@@ -2,174 +2,135 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta charset="utf-8">
-  <meta content="Guess Number Game" name="keywords">
-  <meta content="Guess Number Game" name="description">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta content="en-my" http-equiv="Content-Language">
-  <link rel="icon" href="image/logo.png" />
-  <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/animate.css">
-  <link rel="stylesheet" media="only screen and (max-width: 720px)" href="css/mobile.css" />
-  <link rel="stylesheet" media="only screen and (max-width: 720px)" href="css/desktop.css" />
-  <script src="js/jquery.min.js"></script>
-  <!--script src="js/bootstrap.min.js"></script-->
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	
-	
     <title>Guess Number Game</title>
-    <style>
-        body {
-            text-align: center;
-        }
-
-        input, button {
-            margin: 5px;
-        }
-
-        table {
-            margin: 0 auto;
-        }
-
-        td {
-            width: 50px;
-            height: 40px; /* 修改td高度，减少每个的高度 */
-            text-align: center;
-        }
-
-        .guess {
-            background-color: #f0e6d2;
-        }
-
-        .result {
-            background-color: #d2e2f0;
-        }
-
-        #history {
-            display: none;
-        }
-
-        #new-game {
-            margin: 5px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #60b347;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        #new-game:hover {
-            background-color: #4da43f;
-        }
-        
-    </style>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
 </head>
-<body>
-    <h1>Guess Number Game</h1>
+<body class="container-fluid">
+    <h1 class="mt-5">Guess Number Game</h1>
     <p>Input four non-repeating numbers and press the "Enter" key or click the "Guess" button</p>
-    <input type="text" id="input">
-    <br><br>
-    <button id="guess-btn" onclick="guess()">Guess</button>
-    <br><br>
-    <table>
-        <thead>
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" id="input">
+        <div class="input-group-append">
+            <button type="button" class="btn btn-primary" id="guess-btn" onclick="guess()">Guess</button>
+        </div>
+    </div>
+    <br>
+    <div id="guess-count"></div>
+    <table class="table table-bordered">
+        <thead class="thead-dark">
             <tr>
-                <td>Guess</td>
-                <td>Result</td>
+                <th scope="col">Guess</th>
+                <th scope="col">Result</th>
             </tr>
         </thead>
         <tbody id="history"></tbody>
-    </table>
-    <br>
-    <button id="new-game" onclick="newGame()">New Game</button>
-    <script>
-        // Generate a random target number
-        let target = '';
-        while (target.length < 4) {
-            let num = Math.floor(Math.random() * 10);
-            if (!target.includes(num.toString())) {
-                target += num.toString();
-            }
-        }
-        // Save all the history records
-        let history = [];
-        // Function to guess the number
-		
-        function guess() {
-            let input = document.getElementById('input').value.trim();
-            if (!/^[0-9]{4}$/.test(input)) {
-                alert('Please enter four numbers!');
-                return;
-            }
-            let a = 0;
-            let b = 0;
-            for (let i = 0; i < 4; i++) {
-                let digit = input[i];
-                if (target[i] === digit) {
-                    a++;
-                } else if (target.includes(digit)) {
-                    b++;
-                }
-            }
-            let result = '';
-            if (a === 4) {
-                result = 'Congratulations! You win!';
-                document.getElementById('new-game').style.display = 'inline-block';
-} else {
-result = `${a}A${b}B`;
-}
-// Add the guess and the result to the history array
-history.push([input, result]);
-// Update the history record table on the page
-let tbody = document.getElementById('history');
-let tr = document.createElement('tr');
-let td1 = document.createElement('td');
-td1.textContent = input;
-td1.className = 'guess';
-tr.appendChild(td1);
-let td2 = document.createElement('td');
-td2.textContent = result;
-td2.className = 'result';
-tr.appendChild(td2);
-tbody.appendChild(tr);
-// Display the history record table
-if (history.length === 1) {
-document.getElementById('history').style.display = 'table';
-}
-// Clear the input box
-document.getElementById('input').value = '';
-}
-// Function to start a new game
-function newGame() {
-// Reset the target number
-target = '';
+</table>
+<br>
+<button type="button" class="btn btn-success" id="new-game" onclick="newGame()">New Game</button>
+<script>
+// Generate a random target number
+let target = '';
 while (target.length < 4) {
 let num = Math.floor(Math.random() * 10);
 if (!target.includes(num.toString())) {
 target += num.toString();
 }
 }
-// Clear the history records
-history = [];
-let tbody = document.getElementById('history');
-while (tbody.firstChild) {
-tbody.removeChild(tbody.firstChild);
-}
-// Display the input box and the "Guess" button
-document.getElementById('input').style.display = 'inline-block';
-document.getElementById('guess-btn').style.display = 'inline-block';
-// Hide the history record table and the "New Game" button
-document.getElementById('history').style.display = 'none';
-document.getElementById('new-game').style.display = 'none';
-}
-// Listen to the Enter key and call the guess function when pressed
-document.addEventListener('keydown', function(event) {
-if (event.key === 'Enter') {
-guess();
-}
-});
+// Save all the guess records
+let guessHistory = [];
+    function guess() {
+        let input = document.getElementById('input').value.trim();
+        if (!/^[0-9]{4}$/.test(input)) {
+            alert('Please enter four numbers!');
+            return;
+        }
+        let a = 0;
+        let b = 0;
+        for (let i = 0; i < 4; i++) {
+            let digit = input[i];
+            if (target[i] === digit) {
+                a++;
+            } else if (target.includes(digit)) {
+                b++;
+            }
+        }
+        let result = '';
+        if (a === 4) {
+            result = 'Congratulations! You win!';
+            document.getElementById('new-game').style.display = 'inline-block';
+        } else {
+            result = `${a}A${b}B`;
+        }
+        // Add the guess and the result to the guessHistory array
+        guessHistory.push([input, result]);
+        // Update the guess history table on the page
+        let tbody = document.getElementById('history');
+        let tr = document.createElement('tr');
+        let td1 = document.createElement('td');
+        td1.textContent = input;
+        td1.className = 'guess';
+        tr.appendChild(td1);
+        let td2 = document.createElement('td');
+        td2.textContent = result;
+        td2.className = 'result';
+        tr.appendChild(td2);
+        tbody.appendChild(tr);
+        // Display the guess history table
+        if (guessHistory.length === 1) {
+            document.getElementById('history').style.display = 'table';
+        }
+        // Display guess count
+        let guessCount = guessHistory.length;
+        let guessCountMsg = `Guess count: ${guessCount}`;
+        if (guessCount > 1) {
+            guessCountMsg += ', your guesses:';
+            for (let i = 0; i < guessCount; i++) {
+                guessCountMsg += ` ${guessHistory[i][0]}(${guessHistory[i][1]})`;
+                if (i < guessCount - 1) {
+                    guessCountMsg += ',';
+                }
+            }
+        }
+        document.getElementById('guess-count').textContent = guessCountMsg;
+        // Clear the input box
+        document.getElementById('input').value = '';
+        document.getElementById('input').focus();
+    }
+
+    function newGame() {
+        // Reset the target number
+        target = '';
+        while (target.length < 4) {
+            let num = Math.floor(Math.random() * 10);
+            if (!target.includes(num.toString())) {
+                target += num.toString();
+            }
+        }
+        // Clear the guess history records
+        guessHistory = [];
+        let tbody = document.getElementById('history');
+        while (tbody.firstChild) {
+            tbody.removeChild(tbody.firstChild);
+        }
+        // Hide the "New Game" button
+        document.getElementById('new-game').style.display = 'none';
+        // Clear the guess count message
+        document.getElementById('guess-count').textContent = '';
+        // Display the input box and the "Guess" button
+        document.getElementById('input').style.display = 'inline-block';
+        document.getElementById('guess-btn').style.display = 'inline-block';
+        // Hide the guess history table
+        document.getElementById('history').style.display = 'none';
+        // Set focus to the input box
+        document.getElementById('input').focus();
+    }
+
+    // Listen to the Enter key and call the guess function when pressed
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            guess();
+        }
+    });
 </script>
 </body>
 </html>
