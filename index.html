@@ -105,10 +105,11 @@ $(function() {
     <!-- main -->
     <div id="main" class="container-fluid">
 	<p><a href="getNumber.html" target="iframe_a">Guess Number Game</a></p>
-	<div class="embed-responsive embed-responsive-1by2">
+	<div class="embed-responsive embed-responsive-1by1">
 	  <iframe class="embed-responsive-item" src="getNumber.html" allowfullscreen></iframe>
 	</div>
-	<iframe src="getNumber.html" name="iframe_a" height="500px" width="100%" title="Iframe Example"></iframe>
+	
+	<iframe src="getNumber.html" name="iframe_a" style="position: absolute; height: 80%; width:100%;border: none;" title="Guess Number Game"></iframe>
     </div>
 
     <footer class="footer" style="background-color:white">
