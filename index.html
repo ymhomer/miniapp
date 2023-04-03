@@ -46,11 +46,6 @@ $(document).ready(function(){
     	var obj = document.getElementById('myCarousel').style.height = '200px';
 		//var obj = document.getElementsByName('carousel-indicators').style.height = '200px';
     }
-    
-    //update msgLog
-    var msgText = '20191204 (Testing) updated feature - background music play <br /> - fixed carousel size<br /> - Music control button on the navbar or you can try <a href="#" onclick="controlAudio()">here</a> to control the playback.';
-    document.getElementById('msgLog').innerHTML = msgText;
-
 });
 </script>
 
@@ -79,35 +74,11 @@ $(function() {
         <source src="sound/Believer.mp3" type="audio/mpeg">
     </audio>
     <!-- header -->
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="#main">Mini App</a>
-            </div>
-            <div>
-                <div class="collapse navbar-collapse" id="myNavbar">
-                    <ul class="nav navbar-nav">
-                        <li><a href="#main"><span class="glyphicon glyphicon-home"></span> Main</a></li>
-                        
-                        <!--Dropdown
-                        <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Section 4 <span class="caret"></span></a>
-                          <ul class="dropdown-menu">
-                            <li><a href="#section41">Section 4-1</a></li>
-                            <li><a href="#section42">Section 4-2</a></li>
-                          </ul>
-                        </li>
-                        -->
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+	  <div class="container">
+	    <a class="navbar-brand" href="#">Mini App</a>
+	  </div>
+	</nav>
 
     
 
