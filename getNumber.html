@@ -4,9 +4,22 @@
     <meta charset="UTF-8">
     <title>Guess Number Game</title>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+
 </head>
 <body class="container-fluid">
-    <h1 class="mt-5">Guess Number Game</h1>
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <h1 class="mb-3">Guess Number Game</h1>
+        </div>
+        <div class="col-md-6 text-right">
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#instructionsModal">
+                How to Play
+            </button>
+        </div>
+    </div>
     <p>Input four non-repeating numbers and press the "Enter" key or click the "Guess" button</p>
     <div class="input-group mb-3">
         <input type="text" class="form-control" id="input">
@@ -24,9 +37,15 @@
             </tr>
         </thead>
         <tbody id="history"></tbody>
-</table>
-<br>
-<button type="button" class="btn btn-success" id="new-game" onclick="newGame()">New Game</button>
+    </table>
+    <br>
+    <button type="button" class="btn btn-success" id="new-game" onclick="newGame()">New Game</button>
+
+<!-- Modal --> <div class="modal fade" id="instructionsModal" tabindex="-1" role="dialog" aria-labelledby="instructionsModalLabel" aria-hidden="true"> <div class="modal-dialog" role="document"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title" id="instructionsModalLabel">How to Play</h5> <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">&times;</span> </button> </div> <div class="modal-body"> <p>To play the game, you need to guess a 4-digit number, where each digit is different.</p> <p>After each guess you will get feedback on how many digits are correct and in the right position, and how many digits are correct but in the wrong position.</p> <p>Keep guessing until you correctly guess the number!</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>
 <script>
 // Generate a random target number
 let target = '';
