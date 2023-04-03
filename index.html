@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Mini App</title>
+  <meta charset="utf-8">
+  <meta content="Mini App" name="keywords">
+  <meta content="Mini App" name="description">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="en-my" http-equiv="Content-Language">
+  <link rel="icon" href="image/logo.png" />
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/animate.css">
+  <link rel="stylesheet" media="only screen and (max-width: 720px)" href="css/mobile.css" />
+  <link rel="stylesheet" media="only screen and (max-width: 720px)" href="css/desktop.css" />
+  <script src="js/jquery.min.js"></script>
+  <!--script src="js/bootstrap.min.js"></script-->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<!-- page layout -->
+<style>
+  body {
+      position: relative;
+      background-image: url("image/bkgd.jpg");
+      background-attachment: fixed;
+  }
+  #msgLog {padding-top:50px;padding-bottom:0px;}
+  #main {padding-top:50px;padding-bottom:0px;color: #fff;}
+</style>
+
+<!-- tooltip function -->
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+    if (width > 720){
+    	//alert('Big');
+    	var obj = document.getElementById('slide').style.height = '600px';
+    	var obj = document.getElementById('myCarousel').style.height = '600px';
+    	//var obj = document.getElementsByClassName('carousel-indicators').style.height = '600px';
+
+    }
+    else{
+    	//alert('Small');
+    	var obj = document.getElementById('slide').style.height = '200px';
+    	var obj = document.getElementById('myCarousel').style.height = '200px';
+		//var obj = document.getElementsByName('carousel-indicators').style.height = '200px';
+    }
+    
+    //update msgLog
+    var msgText = '20191204 (Testing) updated feature - background music play <br /> - fixed carousel size<br /> - Music control button on the navbar or you can try <a href="#" onclick="controlAudio()">here</a> to control the playback.';
+    document.getElementById('msgLog').innerHTML = msgText;
+
+});
+</script>
+
+<!-- smooth page scroll
+<script>
+$(function() {
+  $('a[href*="#"]:not([href="#"])').click(function() {
+    if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+      var target = $(this.hash);
+      target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+      if (target.length) {
+        $('html, body').animate({
+          scrollTop: target.offset().top
+        }, 500);
+        return false;
+      }
+    }
+  });
+});
+</script>-->
+
+</head>
+<body data-spy="scroll" data-target=".navbar" data-offset="50">
+
+    <audio preload='auto' loop id="myAudio">
+        <source src="sound/Believer.mp3" type="audio/mpeg">
+    </audio>
+    <!-- header -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#overview">Mini App</a>
+            </div>
+            <div>
+                <div class="collapse navbar-collapse" id="myNavbar">
+                    <ul class="nav navbar-nav">
+                        <li><a href="#overview"><span class="glyphicon glyphicon-home"></span> Overview</a></li>
+                        
+                        <!--Dropdown
+                        <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Section 4 <span class="caret"></span></a>
+                          <ul class="dropdown-menu">
+                            <li><a href="#section41">Section 4-1</a></li>
+                            <li><a href="#section42">Section 4-2</a></li>
+                          </ul>
+                        </li>
+                        -->
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+                        <li><a href="#"><span class="glyphicon glyphicon-log-in" onclick="googleSignInPopUp()"></span> Login</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    
+
+    <!-- main -->
+    <div id="main" class="container-fluid">
+        <h1>Guess Number Game</h1>
+        <p>Input four non-repeating numbers and press the "Enter" key or click the "Guess" button</p>
+        <input type="text" id="input">
+        <br><br>
+        <button id="guess-btn" onclick="guess()">Guess</button>
+        <br><br>
+        <table>
+            <thead>
+                <tr>
+                    <td>Guess</td>
+                    <td>Result</td>
+                </tr>
+            </thead>
+            <tbody id="history"></tbody>
+        </table>
+        <br>
+        <button id="new-game" onclick="newGame()">New Game</button>
+    </div>
+
+    <footer class="footer" style="background-color:white">
+        <div class="container">
+            <p class="text-muted"><strong>&copy; Copyright 2016 taekwandozeroclub.com</strong></p>
+        </div>
+    </footer>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.5.1/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.5.1/firebase-analytics.js"></script>
+
+    <!-- Initialize Firebase -->
+    <!--script src="/__/firebase/init.js"></script-->
+    <script defer src="js/init-firebase.js"></script>
+
+    <script>
+        //firebase
+        var provider = new firebase.auth.GoogleAuthProvider();
+
+
+        function googleSignInPopUp() {
+
+            firebase.auth().signInWithPopup(provider).then(function(result) {
+              // This gives you a Google Access Token. You can use it to access the Google API.
+              var token = result.credential.accessToken;
+              // The signed-in user info.
+              var user = result.user;
+              // ...
+            }).catch(function(error) {
+              // Handle Errors here.
+              var errorCode = error.code;
+              var errorMessage = error.message;
+              // The email of the user's account used.
+              var email = error.email;
+              // The firebase.auth.AuthCredential type that was used.
+              var credential = error.credential;
+              // ...
+            });
+        }
+
+        //provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+
+        var xAudio = document.getElementById("myAudio");
+        var audioStatus = 0;//1 = on
+
+        function controlAudio() {
+            //alert(audioStatus);
+            if (audioStatus == 1) {
+                //alert('pause');
+                pauseAudio();
+                audioStatus = 0;
+                document.getElementById('musicControl').innerHTML = 'Music Off';
+            }
+            else {
+                //alert('play');
+                playAudio();
+                audioStatus = 1;
+                document.getElementById('musicControl').innerHTML = 'Music ON';
+            }
+        }
+
+        function playAudio() {
+            xAudio.play();
+        }
+
+        function pauseAudio() {
+            xAudio.pause();
+        }
+    </script>
+
+</body>
+</html>
