@@ -13,6 +13,7 @@
 
 </head>
 <body class="container-fluid">
+    <div id="navbar"></div>
     <div class="row mt-5">
         <div class="col-md-6">
             <h1 class="mb-3">Guess Number Game</h1>
@@ -58,6 +59,9 @@ if (!target.includes(num.toString())) {
 target += num.toString();
 }
 }
+$(function() {
+  $("#navbar").load("navbar.html");
+});
 // Save all the guess records
 let guessHistory = [];
     function guess() {
