@@ -89,7 +89,7 @@ let guessHistory = [];
             return;
         }
 	    
-	if (new Set(input).size !== 4) {
+	if (input.size !== 4) {
 		alert('Please enter four non-repeating numbers!');
 		return;
 	}
