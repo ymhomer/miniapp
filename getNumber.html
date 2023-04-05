@@ -82,6 +82,7 @@ while (target.length < 4) {
 // Save all the guess records
 let guessHistory = [];
     function guess() {
+	document.getElementById('new-game').style.display = 'block';
         let input = document.getElementById('input').value.trim();
         if (!/^[0-9]{4}$/.test(input)) {
             alert('Please enter four numbers!');
