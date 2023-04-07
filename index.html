@@ -79,7 +79,7 @@
         
             $('[logoUrl]').click(function(e) {
                 e.preventDefault();
-                window.location.href = $(this).attr('logoUrl');
+                window.location.href = $(this).attr(projectPath + 'logoUrl');
             });
 
             $('[data-app]').click(function(e) {
