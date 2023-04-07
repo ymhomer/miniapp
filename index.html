@@ -5,7 +5,7 @@
 	<meta http-equiv="X-Content-Type-Options" content="nosniff">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ymhomer.github.io">
-	<title>Mini Game Home</title>
+	<title>GeDniM</title>
 	<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
 	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 	<script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
@@ -24,8 +24,8 @@
 	          Mini Game
 	        </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	          <a class="dropdown-item" href="#" data-game="GuessNumberGame">Guess Number Game</a>
-	          <a class="dropdown-item" href="#" data-game="MiniRPG">Mini RPG Game (In progress)</a>
+	          <a class="dropdown-item" href="#" data-game="/MiniGame/GuessNumberGame">Guess Number Game</a>
+	          <a class="dropdown-item" href="#" data-game="/MiniGame/MiniRPG">Mini RPG Game (In progress)</a>
 	        </div>
 	      </li>
 	    </ul>
@@ -47,7 +47,7 @@
 		    var game = $(this).data('game');
 		    var iframe = $('#game-iframe');
 		    var projectName = window.location.pathname.split('/')[1];
-		    var targetUrl = window.location.origin + '/' + projectName + '/MiniGame/' + game + '/index.html';
+		    var targetUrl = window.location.origin + '/' + projectName + game + '/index.html';
 		    iframe.attr('src', targetUrl);
 		    document.getElementById("debuglog").innerHTML = targetUrl;
 		  })
