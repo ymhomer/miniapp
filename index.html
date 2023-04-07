@@ -43,7 +43,7 @@
 	<script>
 		$(function() {
 		    var iframe = $('#game-iframe'); // 获取 iframe 元素
-		    var targetUrl = window.location.origin + '/about.html'; // 设置默认页面的链接
+		    var targetUrl = window.location.pathname.split('/')[1] + '/about.html'; // 设置默认页面的链接
 		    iframe.attr('src', targetUrl); // 设置 iframe 的链接
 
 		    $('[data-game]').click(function(e) { // 点击下拉菜单项时触发
