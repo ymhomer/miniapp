@@ -3,4 +3,4 @@
 ### url: https://ymhomer.github.io/miniapp/
 
 ## Game 1
-### Guess Number Game : https://ymhomer.github.io/miniapp/getNumber.html
+### Guess Number Game : https://ymhomer.github.io/miniapp/MiniGame/getNumber.html
