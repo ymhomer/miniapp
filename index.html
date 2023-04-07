@@ -45,7 +45,7 @@
 	      e.preventDefault();
 	      var game = $(this).data('game');
 	      var iframe = $('#game-iframe');
-	      var targetUrl = '/MiniGame/' + game + '/index.html';
+	      var targetUrl = window.location.origin + '/MiniGame/' + game + '/index.html';
 	      iframe.attr('src', targetUrl);
 	      document.getElementById("debuglog").innerHTML = targetUrl;
 	    })
