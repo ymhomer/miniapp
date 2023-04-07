@@ -73,24 +73,23 @@
         $(function() {
             var iframe = $('#app-iframe');
             var projectPath = window.location.origin + '/' + projectName;
-            //var projectName = window.location.pathname.split('/')[1];
+            var projectName = window.location.pathname.split('/')[1];
             var defaultUrl = projectPath + '/About/index.html';
             iframe.attr('src', defaultUrl);
             document.getElementById("debuglog").innerHTML = defaultUrl;
         
             $('[logoUrl]').click(function(e) {
                 e.preventDefault();
-                //var app = $(this).data('app');
-                //var targetUrl = window.location.origin + '/' + projectName;
-                //iframe.attr('src', targetUrl);
-                //document.getElementById("debuglog").innerHTML = targetUrl;
-                window.location.href = $(this).attr('logoUrl');
+                var app = $(this).data('app');
+                var targetUrl = window.location.origin + '/' + projectName;
+                iframe.attr('src', targetUrl);
+                document.getElementById("debuglog").innerHTML = targetUrl;
             });
 
             $('[data-app]').click(function(e) {
                 e.preventDefault();
                 var app = $(this).data('app');
-                var targetUrl = projectPath + app + '/index.html';
+                var targetUrl = window.location.origin + '/' + projectName + app + '/index.html';
                 iframe.attr('src', targetUrl);
                 document.getElementById("debuglog").innerHTML = targetUrl;
             });
