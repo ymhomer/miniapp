@@ -31,10 +31,10 @@
 	    </ul>
 	    <ul class="navbar-nav ml-auto">
 	      <li class="nav-item">
-	        <a class="nav-link" href="#" data-app="/contact">Contact Us</a>
+	        <a class="nav-link" href="#" data-app="/Contact">Contact Us</a>
 	      </li>
 	      <li class="nav-item">
-	        <a class="nav-link" href="#" data-app="/about">About</a>
+	        <a class="nav-link" href="#" data-app="/About">About</a>
 	      </li>
 	    </ul>
 	  </div>
@@ -52,7 +52,7 @@
         $(function() {
             var iframe = $('#app-iframe');
             var projectName = window.location.pathname.split('/')[1];
-            var defaultUrl = window.location.origin + '/' + projectName + '/about.html';
+            var defaultUrl = window.location.origin + '/' + projectName + '/About/index.html';
             iframe.attr('src', defaultUrl);
             document.getElementById("debuglog").innerHTML = defaultUrl;
         
