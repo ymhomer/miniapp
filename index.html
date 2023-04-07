@@ -46,7 +46,7 @@
 	    </ul>
 	  </div>
 	</nav>
-	
+
     <div class="container-fluid">
       <div class="row mt-5">
         <div class="col-12">
@@ -68,6 +68,14 @@
         </div>
     </footer>
     <script>
+    	//auto collapse of navbar
+    	$(function() {
+		  var navbarCollapse = $('.navbar-collapse');
+		  navbarCollapse.on('click', function () {
+		    navbarCollapse.collapse('hide');
+		  });
+		});
+
         $(function() {
             var iframe = $('#app-iframe');
             var projectPath = window.location.origin + '/' + window.location.pathname.split('/')[1];
