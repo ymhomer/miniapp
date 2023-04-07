@@ -67,7 +67,7 @@
 // Design for master page -- but not working now
 $(function() {
 	document.getElementById('new-game').style.display = 'none';
-	$("#navbar").load("navbar.html");
+	$("#navbar").load("~/navbar.html");
 });
 
 // Generate a random target number
@@ -167,8 +167,8 @@ let guessHistory = [];
             tbody.removeChild(tbody.firstChild);
         }
 	
-        // Hide the "New Game" button
-        document.getElementById('new-game').style.display = 'none';
+    // Hide the "New Game" button
+    document.getElementById('new-game').style.display = 'none';
         
 	// Clear the guess count message
         document.getElementById('guess-count').textContent = '';

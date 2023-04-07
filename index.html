@@ -7,6 +7,9 @@
 	<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ymhomer.github.io">
 	<title>Mini Game Home</title>
 	<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+	<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
 </head>
 <body>
 	<nav class="navbar navbar-expand-md navbar-light bg-light">
@@ -21,7 +24,7 @@
 	          Mini Game
 	        </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	          <a class="dropdown-item" href="getNumber.html" data-game="guess-number-game">Guess Number Game</a>
+	          <a class="dropdown-item" href="~/MiniGame/getNumber.html" data-game="guess-number-game">Guess Number Game</a>
 	        </div>
 	      </li>
 	    </ul>
@@ -35,10 +38,6 @@
 	    </div>
 	  </div>
 	</div>
-  
-	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
 	<script>
 	  $(function() {
 	    $('[data-game]').click(function(e) {
