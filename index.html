@@ -24,7 +24,7 @@
 	          Mini Game
 	        </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	          <a class="dropdown-item" href="#" data-game="getNumber">Guess Number Game</a>
+	          <a class="dropdown-item" href="#" data-game="GuessNumberGame">Guess Number Game</a>
 	        </div>
 	      </li>
 	    </ul>
@@ -44,7 +44,7 @@
 	      e.preventDefault();
 	      var game = $(this).data('game');
 	      var iframe = $('#game-iframe');
-	      iframe.attr('src', '/MiniGame/' + game + '.html');
+	      iframe.attr('src', '/MiniGame/' + game + '/index.html');
 	    })
 	  });
 	</script>
