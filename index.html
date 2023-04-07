@@ -20,35 +20,35 @@
 	  <div class="collapse navbar-collapse" id="navbarNav">
 	    <ul class="navbar-nav">
 	      <li class="nav-item dropdown">
-	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="collapse" data-target="#navbarNav" aria-haspopup="true" aria-expanded="false">
 	          Mini Game
 	        </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	          <a class="dropdown-item" href="#" data-app="/MiniGame/GuessNumberGame">Guess Number Game</a>
+	          <a class="dropdown-item" href="#" data-app="/MiniGame/GuessNumberGame" data-toggle="collapse" data-target="#navbarNav">Guess Number Game</a>
 	        </div>
 	      </li>
 	    </ul>
 	    <ul class="navbar-nav">
 	      <li class="nav-item dropdown">
-	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="collapse" data-target="#navbarNav" aria-haspopup="true" aria-expanded="false">
 	          Coming Soon
 	        </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	          <a class="dropdown-item" href="#" data-app="/MiniGame/MiniRPG">Mini RPG Game</a>
+	          <a class="dropdown-item" href="#" data-app="/MiniGame/MiniRPG" data-toggle="collapse" data-target="#navbarNav">Mini RPG Game</a>
 	        </div>
 	      </li>
 	    </ul>
 	    <ul class="navbar-nav ml-auto">
 	      <li class="nav-item">
-	        <a class="nav-link" href="#" data-app="/Contact">Contact Us</a>
+	        <a class="nav-link" href="#" data-app="/Contact" data-toggle="collapse" data-target="#navbarNav">Contact Us</a>
 	      </li>
 	      <li class="nav-item">
-	        <a class="nav-link" href="#" data-app="/About">About</a>
+	        <a class="nav-link" href="#" data-app="/About" data-toggle="collapse" data-target="#navbarNav">About</a>
 	      </li>
 	    </ul>
 	  </div>
 	</nav>
-  
+
     <div class="container-fluid">
       <div class="row mt-5">
         <div class="col-12">
@@ -81,8 +81,6 @@
 	            e.preventDefault();
 	            var logoUrl = $(this).attr('logoUrl');
 	            var targetUrl = projectPath;
-	            //var targetUrl = window.location.origin + '/miniapp' +logoUrl;
-	            //iframe.attr('src', targetUrl);
 	            window.location.href = targetUrl;
 	            document.getElementById("debuglog").innerHTML = targetUrl;
 	        });
