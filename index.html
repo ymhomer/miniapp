@@ -1,61 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-Content-Type-Options" content="nosniff">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ymhomer.github.io">
-	<title>GeDniM</title>
-	<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
-	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ymhomer.github.io">
+    <title>GeDniM</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
 </head>
 <body>
-	<nav class="navbar navbar-expand-md navbar-light bg-light">
-	  <a class="navbar-brand" href="#">GeDniM</a>
-	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-	    <span class="navbar-toggler-icon"></span>
-	  </button>
-	  <div class="collapse navbar-collapse" id="navbarNav">
-	    <ul class="navbar-nav">
-	      <li class="nav-item dropdown">
-	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	          Mini Game
-	        </a>
-	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-	          <a class="dropdown-item" href="#" data-game="/MiniGame/GuessNumberGame">Guess Number Game</a>
-	          <a class="dropdown-item" href="#" data-game="/MiniGame/MiniRPG">Mini RPG Game (In progress)</a>
-	        </div>
-	      </li>
-	    </ul>
-	  </div>
-	</nav>
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+      <a class="navbar-brand" href="#">GeDniM</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Mini Game
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" href="#" data-game="/MiniGame/GuessNumberGame">Guess Number Game</a>
+              <a class="dropdown-item" href="#" data-game="/MiniGame/MiniRPG">Mini RPG Game (In progress)</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </nav>
   
-	<div class="container-fluid">
-	  <div class="row mt-5">
-	    <div class="col-12">
-	    	<p id="debuglog">Hello</p>
-	      <iframe class="embed-responsive-item" id="game-iframe" frameborder="0" width="100%" height="800" data-game="/about"></iframe>
-	    </div>
-	  </div>
-	</div>
-	<script>
-		$(function() {
-		    var iframe = $('#game-iframe'); // 获取 iframe 元素
-		    var targetUrl = window.location.origin + '/' + window.location.pathname.split('/')[1] + '/about.html'; // 设置默认页面的链接
-		    iframe.attr('src', targetUrl); // 设置 iframe 的链接
-		    document.getElementById("debuglog").innerHTML = targetUrl; 
-
-		    $('[data-game]').click(function(e) { // 点击下拉菜单项时触发
-		      e.preventDefault();
-		      var game = $(this).data('game'); // 获取 data-game 属性
-		      var projectName = window.location.pathname.split('/')[1]; // 获取当前网页的项目名
-		      targetUrl = window.location.origin + '/' + projectName + game + '/index.html'; // 设置新的链接
-		      iframe.attr('src', targetUrl); // 设置 iframe 的链接
-		      document.getElementById("debuglog").innerHTML = targetUrl; // 在页面上显示当前链接
-		    })
-		  });
-	</script>
+    <div class="container-fluid">
+      <div class="row mt-5">
+        <div class="col-12">
+            <p id="debuglog">Hello</p>
+          <iframe class="embed-responsive-item" id="game-iframe" frameborder="0" width="100%" height="800"></iframe>
+        </div>
+      </div>
+    </div>
+    <script>
+        $(function() {
+            var iframe = $('#game-iframe');
+            var projectName = window.location.pathname.split('/')[1];
+            var defaultUrl = window.location.origin + '/' + projectName + '/about.html';
+            iframe.attr('src', defaultUrl);
+            document.getElementById("debuglog").innerHTML = defaultUrl;
+        
+            $('[data-game]').click(function(e) {
+                e.preventDefault();
+                var game = $(this).data('game');
+                var targetUrl = window.location.origin + '/' + projectName + game + '/index.html';
+                iframe.attr('src', targetUrl);
+                document.getElementById("debuglog").innerHTML = targetUrl;
+            });
+        });
+    </script>
 </body>
 </html>
