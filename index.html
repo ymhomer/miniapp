@@ -72,8 +72,8 @@
     <script>
         $(function() {
             var iframe = $('#app-iframe');
-            var projectPath = window.location.origin + '/' + projectName;
-            var projectName = window.location.pathname.split('/')[1];
+            var projectPath = window.location.origin + '/' + window.location.pathname.split('/')[1];
+            //var projectName = window.location.pathname.split('/')[1];
             var defaultUrl = projectPath + '/About/index.html';
             iframe.attr('src', defaultUrl);
             document.getElementById("debuglog").innerHTML = defaultUrl;
@@ -89,7 +89,7 @@
             $('[data-app]').click(function(e) {
                 e.preventDefault();
                 var app = $(this).data('app');
-                var targetUrl = window.location.origin + '/' + projectName + app + '/index.html';
+                var targetUrl = projectPath + app + '/index.html';
                 iframe.attr('src', targetUrl);
                 document.getElementById("debuglog").innerHTML = targetUrl;
             });
