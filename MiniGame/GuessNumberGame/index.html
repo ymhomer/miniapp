@@ -14,7 +14,6 @@
 
 </head>
 <body class="container-fluid">
-    <div id="navbar"></div>
     <div class="row mt-5">
         <div class="col-md-6">
             <h1 class="mb-3">Guess Number Game</h1>
@@ -64,12 +63,6 @@
 </div>
 </div>
 <script>
-// Design for master page -- but not working now
-$(function() {
-	document.getElementById('new-game').style.display = 'none';
-	$("#navbar").load("/navbar.html");
-});
-
 // Generate a random target number
 let target = '';
 while (target.length < 4) {
