@@ -80,7 +80,7 @@
             $('[logoUrl]').click(function(e) {
 	            e.preventDefault();
 	            var logoUrl = $(this).attr('logoUrl');
-	            var targetUrl = window.location.origin + logoUrl;
+	            var targetUrl = window.location.origin + '/miniapp' +logoUrl;
 	            //iframe.attr('src', targetUrl);
 	            window.location.href = targetUrl;
 	            document.getElementById("debuglog").innerHTML = targetUrl;
