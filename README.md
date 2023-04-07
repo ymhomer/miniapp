@@ -30,3 +30,5 @@ This website was created by ymhomer默易寒.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 
+© 2023 GeDniM. All rights reserved.
