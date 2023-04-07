@@ -6,6 +6,7 @@ GeDniM is a personal project created to showcase web development skills and know
 
 ## About This Site
 
+**GeDniM = Genius + Medhavi & Mind**
 This website is named GeDniM, which stands for Genius, Medhavi & Mind. This expresses the characteristics of the model that help learners expand their thinking and enhance their intelligence.
 
 The website includes the following sections:
