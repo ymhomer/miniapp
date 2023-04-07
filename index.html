@@ -78,9 +78,12 @@
             document.getElementById("debuglog").innerHTML = defaultUrl;
         
             $('[logoUrl]').click(function(e) {
-                e.preventDefault();
-                window.location.href = $(this).attr(window.location.origin + 'miniapp');
-            });
+	            e.preventDefault();
+	            var logoUrl = $(this).attr('logoUrl');
+	            var targetUrl = window.location.origin + logoUrl;
+	            iframe.attr('src', targetUrl);
+	            document.getElementById("debuglog").innerHTML = targetUrl;
+	        });
 
             $('[data-app]').click(function(e) {
                 e.preventDefault();
