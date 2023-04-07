@@ -34,6 +34,7 @@
 	<div class="container-fluid">
 	  <div class="row mt-5">
 	    <div class="col-12">
+	    	<p id="debuglog">Hello</p>
 	      <iframe class="embed-responsive-item" id="game-iframe" frameborder="0" height="800"></iframe>
 	    </div>
 	  </div>
@@ -44,7 +45,9 @@
 	      e.preventDefault();
 	      var game = $(this).data('game');
 	      var iframe = $('#game-iframe');
-	      iframe.attr('src', '/MiniGame/' + game + '/index.html');
+	      var targetUrl = '/MiniGame/' + game + '/index.html';
+	      iframe.attr('src', targetUrl);
+	      document.getElementById("debuglog").innerHTML = targetUrl;
 	    })
 	  });
 	</script>
