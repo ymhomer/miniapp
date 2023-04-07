@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>RPG Games</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- 引入Bootstrap -->
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<!-- 引入自定义CSS样式 -->
+	<link rel="stylesheet" href="style.css">
+	<style>
+		.tile {
+		  display: inline-block;
+		  width: 50px;
+		  height: 50px;
+		  border: 1px solid #000;
+		}
+	
+		#map {
+			height: 500px;
+			background-color: #ddd;
+		}
+
+		#player, #enemy {
+			height: 200px;
+			background-color: #aaa;
+			margin-bottom: 10px;
+		}
+
+		#log {
+			height: 200px;
+			background-color: #eee;
+			overflow-y: scroll;
+		}
+		
+		.player-You {
+		  background-image: url('your-character.png');
+		  /* 其他样式 */
+		}
+
+		.enemy-Monster {
+		  background-image: url('monster.png');
+		  /* 其他样式 */
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-8">
+				<div id="map"></div>
+			</div>
+			<div class="col-md-4">
+			  <div id="player">
+				<h4>玩家</h4>
+				<p id="playerName"></p>
+				<p id="playerHp"></p>
+				<p id="playerMp"></p>
+			  </div>
+			  <div id="enemy">
+				<h4>敌人</h4>
+				<p id="enemyName"></p>
+				<p id="enemyHp"></p>
+				<p id="enemyMp"></p>
+			  </div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<div id="log"></div>
+			</div>
+		</div>
+	</div>
+	<!-- jQuery -->
+	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+	<!-- JavaScript -->
+	<script src="script.js"></script>
+</body>
+</html>

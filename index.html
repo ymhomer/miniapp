@@ -25,6 +25,7 @@
 	        </a>
 	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
 	          <a class="dropdown-item" href="#" data-game="GuessNumberGame">Guess Number Game</a>
+	          <a class="dropdown-item" href="#" data-game="MiniRPG">Mini RPG Game (In progress)</a>
 	        </div>
 	      </li>
 	    </ul>
@@ -41,16 +42,16 @@
 	</div>
 	<script>
 	  $(function() {
-	  $('[data-game]').click(function(e) {
-	    e.preventDefault();
-	    var game = $(this).data('game');
-	    var iframe = $('#game-iframe');
-	    var projectName = window.location.pathname.split('/')[1];
-	    var targetUrl = window.location.origin + '/' + projectName + '/MiniGame/' + game + '/index.html';
-	    iframe.attr('src', targetUrl);
-	    document.getElementById("debuglog").innerHTML = targetUrl;
-	  })
-	});
+		  $('[data-game]').click(function(e) {
+		    e.preventDefault();
+		    var game = $(this).data('game');
+		    var iframe = $('#game-iframe');
+		    var projectName = window.location.pathname.split('/')[1];
+		    var targetUrl = window.location.origin + '/' + projectName + '/MiniGame/' + game + '/index.html';
+		    iframe.attr('src', targetUrl);
+		    document.getElementById("debuglog").innerHTML = targetUrl;
+		  })
+		});
 	</script>
 </body>
 </html>
