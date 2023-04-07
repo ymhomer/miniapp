@@ -41,6 +41,22 @@
 	  </div>
 	</div>
 	<script>
+		$(function() {
+		    var iframe = $('#game-iframe'); // 获取 iframe 元素
+		    var targetUrl = window.location.origin + '/about.html'; // 设置默认页面的链接
+		    iframe.attr('src', targetUrl); // 设置 iframe 的链接
+
+		    $('[data-game]').click(function(e) { // 点击下拉菜单项时触发
+		      e.preventDefault();
+		      var game = $(this).data('game'); // 获取 data-game 属性
+		      var projectName = window.location.pathname.split('/')[1]; // 获取当前网页的项目名
+		      targetUrl = window.location.origin + '/' + projectName + game + '/index.html'; // 设置新的链接
+		      iframe.attr('src', targetUrl); // 设置 iframe 的链接
+		      document.getElementById("debuglog").innerHTML = targetUrl; // 在页面上显示当前链接
+		    })
+		  });
+
+	/*
 	  $(function() {
 		  $('[data-game]').click(function(e) {
 		    e.preventDefault();
@@ -51,7 +67,7 @@
 		    iframe.attr('src', targetUrl);
 		    document.getElementById("debuglog").innerHTML = targetUrl;
 		  })
-		});
+		});*/
 	</script>
 </body>
 </html>
