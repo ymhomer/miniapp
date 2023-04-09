@@ -99,7 +99,6 @@ var GameManager = {
 
   switch (direction) {
     case "left":
-      alert("left");
       for (var i = 0; i < this.size; i++) {
         for (var j = 1; j < this.size; j++) {
           if (this.board[i][j] !== 0) {
