@@ -34,13 +34,17 @@
 	<script>
 		var startTime, endTime, timeDiff, jumpDistance;
 
-		document.addEventListener('keydown', function(event) {
+		window.addEventListener('load', function() {
+			document.getElementById('game-iframe').contentWindow.focus();
+		});
+
+		document.getElementById('game-iframe').contentWindow.document.addEventListener('keydown', function(event) {
 			if (event.keyCode === 32) { // Spacebar
 				startTime = Date.now();
 			}
 		});
 
-		document.addEventListener('keyup', function(event) {
+		document.getElementById('game-iframe').contentWindow.document.addEventListener('keyup', function(event) {
 			if (event.keyCode === 32) { // Spacebar
 				endTime = Date.now();
 				timeDiff = endTime - startTime;
