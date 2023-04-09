@@ -192,3 +192,5 @@ move: function(direction) {
   break;
 }
 }
+};
+GameManager.setup();
