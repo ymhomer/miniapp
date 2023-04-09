@@ -20,6 +20,14 @@
 			animation: jump 1s ease-in-out;
 			animation-fill-mode: forwards;
 		}
+		#land {
+			width: 100%;
+			height: 50px;
+			background-color: green;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+		}
 		@keyframes jump {
 			0% { bottom: 0; }
 			50% { bottom: 100px; }
@@ -29,28 +37,27 @@
 </head>
 <body>
 	<div id="container">
+		<div id="land"></div>
 		<div id="square"></div>
 	</div>
 	<script>
 		var startTime, endTime, timeDiff, jumpDistance;
 
 		window.addEventListener('load', function() {
-			document.getElementById('game-iframe').contentWindow.focus();
-		});
+			document.addEventListener('keydown', function(event) {
+				if (event.keyCode === 32) { // Spacebar
+					startTime = Date.now();
+				}
+			});
 
-		document.getElementById('game-iframe').contentWindow.document.addEventListener('keydown', function(event) {
-			if (event.keyCode === 32) { // Spacebar
-				startTime = Date.now();
-			}
-		});
-
-		document.getElementById('game-iframe').contentWindow.document.addEventListener('keyup', function(event) {
-			if (event.keyCode === 32) { // Spacebar
-				endTime = Date.now();
-				timeDiff = endTime - startTime;
-				jumpDistance = timeDiff * 0.1; // 跳跃距离系数为 0.1
-				jump();
-			}
+			document.addEventListener('keyup', function(event) {
+				if (event.keyCode === 32) { // Spacebar
+					endTime = Date.now();
+					timeDiff = endTime - startTime;
+					jumpDistance = timeDiff * 0.1; // 跳跃距离系数为 0.1
+					jump();
+				}
+			});
 		});
 
 		function jump() {
