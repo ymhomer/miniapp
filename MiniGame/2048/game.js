@@ -190,3 +190,5 @@ move: function(direction) {
     }
   }
   break;
+}
+}
