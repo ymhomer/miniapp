@@ -27,6 +27,15 @@ body {
   left: 0;
 }
 
+.grid-cell {
+  float: left;
+  width: 106px;
+  height: 106px;
+  margin: 15px;
+  border-radius: 6px;
+  background-color: rgba(238, 228, 218, 0.35);
+}
+
 .tile {
   position: absolute;
   width: 106px;

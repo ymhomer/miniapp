@@ -14,6 +14,11 @@ var GameManager = {
       this.board[i] = new Array(this.size);
       for (var j = 0; j < this.size; j++) {
         this.board[i][j] = 0;
+        var gridCell = document.createElement('div');
+        gridCell.classList.add('grid-cell');
+        gridCell.style.top = (i*121)+'px';
+        gridCell.style.left = (j*121)+'px';
+        gameBoard.appendChild(gridCell);
       }
     }
     this.addStartTiles();
@@ -48,13 +53,11 @@ var GameManager = {
       for (var j = 0; j < this.size; j++) {
         var tileValue = this.board[i][j];
         var tile = document.createElement('div');
+        tile.style.top = (i*121)+'px';
+        tile.style.left = (j*121)+'px';
         tile.classList.add('tile');
-        tile.style.top = i * 100 + 'px';  // 新添加
-        tile.style.left = j * 100 + 'px';  // 新添加
-        if (tileValue > 0) {
-          tile.classList.add('tile-' + tileValue);
-          tile.innerText = tileValue;
-        }
+        tile.classList.add('tile-' + tileValue);
+        tile.innerText = tileValue === 0 ? '' : tileValue;
         gameBoard.appendChild(tile);
       }
     }
@@ -91,114 +94,118 @@ var GameManager = {
   },
 
   // 移动方块
-  move: function(direction) {
-  var moved = false;
-  var self = this;
-  var nextX, nextY, currentTileValue;
-  var startX, startY, deltaX, deltaY;
-  var canMerge;
+  // 移动方块
+move: function(direction) {
+    var moved = false;
+    var nextX, nextY, currentTileValue;
+    var canMerge;
 
-  // 创建临时游戏板来保存原始状态
-  var oldBoard = JSON.parse(JSON.stringify(this.board));
-
-  switch (direction) {
-    case "left":
-      for (var i = 0; i < this.size; i++) {
-        for (var j = 1; j < this.size; j++) {
-          if (this.board[i][j] !== 0) {
-            currentTileValue = this.board[i][j];
-            nextX = i;
-            nextY = j - 1;
-            canMerge = false;
-            while (nextY >= 0 && this.board[nextX][nextY] === 0) {
-              nextY--;
+    switch (direction) {
+      case "left":
+        for (var i = 0; i < this.size; i++) {
+          for (var j = 1; j < this.size; j++) {
+            if (this.board[i][j] !== 0) {
+              currentTileValue = this.board[i][j];
+              nextX = i;
+              nextY = j - 1;
+              canMerge = false;
+              while (nextY >= 0 && this.board[nextX][nextY] === 0) {
+                nextY--;
+              }
+              if (nextY >= 0 && this.board[nextX][nextY] === currentTileValue) {
+                canMerge = true;
+              }
+              if (j !== nextY + 1) {
+                moved = true;
+              }
+              this.board[i][j] = 0;
+              this.board[nextX][nextY + (canMerge ? 0 : 1)] = canMerge ? currentTileValue * 2 : currentTileValue;
             }
-            if (nextY >= 0 && this.board[nextX][nextY] === currentTileValue) {
-              canMerge = true;
+          }
+        }
+        break;
+
+      case "right":
+        for (var i = 0; i < this.size; i++) {
+          for (var j = this.size - 2; j >= 0; j--) {
+            if (this.board[i][j] !== 0) {
+              currentTileValue = this.board[i][j];
+              nextX = i;
+              nextY = j + 1;
+              canMerge = false;
+              while (nextY < this.size && this.board[nextX][nextY] === 0) {
+                nextY++;
+              }
+              if (nextY < this.size && this.board[nextX][nextY] === currentTileValue) {
+                canMerge = true;
+              }
+              if (j !== nextY - 1) {
+                moved = true;
+              }
+              this.board[i][j] = 0;
+              this.board[nextX][nextY - (canMerge ? 0 : 1)] = canMerge ? currentTileValue * 2 : currentTileValue;
             }
-            if (j !== nextY + 1) {
-              moved = true;
+          }
+        }
+        break;
+
+      case 'up':
+        for (var j = 0; j < this.size; j++) {
+          for (var i = 1; i < this.size; i++) {
+            if (this.board[i][j] !== 0) {
+              currentTileValue = this.board[i][j];
+              nextX = i - 1;
+              nextY = j;
+              canMerge = false;
+              while (nextX >= 0 && this.board[nextX][nextY] === 0) {
+                nextX--;
+              }
+              if (nextX >= 0 && this.board[nextX][nextY] === currentTileValue) {
+                canMerge = true;
+              }
+              if (i !== nextX + 1) {
+                moved = true;
+              }
+              this.board[i][j] = 0;
+              this.board[nextX + (canMerge ? 0 : 1)][nextY] = canMerge ? currentTileValue * 2 : currentTileValue;
             }
-            this.board[i][j] = 0;
-            this.board[nextX][nextY + (canMerge ? 0 : 1)] = canMerge ? currentTileValue * 2 : currentTileValue;
           }
         }
-      }
-      break;
+        break;
 
-    case "right":
-    for (var i = 0; i < this.size; i++) {
-      for (var j = this.size - 2; j >= 0; j--) {
-        if (this.board[i][j] !== 0) {
-          currentTileValue = this.board[i][j];
-          nextX = i;
-          nextY = j + 1;
-          canMerge = false;
-          while (nextY < this.size && this.board[nextX][nextY] === 0) {
-            nextY++;
+      case 'down':
+        for (var j = 0; j < this.size; j++) {
+          for (var i = this.size - 2; i >= 0; i--) {
+            if (this.board[i][j] !== 0) {
+              currentTileValue = this.board[i][j];
+              nextX = i + 1;
+              nextY = j;
+              canMerge = false;
+              while (nextX < this.size && this.board[nextX][nextY] === 0) {
+                nextX++;
+              }
+              if (nextX < this.size && this.board[nextX][nextY] === currentTileValue) {
+                canMerge = true;
+              }
+              if (i !== nextX - 1) {
+                moved = true;
+              }
+              this.board[i][j] = 0;
+              this.board[nextX - (canMerge ? 0 : 1)][nextY] = canMerge ? currentTileValue * 2 : currentTileValue;
+            }
           }
-          if (nextY < this.size && this.board[nextX][nextY] === currentTileValue) {
-            canMerge = true;
-          }
-          if (j !== nextY - 1) {
-            moved = true;
-          }
-          this.board[i][j] = 0;
-          this.board[nextX][nextY - (canMerge ? 0 : 1)] = canMerge ? currentTileValue * 2 : currentTileValue;
         }
-      }
+        break;
     }
-    break;
 
-    case 'up':
-    for (var j = 0; j < this.size; j++) {
-      for (var i = 1; i < this.size; i++) {
-        if (this.board[i][j] !== 0) {
-          currentTileValue = this.board[i][j];
-          nextX = i - 1;
-          nextY = j;
-          canMerge = false;
-          while (nextX >= 0 && this.board[nextX][nextY] === 0) {
-            nextX--;
-          }
-          if (nextX >= 0 && this.board[nextX][nextY] === currentTileValue) {
-            canMerge = true;
-          }
-          if (i !== nextX + 1) {
-            moved = true;
-          }
-          this.board[i][j] = 0;
-          this.board[nextX + (canMerge ? 0 : 1)][nextY] = canMerge ? currentTileValue * 2 : currentTileValue;
-        }
+    // 如果方块已经移动，那么就添加一个新的随机方块
+    if (moved) {
+      this.addRandomTile();
+      this.updateBoard();
+      if (this.checkGameOver()) {
+        this.handleGameOver();
       }
     }
-    break;
-
-  case 'down':
-    for (var j = 0; j < this.size; j++) {
-      for (var i = this.size - 2; i >= 0; i--) {
-        if (this.board[i][j] !== 0) {
-          currentTileValue = this.board[i][j];
-          nextX = i + 1;
-          nextY = j;
-          canMerge = false;
-          while (nextX < this.size && this.board[nextX][nextY] === 0) {
-            nextX++;
-          }
-          if (nextX < this.size && this.board[nextX][nextY] === currentTileValue) {
-            canMerge = true;
-          }
-          if (i !== nextX - 1) {
-            moved = true;
-          }
-          this.board[i][j] = 0;
-          this.board[nextX - (canMerge ? 0 : 1)][nextY] = canMerge ? currentTileValue * 2 : currentTileValue;
-        }
-      }
-    }
-    break;
-    }
-    this.updateBoard();
   },
   
   bindEventListeners: function() {
