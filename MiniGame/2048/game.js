@@ -49,8 +49,12 @@ var GameManager = {
         var tileValue = this.board[i][j];
         var tile = document.createElement('div');
         tile.classList.add('tile');
-        tile.classList.add('tile-' + tileValue);
-        tile.innerText = tileValue === 0 ? '' : tileValue;
+        tile.style.top = i * 100 + 'px';  // 新添加
+        tile.style.left = j * 100 + 'px';  // 新添加
+        if (tileValue > 0) {
+          tile.classList.add('tile-' + tileValue);
+          tile.innerText = tileValue;
+        }
         gameBoard.appendChild(tile);
       }
     }
@@ -216,3 +220,4 @@ var GameManager = {
   }
 }
 GameManager.setup();
+GameManager.bindEventListeners();
