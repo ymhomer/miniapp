@@ -47,26 +47,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("ta_text").value = result;
     }
 
-    //document.getElementById("copyText").addEventListener('click', copyContent);
-
-    //function copyContent() {
     document.getElementById("copyText").addEventListener('click', async () => {
-        // 获取 textarea
-        //let textarea = document.getElementById("ta_text");
         let textareaContent = document.getElementById("ta_text").value;
         let tableContent = document.getElementById("txtTable").value;
         let conditionContent = document.getElementById("txtCondition").value;
-
-        // 选择 textarea 的内容
-        //textarea.select();
-
-        // 复制选中的内容
-        //document.execCommand("copy");
-
-        // (可选) 提示用户复制成功
-        //alert("Content copied to clipboard!");
-        //var toastEl = new bootstrap.Toast(document.getElementById('toast'));
-        //toastEl.show();
 
         let contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent;
 
@@ -79,6 +63,5 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {
             console.error('Failed to copy text: ', err);
         }
-
-    }
+    });
 });
