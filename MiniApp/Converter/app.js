@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // (可选) 提示用户复制成功
         //alert("Content copied to clipboard!");
-        var toastEl = new bootstrap.Toast(document.getElementById('toast'));
-        toastEl.show();
+        //var toastEl = new bootstrap.Toast(document.getElementById('toast'));
+        //toastEl.show();
 
         let contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent;
 
