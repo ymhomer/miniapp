@@ -52,7 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let tableContent = document.getElementById("txtTable").value;
         let conditionContent = document.getElementById("txtCondition").value;
 
-        let contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent;
+        let contentToCopy = "";
+
+        if (document.getElementById("selectCheck").checked) {
+            contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent + ";";
+        }
+        else {
+            contentToCopy = "textareaContent";
+        }
 
         try {
             await navigator.clipboard.writeText(contentToCopy);
