@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- CSS only -->
+  <link rel="stylesheet" href="../css/bootstrap.min.css">
+
+  <!-- JS, Popper.js, and jQuery -->
+  <script src="../js/bootstrap.min.js"></script>
+  <script src="../js/bootstrap.bundle.min.js"></script>
+  <script src="../MiniApp/Converter.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="sql-tab" data-bs-toggle="tab" href="#sql" role="tab" aria-controls="sql" aria-selected="true">SQL</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="sentence-tab" data-bs-toggle="tab" href="#sentence" role="tab" aria-controls="sentence" aria-selected="false">Sentence</a>
+      </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="sql" role="tabpanel" aria-labelledby="sql-tab">
+        <!-- SQL -->
+        <label for="ta_text" class="form-label">Enter Text</label>
+        <textarea class="form-control" id="ta_text" rows="5"></textarea>
+        <br />
+        <div class="btn-group" role="group" aria-label="btnSQL">
+          <button type="button" class="btn btn-primary" id="addQuote">Add Quote</button>
+          <button type="button" class="btn btn-primary" id="removeQuote">Remove Quote</button>
+        </div>
+        <div class="btn-group" role="group" aria-label="btnSQL2">
+          <button type="button" class="btn btn-outline-primary" id="copyText">Copy</button>
+        </div>
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="toast" data-bs-autohide="false">
+          <div class="toast-body">
+            Content copied to clipboard!
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="sentence" role="tabpanel" aria-labelledby="sentence-tab">
+        <!-- Sentence -->
+        <p>Sentence</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

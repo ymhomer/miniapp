@@ -1,0 +1,11 @@
+﻿#pageType:before {
+  content: "Mobile";
+}
+
+img {
+	max-width: 300px;
+}
+
+.slide {
+	height:300px;
+}

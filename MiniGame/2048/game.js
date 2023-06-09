@@ -94,8 +94,7 @@ var GameManager = {
   },
 
   // 移动方块
-  // 移动方块
-move: function(direction) {
+  move: function(direction) {
     var moved = false;
     var nextX, nextY, currentTileValue;
     var canMerge;
