@@ -47,9 +47,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("ta_text").value = result;
     }
 
-    document.getElementById("copyText").addEventListener('click', copyContent);
+    //document.getElementById("copyText").addEventListener('click', copyContent);
 
-    function copyContent() {
+    //function copyContent() {
+    document.getElementById("copyText").addEventListener('click', async () => {
         // 获取 textarea
         //let textarea = document.getElementById("ta_text");
         let textareaContent = document.getElementById("ta_text").value;
