@@ -51,17 +51,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function copyContent() {
         // 获取 textarea
-        let textarea = document.getElementById("ta_text");
+        //let textarea = document.getElementById("ta_text");
+        let textareaContent = document.getElementById("ta_text").value;
+        let tableContent = document.getElementById("txtTable").value;
+        let conditionContent = document.getElementById("txtCondition").value;
 
         // 选择 textarea 的内容
-        textarea.select();
+        //textarea.select();
 
         // 复制选中的内容
-        document.execCommand("copy");
+        //document.execCommand("copy");
 
         // (可选) 提示用户复制成功
         //alert("Content copied to clipboard!");
         var toastEl = new bootstrap.Toast(document.getElementById('toast'));
         toastEl.show();
+
+        let contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent;
+
+        try {
+            await navigator.clipboard.writeText(contentToCopy);
+
+            // (可选) 提示用户复制成功
+            var toastEl = new bootstrap.Toast(document.getElementById('toast'));
+            toastEl.show();
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+
     }
 });
