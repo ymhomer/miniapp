@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // 去除每个元素的前后空格
         items = items.map(item => item.trim());
 
+        // 检查复选框是否被选中，如果是，将内容转换为大写
+        if (document.getElementById("uppercaseCheck").checked) {
+            items = items.map(item => item.toUpperCase());
+        }
+
         // 将数组转换为字符串，并在每个元素之间添加逗号和空格
         let result = "('" + items.join("', '") + "')";
 
@@ -29,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 用逗号和空格将内容分割成数组
         let items = removedBrackets.split("', '");
+
+        // 检查复选框是否被选中，如果是，将内容转换为大写
+        if (document.getElementById("uppercaseCheck").checked) {
+            items = items.map(item => item.toUpperCase());
+        }
 
         // 将数组转换为字符串，并在每个元素之间添加换行符
         let result = items.join("\n");
