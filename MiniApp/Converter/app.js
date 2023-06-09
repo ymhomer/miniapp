@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
             contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent + ";";
         }
         else {
-            contentToCopy = "textareaContent";
+            contentToCopy = textareaContent;
         }
 
         try {
