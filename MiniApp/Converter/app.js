@@ -2,48 +2,48 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("addQuote").addEventListener('click', convert);
 
     function convert() {
-        // 获取 textarea 的内容
+        // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
-        // 用换行符将内容分割成数组
+        // split content line by line
         let items = textareaContent.split("\n");
 
         // 去除每个元素的前后空格
         items = items.map(item => item.trim());
 
-        // 检查复选框是否被选中，如果是，将内容转换为大写
+        // If Uppercase
         if (document.getElementById("uppercaseCheck").checked) {
             items = items.map(item => item.toUpperCase());
         }
 
-        // 将数组转换为字符串，并在每个元素之间添加逗号和空格
+        // convert
         let result = "('" + items.join("', '") + "')";
 
-        // 将结果显示在原本的textarea
+        // update the result to textarea
         document.getElementById("ta_text").value = result;
     }
 
     document.getElementById("removeQuote").addEventListener('click', revert);
 
     function revert() {
-        // 获取 textarea 的内容
+        // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
-        // 移除前后的括号和引号
+        // remove Brackets
         let removedBrackets = textareaContent.slice(2, -2);
 
-        // 用逗号和空格将内容分割成数组
+        // split value
         let items = removedBrackets.split("', '");
 
-        // 检查复选框是否被选中，如果是，将内容转换为大写
+        // If Uppercase
         if (document.getElementById("uppercaseCheck").checked) {
             items = items.map(item => item.toUpperCase());
         }
 
-        // 将数组转换为字符串，并在每个元素之间添加换行符
+        // convert
         let result = items.join("\n");
 
-        // 将结果显示在原本的textarea
+        // update the result to textarea
         document.getElementById("ta_text").value = result;
     }
 
@@ -64,7 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             await navigator.clipboard.writeText(contentToCopy);
 
-            // (可选) 提示用户复制成功
+            // Message
+            document.getElementById("toast").value = "Copied! " + contentToCopy;
             var toastEl = new bootstrap.Toast(document.getElementById('toast'));
             toastEl.show();
         } catch (err) {
