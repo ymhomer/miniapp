@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 0);
     });
 
+    document.getElementById('ta_text').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            let status = checkTextareaStatus();
+            console.log("Status after paste: " + status);
+            alert("Status after paste: " + status);
+        }
+    });
+
     function convert() {
         // get textarea
         let textareaContent = document.getElementById("ta_text").value;
