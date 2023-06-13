@@ -98,9 +98,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let textareaContent = document.getElementById("ta_text").value.trim();
 
         // Check select
-        if (textareaContent.toUpperCase().startsWith("SELECT")) {
+        let regexSelect = /^SELECT \* FROM\s+/i;
+
+        if (regexSelect.test(textareaContent)) {
             return "select_statement";
         }
+        
         // Check quote
         else if (textareaContent.startsWith("('") && textareaContent.endsWith("')")) {
             return "converted";
