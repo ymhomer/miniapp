@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             let status = checkTextareaStatus();
             console.log("Status after paste: " + status);
+            alert("Status after paste: " + status);
         }, 0);
     });
 
