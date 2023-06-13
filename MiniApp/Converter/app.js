@@ -34,17 +34,20 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
             
             let status = checkTextareaStatus();
-            console.log("Status after paste: " + status);
-            alert("Status after paste: " + status);
+            document.getElementById('statusText').innerText = 'Status: '+ status;
+            //console.log("Status after paste: " + status);
+            //alert("Status after paste: " + status);
         }, 0);
     });
 
     document.getElementById('ta_text').addEventListener('keydown', function(event) {
+        let status = checkTextareaStatus();
+        document.getElementById('statusText').innerText = 'Status: '+ status;
+        /*
         if (event.key === 'Enter') {
-            let status = checkTextareaStatus();
             console.log("Status after paste: " + status);
             alert("Status after paste: " + status);
-        }
+        }*/
     });
 
     function convert() {
