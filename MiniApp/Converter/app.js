@@ -70,6 +70,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // update the result to textarea
         document.getElementById("ta_text").value = result;
+        
+        let status = checkTextareaStatus();
+        document.getElementById('statusText').innerText = 'Status: '+ status;
+
     }
 
     function revert() {
@@ -92,18 +96,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // update the result to textarea
         document.getElementById("ta_text").value = result;
+
+        let status = checkTextareaStatus();
+        document.getElementById('statusText').innerText = 'Status: '+ status;
     }
 
     function checkTextareaStatus() {
         let textareaContent = document.getElementById("ta_text").value.trim();
-
-        // Check select
         let regexSelect = /^SELECT \* FROM\s+/i;
 
+        // Check select
         if (regexSelect.test(textareaContent)) {
             return "select_statement";
         }
-        
+
         // Check quote
         else if (textareaContent.startsWith("('") && textareaContent.endsWith("')")) {
             return "converted";
