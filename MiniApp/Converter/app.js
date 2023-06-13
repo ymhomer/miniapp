@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let inputElement = document.getElementById('ta_text');
+    let status = checkTextareaStatus();
+
     document.getElementById("addQuote").addEventListener('click', convert);
     document.getElementById("removeQuote").addEventListener('click', revert);
 
@@ -33,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('ta_text').addEventListener('paste', function(event) {
         setTimeout(function() {
             
-            let status = checkTextareaStatus();
+            status = checkTextareaStatus();
             document.getElementById('statusText').innerText = 'Status: '+ status;
             //console.log("Status after paste: " + status);
             //alert("Status after paste: " + status);
@@ -41,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('ta_text').addEventListener('keydown', function(event) {
-        let status = checkTextareaStatus();
+        status = checkTextareaStatus();
         document.getElementById('statusText').innerText = 'Status: '+ status;
         /*
         if (event.key === 'Enter') {
@@ -54,24 +56,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
-        // split content line by line
-        let items = textareaContent.split("\n");
+        if (status == 'default'){
+            // split content line by line
+            let items = textareaContent.split("\n");
 
-        // 去除每个元素的前后空格
-        items = items.map(item => item.trim());
+            // 去除每个元素的前后空格
+            items = items.map(item => item.trim());
 
-        // If Uppercase
-        if (document.getElementById("uppercaseCheck").checked) {
-            items = items.map(item => item.toUpperCase());
+            // If Uppercase
+            if (document.getElementById("uppercaseCheck").checked) {
+                items = items.map(item => item.toUpperCase());
+            }
+
+            // convert
+            let result = "('" + items.join("', '") + "')";
+
+            // update the result to textarea
+            document.getElementById("ta_text").value = result;
         }
-
-        // convert
-        let result = "('" + items.join("', '") + "')";
-
-        // update the result to textarea
-        document.getElementById("ta_text").value = result;
+        else{
+            alert('Status: '+ status + '. Please confirm before convert.');
+        }
         
-        let status = checkTextareaStatus();
+        status = checkTextareaStatus();
         document.getElementById('statusText').innerText = 'Status: '+ status;
 
     }
@@ -80,24 +87,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
-        // remove Brackets
-        let removedBrackets = textareaContent.slice(2, -2);
+        if (status == 'converted'){
+            // remove Brackets
+            let removedBrackets = textareaContent.slice(2, -2);
 
-        // split value
-        let items = removedBrackets.split("', '");
+            // split value
+            let items = removedBrackets.split("', '");
 
-        // If Uppercase
-        if (document.getElementById("uppercaseCheck").checked) {
-            items = items.map(item => item.toUpperCase());
+            // If Uppercase
+            if (document.getElementById("uppercaseCheck").checked) {
+                items = items.map(item => item.toUpperCase());
+            }
+
+            // convert
+            let result = items.join("\n");
+
+            // update the result to textarea
+            document.getElementById("ta_text").value = result;
+        }
+        else{
+            alert('Status: '+ status + '. Please confirm before convert.');
         }
 
-        // convert
-        let result = items.join("\n");
-
-        // update the result to textarea
-        document.getElementById("ta_text").value = result;
-
-        let status = checkTextareaStatus();
+        status = checkTextareaStatus();
         document.getElementById('statusText').innerText = 'Status: '+ status;
     }
 
