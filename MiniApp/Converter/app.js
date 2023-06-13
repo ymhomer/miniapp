@@ -9,11 +9,19 @@ document.addEventListener('DOMContentLoaded', function() {
         let textareaContent = document.getElementById("ta_text").value;
         let tableContent = document.getElementById("txtTable").value;
         let conditionContent = document.getElementById("txtCondition").value;
-
         let contentToCopy = "";
 
         if (document.getElementById("selectCheck").checked) {
+            //if default --> not convert
+            if (status == 'default'){
+                convert();
+                textareaContent = document.getElementById("ta_text").value;
+            }
             contentToCopy = "SELECT * FROM " + tableContent + ' WHERE ' + conditionContent + ' IN ' + textareaContent + ";";
+
+            if (status == 'select_statement'){
+                contentToCopy = textareaContent;
+            }
         }
         else {
             contentToCopy = textareaContent;
