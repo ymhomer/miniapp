@@ -47,6 +47,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById("ta_text").value = result;
     }
 
+    //Pendding feature
+    let inputElement = document.getElementById('ta_text');
+
+    inputElement.addEventListener('paste', function(event) {
+        let pasteData = event.clipboardData.getData('text');
+        console.log(pasteData);
+
+        // Action
+    });
+
     document.getElementById("copyText").addEventListener('click', async () => {
         let textareaContent = document.getElementById("ta_text").value;
         let tableContent = document.getElementById("txtTable").value;
@@ -65,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await navigator.clipboard.writeText(contentToCopy);
 
             // Message
-            document.getElementById("toast").value = "Copied! " + contentToCopy;
+            document.getElementById("toast").querySelector('.toast-body').textContent = "Copied! " + contentToCopy;
             var toastEl = new bootstrap.Toast(document.getElementById('toast'));
             toastEl.show();
         } catch (err) {
