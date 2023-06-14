@@ -16,6 +16,9 @@ The website includes the following sections:
 - **About**: a page that explains the purpose and features of the website.
 - **Contact**: a page that provides a contact form for users to reach out.
 
+[Page URL](https://ymhomer.github.io/miniapp/)
+
+
 ### About Page
 
 The About page provides more details about GeDniM. It includes an image and a brief introduction about the website. Users can learn about the project's motivation, features, and how it was built.
