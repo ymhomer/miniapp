@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   fetch('/miniapp/README.md')
-    .then(response => response.text()) 
+    .then(response => {
+        console.log(response.url); // 输出你的 fetch 请求的 URL
+        return response.text();
+    })
     .then(text => {
       const html = marked(text); 
       document.getElementById('your-container-id').innerHTML = html;
