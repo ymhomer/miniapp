@@ -11,6 +11,7 @@ This website is named GeDniM, which stands for Genius, Medhavi & Mind. This expr
 
 The website includes the following sections:
 
+- **Mini App**: a dropdown menu that includes several mini apps for users to use.
 - **Mini Game**: a dropdown menu that includes several mini games for users to play.
 - **About**: a page that explains the purpose and features of the website.
 - **Contact**: a page that provides a contact form for users to reach out.
