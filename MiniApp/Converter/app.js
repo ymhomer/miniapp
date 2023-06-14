@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // split content line by line
             let items = textareaContent.split("\n");
 
-            // 去除每个元素的前后空格
+            // trim
             items = items.map(item => item.trim());
 
             // If Uppercase
