@@ -16,7 +16,7 @@ The website includes the following sections:
 - **About**: a page that explains the purpose and features of the website.
 - **Contact**: a page that provides a contact form for users to reach out.
 
-[Page URL](https://ymhomer.github.io/miniapp/)
+[Page URL Portal - Click here](https://ymhomer.github.io/miniapp/)
 
 ### About Page
 
