@@ -51,13 +51,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('ta_text').addEventListener('keydown', function(event) {
-        status = checkTextareaStatus();
-        document.getElementById('statusText').innerText = 'Status: '+ status;
-        /*
-        if (event.key === 'Enter') {
-            console.log("Status after paste: " + status);
-            alert("Status after paste: " + status);
-        }*/
+        setTimeout(function() {
+            status = checkTextareaStatus();
+            document.getElementById('statusText').innerText = 'Status: '+ status;
+        }, 1);
     });
 
     function convert() {
