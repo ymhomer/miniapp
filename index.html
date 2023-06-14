@@ -99,36 +99,42 @@
         </div>
     </footer>
     <script>
-        $(function() {
-            var iframe = $('#app-iframe');
-            var projectPath = window.location.origin + '/' + window.location.pathname.split('/')[1];
-            var defaultUrl = projectPath + '/About/index.html';
-            iframe.attr('src', defaultUrl);
-            document.getElementById("debuglog").innerHTML = defaultUrl;
-        
-            $('[logoUrl]').click(function(e) {
+        document.addEventListener("DOMContentLoaded", function() {
+	    var iframe = document.getElementById('app-iframe');
+	    var projectPath = window.location.origin + '/' + window.location.pathname.split('/')[1];
+	    var defaultUrl = projectPath + '/About/index.html';
+	    iframe.setAttribute('src', defaultUrl);
+	    document.getElementById("debuglog").innerHTML = defaultUrl;
+	  
+	    var logoUrlElements = document.querySelectorAll('[logoUrl]');
+	    for (let i = 0; i < logoUrlElements.length; i++) {
+	        logoUrlElements[i].addEventListener('click', function(e) {
 	            e.preventDefault();
-	            var logoUrl = $(this).attr('logoUrl');
+	            var logoUrl = logoUrlElements[i].getAttribute('logoUrl');
 	            var targetUrl = projectPath;
 	            window.location.href = targetUrl;
 	            document.getElementById("debuglog").innerHTML = targetUrl;
 	        });
+	    }
+	  
+	    var dataAppElements = document.querySelectorAll('[data-app]');
+	    for (let i = 0; i < dataAppElements.length; i++) {
+	        dataAppElements[i].addEventListener('click', function(e) {
+	            e.preventDefault();
+	            var app = dataAppElements[i].getAttribute('data-app');
+	            var targetUrl = projectPath + app + '/index.html';
+	            iframe.setAttribute('src', targetUrl);
+	            document.getElementById("debuglog").innerHTML = targetUrl;
+	        });
+	    }
+	});
 
-            $('[data-app]').click(function(e) {
-                e.preventDefault();
-                var app = $(this).data('app');
-                var targetUrl = projectPath + app + '/index.html';
-                iframe.attr('src', targetUrl);
-                document.getElementById("debuglog").innerHTML = targetUrl;
-            });
-        });
+	const myIframe = document.getElementById('app-iframe');
 
-      const myIframe = document.getElementById('app-iframe');
-
-	  myIframe.addEventListener('load', () => {
+	myIframe.addEventListener('load', () => {
 	    // 当 iframe 加载完成后，让 iframe 获得焦点
 	    myIframe.contentWindow.focus();
-	  });
+	});
     </script>
     <script type="module">
 	  // Import the functions you need from the SDKs you need
