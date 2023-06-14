@@ -7,6 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(text => {
       const html = marked(text); 
-      document.getElementById('your-container-id').innerHTML = html;
+      document.getElementById('Logs-md').innerHTML = html;
   });
 });
