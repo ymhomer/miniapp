@@ -18,7 +18,6 @@ The website includes the following sections:
 
 [Page URL](https://ymhomer.github.io/miniapp/)
 
-
 ### About Page
 
 The About page provides more details about GeDniM. It includes an image and a brief introduction about the website. Users can learn about the project's motivation, features, and how it was built.
