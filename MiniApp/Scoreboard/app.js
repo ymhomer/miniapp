@@ -12,11 +12,13 @@ document.addEventListener("DOMContentLoaded", function() {
     teamRed.addEventListener('click', function() {
         let currentScore = parseInt(scoreRed.textContent, 10);
         scoreRed.textContent = currentScore + 1;
+        checkScore('red');
     });
 
     teamBlue.addEventListener('click', function() {
         let currentScore = parseInt(scoreBlue.textContent, 10);
         scoreBlue.textContent = currentScore + 1;
+        checkScore('blue');
     });
 
     redD.addEventListener('click', function() {
@@ -38,4 +40,23 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    function checkScore(team) {
+        let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+        let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
+        
+        if (currentScore >= maxScore) {
+            let isConfirmed = confirm('Are you sure about this score?');
+            if (isConfirmed) {
+                alert(`${team === 'red' ? 'Red' : 'Blue'} team wins!`);
+                // TODO: Add the result to the history.
+            } else {
+                // Subtract the last added score.
+                if (team === 'red') {
+                    scoreRed.textContent = currentScore - 1;
+                } else {
+                    scoreBlue.textContent = currentScore - 1;
+                }
+            }
+        }
+    }
 });
