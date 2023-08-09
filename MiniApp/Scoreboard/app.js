@@ -20,9 +20,9 @@ document.addEventListener("DOMContentLoaded", function() {
     singleRoundScoreSlt.addEventListener('change', function() {
         singleRoundScore = singleRoundScoreSlt.value;
         if (singleRoundScore === '0') {
-            customScoreInput.style.display = 'block';
+            document.getElementById('singleRoundScoreCustomForm').style.display = 'block';
         } else {
-            customScoreInput.style.display = 'none';
+            document.getElementById('singleRoundScoreCustomForm').style.display = 'none';
         }
     });
 
