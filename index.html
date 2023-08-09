@@ -139,6 +139,14 @@
 	        });
 	    }
 
+	    function adjustIframeHeight(iframe) {
+		    iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+		}
+
+		myIframe.onload = function() {
+		    adjustIframeHeight(myIframe);
+		}
+
 	    //const myIframe = document.getElementById('app-iframe');
 	    myIframe.addEventListener('load', () => {
 	        myIframe.contentWindow.focus();
