@@ -12,9 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.onload = function() {
-  fetch('/miniapp/README.md')
+  var mdUrl = 'https://raw.githubusercontent.com/ymhomer/miniapp/master/README.md';
+  fetch(mdUrl)
     .then(response => {
-      console.log("123");
+      //console.log("123");
         console.log(response.url); // 输出你的 fetch 请求的 URL
         return response.text();
     })
