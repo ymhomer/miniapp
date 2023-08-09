@@ -3,11 +3,18 @@ body, html {
 }
 
 .container-fluid {
-    padding: 0;  /* 移除容器的内边距，确保全屏显示 */
+    padding: 0;
 }
 
 .display-1 {
-    font-size: 10rem;  /* 调整字体大小以适应全屏显示 */
+    font-size: calc(10vw);  /* 使用vw单位，使字体大小基于视口宽度 */
+}
+
+/* 当设备处于横屏模式时 */
+@media (orientation: landscape) {
+    .display-1 {
+        font-size: calc(10vh);  /* 使用vh单位，使字体大小基于视口高度 */
+    }
 }
 
 .dropdown-toggle {
@@ -20,37 +27,4 @@ body, html {
 
 .position-absolute.bottom-0 {
     bottom: 2vh;  /* 使用vh单位替代固定的像素值 */
-}
-
-/* 当屏幕宽度小于768px时 */
-@media (max-width: 767px) {
-    .display-1 {
-        font-size: 6rem;  /* 调整字体大小 */
-    }
-    .position-absolute.top-0 {
-        top: 1rem;  /* 调整上排按钮的位置 */
-    }
-    .position-absolute.bottom-0 {
-        bottom: 1rem;  /* 调整下排按钮的位置 */
-    }
-}
-
-/* 当屏幕宽度小于576px（Bootstrap的sm断点）时 */
-@media (max-width: 575px) {
-    .display-1 {
-        font-size: 4rem;  /* 调整字体大小 */
-    }
-    .position-absolute.top-0 {
-        top: 1rem;  /* 调整上排按钮的位置 */
-    }
-    .position-absolute.bottom-0 {
-        bottom: 1rem;  /* 调整下排按钮的位置 */
-    }
-}
-
-/* 当设备处于横屏模式时 */
-@media (orientation: landscape) {
-    .display-1 {
-        font-size: 5rem;  /* 调整字体大小 */
-    }
 }
