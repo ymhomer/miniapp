@@ -59,9 +59,16 @@
                 <!-- 单局总数 -->
                 <div class="mb-3">
                     <label for="singleRoundScore" class="form-label">Single Round Score</label>
-                    <select class="form-select" id="singleRoundScore">
-                        <!-- 这里可以添加您的 dropdown 选项 -->
-                    </select>
+                    <div class="dropdown">
+                      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        21
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><span class="dropdown-item disabled">Single Round Score</span></li>
+                        <li><a class="dropdown-item" href="#">11</a></li>
+                        <li><a class="dropdown-item" href="#">25</a></li>
+                      </ul>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="totalRounds" class="form-label">Total Rounds</label>
