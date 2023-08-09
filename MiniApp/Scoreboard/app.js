@@ -40,6 +40,11 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    document.getElementById('newGameBtn').addEventListener('click', function() {
+        scoreRed.textContent = '0';
+        scoreBlue.textContent = '0';
+    });
+
     function checkScore(team) {
         let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
