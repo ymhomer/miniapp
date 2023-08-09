@@ -27,14 +27,33 @@ window.onload = function() {
   fetch('https://api.github.com/repos/ymhomer/miniapp/commits')
     .then(response => response.json())
     .then(commits => {
-      let logsHtml = '';
-      commits.forEach(commit => {
-        logsHtml += `<div>
-                      <strong>${commit.commit.author.name}</strong>:
-                      ${commit.commit.message} 
-                      <em>${new Date(commit.commit.author.date).toLocaleDateString()}</em>
-                    </div>`;
-      });
-      document.getElementById('Logs-md').innerHTML = logsHtml;
+        let logsHtml = `
+            <table class="table table-striped table-responsive">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Author</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        commits.forEach(commit => {
+            logsHtml += `
+                <tr>
+                    <td>${new Date(commit.commit.author.date).toLocaleDateString()}</td>
+                    <td>${commit.commit.author.name}</td>
+                    <td>${commit.commit.message}</td>
+                </tr>
+            `;
+        });
+
+        logsHtml += `
+                </tbody>
+            </table>
+        `;
+
+        document.getElementById('Logs-md').innerHTML = logsHtml;
     });
 };
