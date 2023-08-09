@@ -27,13 +27,30 @@ body, html {
     .display-1 {
         font-size: 6rem;  /* 调整字体大小 */
     }
-    /* 其他针对小屏幕的样式调整 */
+    .position-absolute.top-0 {
+        top: 1rem;  /* 调整上排按钮的位置 */
+    }
+    .position-absolute.bottom-0 {
+        bottom: 1rem;  /* 调整下排按钮的位置 */
+    }
+}
+
+/* 当屏幕宽度小于576px（Bootstrap的sm断点）时 */
+@media (max-width: 575px) {
+    .display-1 {
+        font-size: 4rem;  /* 调整字体大小 */
+    }
+    .position-absolute.top-0 {
+        top: 1rem;  /* 调整上排按钮的位置 */
+    }
+    .position-absolute.bottom-0 {
+        bottom: 1rem;  /* 调整下排按钮的位置 */
+    }
 }
 
 /* 当设备处于横屏模式时 */
 @media (orientation: landscape) {
     .display-1 {
-        font-size: 8rem;  /* 调整字体大小 */
+        font-size: 5rem;  /* 调整字体大小 */
     }
-    /* 其他针对横屏模式的样式调整 */
 }
