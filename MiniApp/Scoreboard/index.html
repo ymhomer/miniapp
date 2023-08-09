@@ -9,6 +9,7 @@
     <title>Scoreboard</title>
     <!-- JS & CSS -->
     <link rel="stylesheet" href="/miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/miniapp/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/miniapp/MiniApp/Scoreboard/style.css">
     <script src="/miniapp/js/bootstrap.min.js"></script>
     <script src="/miniapp/js/bootstrap.bundle.min.js"></script>
@@ -29,9 +30,9 @@
     </div>
     <!-- 上排按钮，使用绝对定位 -->
     <div class="position-absolute top-0 start-50 translate-middle-x">
-        <button class="btn btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#settingsModal">Setting</button>
-        <button class="btn btn-secondary me-2">History</button>
-        <button class="btn btn-secondary">New Game</button>
+        <button class="btn btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="bi bi-gear"></i></button>
+        <button class="btn btn-secondary me-2"><i class="bi bi-clock-history"></i></button>
+        <button class="btn btn-secondary" id="newGameBtn">New Game</button>
     </div>
     <!-- mark -1 -->
     <div class="position-absolute bottom-0 start-0 mb-2">
