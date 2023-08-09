@@ -21,6 +21,20 @@ window.onload = function() {
     })
     .then(text => {
       const html = marked.parse(text); 
-      document.getElementById('Logs-md').innerHTML = html;
+      document.getElementById('README-md').innerHTML = html;
   });
+
+  fetch('https://api.github.com/repos/ymhomer/miniapp/commits')
+    .then(response => response.json())
+    .then(commits => {
+      let logsHtml = '';
+      commits.forEach(commit => {
+        logsHtml += `<div>
+                      <strong>${commit.commit.author.name}</strong>:
+                      ${commit.commit.message} 
+                      <em>${new Date(commit.commit.author.date).toLocaleDateString()}</em>
+                    </div>`;
+      });
+      document.getElementById('Logs-md').innerHTML = logsHtml;
+    });
 };
