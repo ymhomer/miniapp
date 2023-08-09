@@ -129,10 +129,10 @@
 	            document.getElementById("debuglog").innerHTML = targetUrl;
 	        });
 	    }
-	    
-	    const myIframe = document.getElementById('app-iframe');
-	    myIframe.addEventListener('load', () => {
-	        myIframe.contentWindow.focus();
+
+	    //const myIframe = document.getElementById('app-iframe');
+	    iframe.addEventListener('load', () => {
+	        iframe.contentWindow.focus();
 	    });
 
 	    document.getElementById('fullscreenBtn').addEventListener('click', function() {
