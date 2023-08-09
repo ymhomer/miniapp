@@ -58,6 +58,18 @@ document.addEventListener("DOMContentLoaded", function() {
 		    iframe.style.width = contentWidth + 'px';
 		}
 
+		window.addEventListener('resize', function() {
+		    // 检查是否处于全屏模式
+		    if (document.fullscreenElement) {
+		        // 如果是全屏模式，设置iframe的高度和宽度为100vh和100vw
+		        myIframe.style.height = '100vh';
+		        myIframe.style.width = '100vw';
+		    } else {
+		        // 如果不是全屏模式，调整iframe的高度以适应其内容
+		        adjustIframeHeight(myIframe);
+		    }
+		});
+
 	    //const myIframe = document.getElementById('app-iframe');
 	    myIframe.addEventListener('load', () => {
 	        myIframe.contentWindow.focus();
