@@ -20,7 +20,7 @@ window.onload = function() {
         return response.text();
     })
     .then(text => {
-      const html = marked(text); 
+      const html = marked.parse(text); 
       document.getElementById('Logs-md').innerHTML = html;
   });
 };
