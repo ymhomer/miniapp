@@ -3,7 +3,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const teamBlue = document.getElementById('teamBlue');
     const scoreRed = document.getElementById('scoreRed');
     const scoreBlue = document.getElementById('scoreBlue');
-    var singleRoundScore = document.getElementById('singleRoundScore').value;
+    const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
+    const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
+    var singleRoundScore = singleRoundScoreSlt.value;
 
     document.getElementById('teamRed').addEventListener('click', function() {
         let currentScore = parseInt(scoreRed.textContent, 10);
@@ -14,4 +16,14 @@ document.addEventListener("DOMContentLoaded", function() {
         let currentScore = parseInt(scoreBlue.textContent, 10);
         scoreBlue.textContent = currentScore + 1;
     });
+
+    singleRoundScoreSlt.addEventListener('change', function() {
+        const customScoreInput = document.getElementById('singleRoundScoreSlt');
+        if (singleRoundScore === '0') {
+            customScoreInput.style.display = 'block';
+        } else {
+            customScoreInput.style.display = 'none';
+        }
+    });
+
 });
