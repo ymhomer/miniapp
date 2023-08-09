@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     singleRoundScoreSlt.addEventListener('change', function() {
-        const customScoreInput = document.getElementById('singleRoundScoreSlt');
+        singleRoundScore = singleRoundScoreSlt.value;
         if (singleRoundScore === '0') {
             customScoreInput.style.display = 'block';
         } else {
