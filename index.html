@@ -178,8 +178,11 @@
 
 		document.addEventListener('fullscreenchange', function() {
 		    if (document.fullscreenElement) {
+		    	myIframe.style.height = '100vh';
+        		myIframe.style.width = '100vw';
 		        exitFullscreenBtn.style.display = 'block';
 		    } else {
+		    	adjustIframeHeight(myIframe);
 		        exitFullscreenBtn.style.display = 'none';
 		    }
 		});
