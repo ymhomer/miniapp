@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self';">
+    <meta http-equiv="X-Frame-Options" content="allow">
+    <title>Scoreboard</title>
+    <!-- JS & CSS -->
+    <link rel="stylesheet" href="/miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/miniapp/MiniApp/Scoreboard/style.css">
+    <script src="/miniapp/js/bootstrap.min.js"></script>
+    <script src="/miniapp/js/bootstrap.bundle.min.js"></script>
+    <script src="/miniapp/MiniApp/Scoreboard/app.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <div class="col-6 bg-danger text-white text-center d-flex flex-column justify-content-center">
+            <h1 id="scoreRed">0</h1>
+        </div>
+        <div class="col-6 bg-primary text-white text-center d-flex flex-column justify-content-center">
+            <h1 id="scoreBlue">0</h1>
+        </div>
+    </div>
+    <!-- 下排按钮 -->
+    <div class="row">
+        <div class="col-6 text-left">
+            <button class="btn btn-danger">-1</button>
+        </div>
+        <div class="col-6 text-right">
+            <button class="btn btn-primary">-1</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-4 text-left">
+            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">Setting</button>
+        </div>
+        <div class="col-4 text-center">
+            <button class="btn btn-secondary">History</button>
+        </div>
+        <div class="col-4 text-right">
+            <button class="btn btn-secondary">New Game</button>
+        </div>
+    </div>
+</div>
+
+<!-- 设置 Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalLabel">Setting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 单局总数 -->
+                <div class="mb-3">
+                    <label for="singleRoundScore" class="form-label">Single Round Score</label>
+                    <select class="form-select" id="singleRoundScore">
+                        <!-- 这里可以添加您的 dropdown 选项 -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="totalRounds" class="form-label">Total Rounds</label>
+                    <input type="number" class="form-control" id="totalRounds">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save setting</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
