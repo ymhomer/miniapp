@@ -7,3 +7,7 @@
 .navbar-brand-custom {
     padding-left: 15px;
 }
+
+#app-iframe {
+    min-height: 800px;
+}
