@@ -17,3 +17,7 @@ body, html {
 .dropdown-menu {
   width: 150px;
 }
+
+.position-absolute.bottom-0 {
+    bottom: 2vh;  /* 使用vh单位替代固定的像素值 */
+}
