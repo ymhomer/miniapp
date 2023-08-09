@@ -21,3 +21,19 @@ body, html {
 .position-absolute.bottom-0 {
     bottom: 2vh;  /* 使用vh单位替代固定的像素值 */
 }
+
+/* 当屏幕宽度小于768px时 */
+@media (max-width: 767px) {
+    .display-1 {
+        font-size: 6rem;  /* 调整字体大小 */
+    }
+    /* 其他针对小屏幕的样式调整 */
+}
+
+/* 当设备处于横屏模式时 */
+@media (orientation: landscape) {
+    .display-1 {
+        font-size: 8rem;  /* 调整字体大小 */
+    }
+    /* 其他针对横屏模式的样式调整 */
+}
