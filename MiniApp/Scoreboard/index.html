@@ -20,11 +20,11 @@
     <div class="row h-100">
         <!-- 左侧红色区域 -->
         <div class="col-6 bg-danger text-white d-flex align-items-center justify-content-center" id='teamRed'>
-            <h1 id="scoreRed" class="display-1">0</h1>
+            <h1 id="scoreRed" class="scoreTxt">0</h1>
         </div>
         <!-- 右侧蓝色区域 -->
         <div class="col-6 bg-primary text-white d-flex align-items-center justify-content-center" id='teamBlue'>
-            <h1 id="scoreBlue" class="display-1">0</h1>
+            <h1 id="scoreBlue" class="scoreTxt">0</h1>
         </div>
     </div>
     <!-- 上排按钮，使用绝对定位 -->
@@ -35,10 +35,10 @@
     </div>
     <!-- mark down -->
     <div class="position-absolute bottom-0 start-0 mb-2">
-        <button class="btn btn-danger">-1</button>
+        <button class="btn btn-danger" id="red-1">-1</button>
     </div>
     <div class="position-absolute bottom-0 end-0 mb-2">
-        <button class="btn btn-primary">-1</button>
+        <button class="btn btn-primary" id="blue-1">-1</button>
     </div>
 </div>
 
@@ -62,8 +62,8 @@
                      </select>
                 </div>
                 
-                <div class="mb-3">
-                    <label for="singleRoundScoreCustom" class="form-label">Single Round Score (Custom)</label>
+                <div class="mb-3" id="singleRoundScoreCustomForm">
+                    <label for="singleRoundScoreCustom" class="form-label" id="singleRoundScoreCustomlbl">Single Round Score (Custom)</label>
                     <input type="number" class="form-control" id="singleRoundScoreCustom" value="0" style="display: none;">
                 </div>
                 <div class="mb-3">

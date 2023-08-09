@@ -6,14 +6,14 @@ body, html {
     padding: 0;
 }
 
-.display-1 {
-    font-size: calc(10vw);  /* 使用vw单位，使字体大小基于视口宽度 */
+.scoreTxt {
+    font-size: calc(20vw);  /* 使用vw单位，使字体大小基于视口宽度 */
 }
 
 /* 当设备处于横屏模式时 */
 @media (orientation: landscape) {
-    .display-1 {
-        font-size: calc(10vh);  /* 使用vh单位，使字体大小基于视口高度 */
+    .scoreTxt {
+        font-size: calc(20vh);  /* 使用vh单位，使字体大小基于视口高度 */
     }
 }
 
