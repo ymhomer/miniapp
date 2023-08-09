@@ -19,11 +19,11 @@
 <div class="container-fluid h-100 position-relative"> <!-- 添加 position-relative -->
     <div class="row h-100">
         <!-- 左侧红色区域 -->
-        <div class="col-6 bg-danger text-white d-flex align-items-center justify-content-center">
+        <div class="col-6 bg-danger text-white d-flex align-items-center justify-content-center" id='teamRed'>
             <h1 id="scoreRed" class="display-1">0</h1>
         </div>
         <!-- 右侧蓝色区域 -->
-        <div class="col-6 bg-primary text-white d-flex align-items-center justify-content-center">
+        <div class="col-6 bg-primary text-white d-flex align-items-center justify-content-center" id='teamBlue'>
             <h1 id="scoreBlue" class="display-1">0</h1>
         </div>
     </div>
@@ -53,17 +53,13 @@
             <div class="modal-body">
                 <!-- 单局总数 -->
                 <div class="mb-3">
-                    <label for="singleRoundScore" class="form-label">Single Round Score</label>
-                    <div class="dropdown">
-                      <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        21
-                      </button>
-                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <li><span class="dropdown-item disabled">Single Round Score</span></li>
-                        <li><a class="dropdown-item" href="#">11</a></li>
-                        <li><a class="dropdown-item" href="#">25</a></li>
-                      </ul>
-                    </div>
+                    <label for="singleRoundScore" class="form-label" id="scoreSlt">Single Round Score</label>
+                     <select class="form-select" id="singleRoundScore">
+                       <option value="11">11</option>
+                       <option value="21" selected>21</option>
+                       <option value="25">25</option>
+                       <option value="0">Custom</option>
+                     </select>
                 </div>
                 <div class="mb-3">
                     <label for="totalRounds" class="form-label">Total Rounds</label>

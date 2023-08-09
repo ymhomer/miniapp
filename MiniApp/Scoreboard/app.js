@@ -1,19 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById('scoreRed').addEventListener('click', function() {
-        let currentScore = parseInt(this.textContent, 10);
-        this.textContent = currentScore + 1;
+    const teamRed = document.getElementById('teamRed');
+    const teamBlue = document.getElementById('teamBlue');
+    const scoreRed = document.getElementById('scoreRed');
+    const scoreBlue = document.getElementById('scoreBlue');
+    var singleRoundScore = document.getElementById('singleRoundScore').value;
+
+    document.getElementById('teamRed').addEventListener('click', function() {
+        let currentScore = parseInt(scoreRed.textContent, 10);
+        scoreRed.textContent = currentScore + 1;
     });
 
-    document.getElementById('scoreBlue').addEventListener('click', function() {
-        let currentScore = parseInt(this.textContent, 10);
-        this.textContent = currentScore + 1;
-    });
-
-    document.querySelectorAll('.dropdown-item').forEach(item => {
-      item.addEventListener('click', function() {
-        if (!this.classList.contains('disabled')) {
-          document.getElementById('dropdownMenuButton').textContent = this.textContent;
-        }
-      });
+    document.getElementById('teamBlue').addEventListener('click', function() {
+        let currentScore = parseInt(scoreBlue.textContent, 10);
+        scoreBlue.textContent = currentScore + 1;
     });
 });
