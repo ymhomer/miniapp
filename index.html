@@ -140,7 +140,7 @@
 	    }
 
 	    function adjustIframeHeight(iframe) {
-		    iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+		    iframe.style.height = (iframe.contentWindow.document.body.scrollHeight - 50) + 'px';
 		}
 
 		myIframe.onload = function() {
