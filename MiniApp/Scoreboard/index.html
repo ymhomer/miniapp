@@ -16,36 +16,29 @@
 </head>
 <body class="bg-light">
 
-<div class="container-fluid h-100">
+<div class="container-fluid h-100 position-relative"> <!-- 添加 position-relative -->
     <div class="row h-100">
-        <div class="row h-100">
-            <div class="col-6 bg-danger text-white text-center d-flex flex-column justify-content-center">
-                <h1 id="scoreRed" class="display-1">0</h1>
-            </div>
-            <div class="col-6 bg-primary text-white text-center d-flex flex-column justify-content-center">
-                <h1 id="scoreBlue" class="display-1">0</h1>
-            </div>
+        <!-- 左侧红色区域 -->
+        <div class="col-6 bg-danger text-white text-center d-flex flex-column justify-content-center">
+            <h1 id="scoreRed" class="display-1">0</h1>
         </div>
+        <!-- 右侧蓝色区域 -->
+        <div class="col-6 bg-primary text-white text-center d-flex flex-column justify-content-center">
+            <h1 id="scoreBlue" class="display-1">0</h1>
+        </div>
+    </div>
+    <!-- 上排按钮，使用绝对定位 -->
+    <div class="position-absolute top-0 start-50 translate-middle-x">
+        <button class="btn btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#settingsModal">Setting</button>
+        <button class="btn btn-secondary me-2">History</button>
+        <button class="btn btn-secondary">New Game</button>
     </div>
     <!-- mark down -->
-    <div class="row">
-        <div class="col-6 text-left">
-            <button class="btn btn-danger">-1</button>
-        </div>
-        <div class="col-6 text-right">
-            <button class="btn btn-primary">-1</button>
-        </div>
+    <div class="position-absolute bottom-0 start-0 mb-2">
+        <button class="btn btn-danger">-1</button>
     </div>
-    <div class="row">
-        <div class="col-4 text-left">
-            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">Setting</button>
-        </div>
-        <div class="col-4 text-center">
-            <button class="btn btn-secondary">History</button>
-        </div>
-        <div class="col-4 text-right">
-            <button class="btn btn-secondary">New Game</button>
-        </div>
+    <div class="position-absolute bottom-0 end-0 mb-2">
+        <button class="btn btn-primary">-1</button>
     </div>
 </div>
 
