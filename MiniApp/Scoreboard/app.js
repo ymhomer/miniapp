@@ -38,25 +38,29 @@ document.addEventListener("DOMContentLoaded", function() {
     //Add point
     teamRed.addEventListener('click', function() {
         //let currentScore = parseInt(scoreRed.textContent, 10);
-        redScoreElem.textContent = redscore + 1;
+        redScore += 1;
+        redScoreElem.textContent = redScore;
         checkScore('red');
     });
 
     teamBlue.addEventListener('click', function() {
         //let currentScore = parseInt(scoreBlue.textContent, 10);
-        blueScoreElem.textContent = bluescore + 1;
+        blueScore += 1;
+        blueScoreElem.textContent = blueScore;
         checkScore('blue');
     });
 
     //Deduct point
     redD.addEventListener('click', function() {
         //let currentScore = parseInt(scoreRed.textContent, 10);
-        redScoreElem.textContent = redscore - 1;
+        redScore -= 1;
+        redScoreElem.textContent = redScore;
     });
 
     blueD.addEventListener('click', function() {
         //let currentScore = parseInt(scoreBlue.textContent, 10);
-        blueScoreElem.textContent = bluescore - 1;
+        blueScore -= 1;
+        blueScoreElem.textContent = blueScore;
     });
 
     confirmEndGame.addEventListener('click', function() {
@@ -73,10 +77,12 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     cancelEndGame.addEventListener('click', function() {
-        if (redscore >= maxScore) {
-            redScoreElem.textContent = redscore-1;
-        } else if (bluescore >= maxScore) {
-            blueScoreElem.textContent = bluescore-1;
+        if (redScore >= maxScore) {
+            redScore-=1;
+            redScoreElem.textContent = redScore;
+        } else if (blueScore >= maxScore) {
+            blueScore-1;
+            blueScoreElem.textContent = blueScore;
         }
 
         confirmModal.hide();
