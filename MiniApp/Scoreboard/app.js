@@ -51,6 +51,8 @@ document.addEventListener("DOMContentLoaded", function() {
         
         if (currentScore >= maxScore) {
             let isConfirmed = confirm('Are you sure about this score?');
+            var modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            modal.show();
             if (isConfirmed) {
                 alert(`${team === 'red' ? 'Red' : 'Blue'} team wins!`);
                 // TODO: Add the result to the history.
@@ -64,4 +66,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     }
+
+    document.getElementById('confirmEndGame').addEventListener('click', function() {
+        // 在这里处理用户确认结束游戏的逻辑
+        modal.hide();
+    });
 });
