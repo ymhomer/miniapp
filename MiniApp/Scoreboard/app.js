@@ -20,12 +20,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
     //UI
-    newGameBtn.addEventListener('click', function() {
-        redScoreElem.textContent = '0';
-        blueScoreElem.textContent = '0';
-        redScore = parseInt(redScoreElem.textContent, 10);
-        blueScore = parseInt(blueScoreElem.textContent, 10);
-    });
+    newGameBtn.addEventListener('click', resetScores);
 
     //Setting
     singleRoundScoreSlt.addEventListener('change', function() {
@@ -39,14 +34,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
     //Add point
     teamRed.addEventListener('click', function() {
-        //let currentScore = parseInt(scoreRed.textContent, 10);
         redScore += 1;
         redScoreElem.textContent = redScore;
         checkScore('red');
     });
 
     teamBlue.addEventListener('click', function() {
-        //let currentScore = parseInt(scoreBlue.textContent, 10);
         blueScore += 1;
         blueScoreElem.textContent = blueScore;
         checkScore('blue');
@@ -54,13 +47,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     //Deduct point
     redD.addEventListener('click', function() {
-        //let currentScore = parseInt(scoreRed.textContent, 10);
         redScore -= 1;
         redScoreElem.textContent = redScore;
     });
 
     blueD.addEventListener('click', function() {
-        //let currentScore = parseInt(scoreBlue.textContent, 10);
         blueScore -= 1;
         blueScoreElem.textContent = blueScore;
     });
@@ -72,10 +63,10 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
 
-        //var victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
         victoryModal.show();
-
         confirmModal.hide();
+        //Will update score to history then resetScore
+        resetScores();
     });
 
     cancelEndGame.addEventListener('click', function() {
@@ -106,5 +97,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 confirmModal.show();
             }
         }
+    }
+
+    function resetScores() {
+        redScoreElem.textContent = '0';
+        blueScoreElem.textContent = '0';
+        redScore = parseInt(redScoreElem.textContent, 10);
+        blueScore = parseInt(blueScoreElem.textContent, 10);
     }
 });
