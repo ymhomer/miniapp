@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function() {
         let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
         
-        if (redScore >= targetScore || blueScore >= targetScore) {
+        if (parseInt(scoreRed.textContent, 10) >= targetScore || parseInt(scoreBlue.textContent, 10) >= targetScore) {
             var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
             confirmModal.show();
         }
@@ -109,5 +109,4 @@ document.addEventListener("DOMContentLoaded", function() {
         var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
         confirmModal.hide();
     });
-
 });
