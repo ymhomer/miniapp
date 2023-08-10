@@ -87,14 +87,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     //endGame(redScore > blueScore ? 'Red' : 'Blue');
                     confirmModal.show();
                 }
-            } else if (redScore >= maxScore || blueScore >= maxScore) {
+            } else if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
                 // 没有达到20:20，但一方达到了最大分数
                 //endGame(redScore > blueScore ? 'Red' : 'Blue');
                 confirmModal.show();
             }
         } else {
             // 不使用延长赛规则
-            if (redScore >= maxScore || blueScore >= maxScore) {
+            if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
                 //endGame(redScore > blueScore ? 'Red' : 'Blue');
                 confirmModal.show();
             }
