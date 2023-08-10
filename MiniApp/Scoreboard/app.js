@@ -49,8 +49,14 @@ document.addEventListener("DOMContentLoaded", function() {
         let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
         
+        if (redScore >= targetScore || blueScore >= targetScore) {
+            var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            confirmModal.show();
+        }
+/*
+
         if (currentScore >= maxScore) {
-            let isConfirmed = confirm('Are you sure about this score?');
+            //let isConfirmed = confirm('Are you sure about this score?');
             var modal = new bootstrap.Modal(document.getElementById('confirmModal'));
             modal.show();
             if (isConfirmed) {
@@ -64,11 +70,44 @@ document.addEventListener("DOMContentLoaded", function() {
                     scoreBlue.textContent = currentScore - 1;
                 }
             }
-        }
+        }*/
     }
-
+    /*
     document.getElementById('confirmEndGame').addEventListener('click', function() {
         // 在这里处理用户确认结束游戏的逻辑
         modal.hide();
+    });*/
+    document.getElementById('confirmEndGame').addEventListener('click', function() {
+        // 根据之前的逻辑确定哪个队伍胜利
+        if (redScore >= targetScore) {
+            document.getElementById('winningTeamName').textContent = "Red Team";
+        } else if (blueScore >= targetScore) {
+            document.getElementById('winningTeamName').textContent = "Blue Team";
+        }
+
+        // 显示胜利模态框
+        var victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
+        victoryModal.show();
+
+        // 关闭确认模态框
+        var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+        confirmModal.hide();
     });
+
+    document.getElementById('cancelEndGame').addEventListener('click', function() {
+        // 扣除最后添加的分数
+        if (redScore >= targetScore) {
+            redScore--;
+        } else if (blueScore >= targetScore) {
+            blueScore--;
+        }
+
+        // 更新分数显示
+        updateScoreDisplay();
+
+        // 关闭确认模态框
+        var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+        confirmModal.hide();
+    });
+
 });
