@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function() {
             redScore-=1;
             redScoreElem.textContent = redScore;
         } else if (blueScore >= maxScore) {
-            blueScore-1;
+            blueScore-=1;
             blueScoreElem.textContent = blueScore;
         }
 
@@ -91,10 +91,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function checkScore(team) {
-        /*
-        if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
-            confirmModal.show();//end game
-        }*/
+        maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
         if (useExtendedRuleChk.checked) {
             if (redScore >= (maxScore-1) && blueScore>= (maxScore-1)) {
