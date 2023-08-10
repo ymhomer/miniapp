@@ -7,16 +7,19 @@ body, html {
 }
 
 .scoreTxt {
-    font-size: calc(20vw);  /* 使用vw单位，使字体大小基于视口宽度 */
+    font-size: calc(30vw);
 }
 
 /* 当设备处于横屏模式时 */
 @media (orientation: landscape) {
     .scoreTxt {
-        font-size: calc(20vh);  /* 使用vh单位，使字体大小基于视口高度 */
+        font-size: calc(30vh);
+    }
+    .position-absolute.bottom-0 {
+        bottom: 2vh;
     }
 }
 
 .position-absolute.bottom-0 {
-    bottom: 2vh;  /* 使用vh单位替代固定的像素值 */
+    bottom: 2vh;
 }
