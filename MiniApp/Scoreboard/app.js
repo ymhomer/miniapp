@@ -80,9 +80,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });*/
     document.getElementById('confirmEndGame').addEventListener('click', function() {
         // 根据之前的逻辑确定哪个队伍胜利
-        if (scoreRed >= maxScore) {
+        if (parseInt(scoreRed.textContent, 10) >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
-        } else if (scoreBlue >= maxScore) {
+        } else if (parseInt(scoreBlue.textContent, 10) >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
 
