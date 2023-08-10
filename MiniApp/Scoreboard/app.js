@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function() {
         let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
         
-        if (parseInt(scoreRed.textContent, 10) >= targetScore || parseInt(scoreBlue.textContent, 10) >= targetScore) {
+        if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
             var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
             confirmModal.show();
         }
