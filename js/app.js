@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
 	    const fullscreenBtn = document.getElementById('fullscreenBtn');
+	    const newtabBtn = document.getElementById('newtabBtn');
 		const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
 		const myIframe = document.getElementById('app-iframe');
 		const fullscreenContainer = document.getElementById('fullscreenContainer');
@@ -92,6 +93,11 @@ document.addEventListener("DOMContentLoaded", function() {
 		    } else if (document.msExitFullscreen) {
 		        document.msExitFullscreen();
 		    }
+		});
+
+		newtabBtn.addEventListener('click', function() {
+		    var iframeSrc = document.getElementById('app-iframe').src;
+		    window.open(iframeSrc, '_blank');
 		});
 
 		document.addEventListener('fullscreenchange', function() {
