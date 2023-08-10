@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let redScore = parseInt(redScoreElem.textContent, 10);
     let blueScore = parseInt(blueScoreElem.textContent, 10);
     let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+    let winningTeam = null;
 
     //UI
     newGameBtn.addEventListener('click', resetScores);
@@ -36,13 +37,15 @@ document.addEventListener("DOMContentLoaded", function() {
     teamRed.addEventListener('click', function() {
         redScore += 1;
         redScoreElem.textContent = redScore;
-        checkScore('red');
+        //checkScore('red');
+        checkScore();
     });
 
     teamBlue.addEventListener('click', function() {
         blueScore += 1;
         blueScoreElem.textContent = blueScore;
-        checkScore('blue');
+        //checkScore('blue');
+        checkScore();
     });
 
     //Deduct point
@@ -82,9 +85,30 @@ document.addEventListener("DOMContentLoaded", function() {
             score = 0;
             scoreElem.textContent = '0';
         }
-        return score; // 返回修正后的分数
+        return score;
     }
 
+    function checkScore() {
+        let maxScoreValue = parseInt(singleRoundScoreSlt.value, 10);
+        if (singleRoundScoreSlt.value == 0) {
+            maxScoreValue = parseInt(singleRoundScoreCustom.value, 10);
+        }
+
+        if (redScore >= maxScoreValue || blueScore >= maxScoreValue) {
+            if (extendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
+                return;
+            }
+
+            if (redScore > blueScore) {
+                winningTeam = 'red';
+            } else {
+                winningTeam = 'blue';
+            }
+
+            confirmModal.show();
+        }
+    }
+/*
     function checkScore(team) {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
@@ -101,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 confirmModal.show();
             }
         }
-    }
+    }*/
 
     function decrementScoreIfExceedsMax(score, scoreElem, maxScoreValue) {
         if (score >= maxScoreValue) {
