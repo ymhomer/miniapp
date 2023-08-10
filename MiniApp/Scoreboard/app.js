@@ -62,9 +62,14 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     confirmEndGame.addEventListener('click', function() {
-        if (redScore >= maxScore) {
+        /*if (redScore >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
         } else if (blueScore >= maxScore) {
+            document.getElementById('winningTeamName').textContent = "Blue Team";
+        }*/
+        if (redScore >= blueScore) {
+            document.getElementById('winningTeamName').textContent = "Red Team";
+        } else
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
 
@@ -89,12 +94,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function checkScore() {
-        let maxScoreValue = parseInt(singleRoundScoreSlt.value, 10);
+        /*let maxScoreValue = parseInt(singleRoundScoreSlt.value, 10);
         if (singleRoundScoreSlt.value == 0) {
             maxScoreValue = parseInt(singleRoundScoreCustom.value, 10);
-        }
+        }*/
+        maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
-        if (redScore >= maxScoreValue || blueScore >= maxScoreValue) {
+        if (redScore >= maxScore || blueScore >= maxScore) {
             if (useExtendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
                 return;
             }
