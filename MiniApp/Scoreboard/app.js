@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }*/
         if (redScore >= blueScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
-        } else
+        } else if (blueScore >= redScore) {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
 
