@@ -72,14 +72,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     cancelEndGame.addEventListener('click', function() {
-        if (redScore >= maxScore) {
-            redScore-=1;
-            redScoreElem.textContent = redScore;
-        } else if (blueScore >= maxScore) {
-            blueScore-=1;
-            blueScoreElem.textContent = blueScore;
-        }
-
+        redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
+        blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
         confirmModal.hide();
     });
 
@@ -107,6 +101,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 confirmModal.show();
             }
         }
+    }
+
+    function decrementScoreIfExceedsMax(score, scoreElem, maxScoreValue) {
+        if (score >= maxScoreValue) {
+            score -= 1;
+            scoreElem.textContent = score;
+        }
+        return score;
     }
 
     function resetScores() {
