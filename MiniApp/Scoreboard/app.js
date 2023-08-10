@@ -77,6 +77,6 @@ document.addEventListener("DOMContentLoaded", function() {
             scoreBlue.textContent = parseInt(scoreBlue.textContent,10)-1;
         }
 
-        confirmModall.hide();
+        confirmModal.hide();
     });
 });
