@@ -23,6 +23,8 @@ document.addEventListener("DOMContentLoaded", function() {
     newGameBtn.addEventListener('click', function() {
         redScoreElem.textContent = '0';
         blueScoreElem.textContent = '0';
+        redScore = parseInt(redScoreElem.textContent, 10);
+        blueScore = parseInt(blueScoreElem.textContent, 10);
     });
 
     //Setting
