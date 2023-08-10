@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const redD = document.getElementById('red-1');
     const blueD = document.getElementById('blue-1');
     const newGameBtn = document.getElementById('newGameBtn');
+    const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
     const confirmEndGame = document.getElementById('confirmEndGame');
     const cancelEndGame = document.getElementById('cancelEndGame');
@@ -50,14 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
         scoreBlue.textContent = '0';
     });
 
-    function checkScore(team) {
-        if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
-            confirmModal.show();
-        }
-    }
-
     confirmEndGame.addEventListener('click', function() {
-        // 根据之前的逻辑确定哪个队伍胜利
         if (parseInt(scoreRed.textContent, 10) >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
         } else if (parseInt(scoreBlue.textContent, 10) >= maxScore) {
@@ -79,4 +73,31 @@ document.addEventListener("DOMContentLoaded", function() {
 
         confirmModal.hide();
     });
+
+    function checkScore(team) {
+        /*
+        if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
+            confirmModal.show();//end game
+        }*/
+
+        if (useExtendedRuleChk.checked) {
+            if (parseInt(scoreRed.textContent, 10) >= (maxScore-1) && parseInt(scoreBlue.textContent, 10) >= (maxScore-1)) {
+                if (Math.abs(parseInt(scoreRed.textContent, 10) - parseInt(scoreBlue.textContent, 10)) >= 2) {
+                    // 一方领先2分，可以结束比赛
+                    //endGame(redScore > blueScore ? 'Red' : 'Blue');
+                    confirmModal.show();
+                }
+            } else if (redScore >= maxScore || blueScore >= maxScore) {
+                // 没有达到20:20，但一方达到了最大分数
+                //endGame(redScore > blueScore ? 'Red' : 'Blue');
+                confirmModal.show();
+            }
+        } else {
+            // 不使用延长赛规则
+            if (redScore >= maxScore || blueScore >= maxScore) {
+                //endGame(redScore > blueScore ? 'Red' : 'Blue');
+                confirmModal.show();
+            }
+        }
+    }
 });
