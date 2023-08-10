@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         if (redScore >= maxScoreValue || blueScore >= maxScoreValue) {
-            if (extendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
+            if (useExtendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
                 return;
             }
 
