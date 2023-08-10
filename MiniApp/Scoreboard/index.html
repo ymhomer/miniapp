@@ -17,18 +17,15 @@
 </head>
 <body class="bg-light">
 
-<div class="container-fluid h-100 position-relative"> <!-- 添加 position-relative -->
+<div class="container-fluid h-100 position-relative">
     <div class="row h-100">
-        <!-- 左侧红色区域 -->
         <div class="col-6 bg-danger text-white d-flex align-items-center justify-content-center" id='teamRed'>
             <h1 id="scoreRed" class="scoreTxt">0</h1>
         </div>
-        <!-- 右侧蓝色区域 -->
         <div class="col-6 bg-primary text-white d-flex align-items-center justify-content-center" id='teamBlue'>
             <h1 id="scoreBlue" class="scoreTxt">0</h1>
         </div>
     </div>
-    <!-- 上排按钮，使用绝对定位 -->
     <div class="position-absolute top-0 start-50 translate-middle-x">
         <button class="btn btn-secondary me-1" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="bi bi-gear"></i></button>
         <button class="btn btn-secondary me-1"><i class="bi bi-clock-history"></i></button>
