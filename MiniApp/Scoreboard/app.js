@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
     const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
     var singleRoundScore = singleRoundScoreSlt.value;
+    var maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
     teamRed.addEventListener('click', function() {
         let currentScore = parseInt(scoreRed.textContent, 10);
@@ -46,8 +47,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function checkScore(team) {
-        let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-        let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
+        //let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+        //let currentScore = team === 'red' ? parseInt(scoreRed.textContent, 10) : parseInt(scoreBlue.textContent, 10);
         
         if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
             var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
@@ -79,9 +80,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });*/
     document.getElementById('confirmEndGame').addEventListener('click', function() {
         // 根据之前的逻辑确定哪个队伍胜利
-        if (redScore >= targetScore) {
+        if (scoreRed >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
-        } else if (blueScore >= targetScore) {
+        } else if (scoreBlue >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
 
@@ -96,10 +97,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.getElementById('cancelEndGame').addEventListener('click', function() {
         // 扣除最后添加的分数
-        if (redScore >= targetScore) {
-            redScore--;
-        } else if (blueScore >= targetScore) {
-            blueScore--;
+        if (scoreRed >= maxScore) {
+            scoreRed--;
+        } else if (scoreBlue >= maxScore) {
+            scoreBlue--;
         }
 
         // 更新分数显示
