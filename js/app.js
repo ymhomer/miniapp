@@ -49,24 +49,19 @@ document.addEventListener("DOMContentLoaded", function() {
 		    const iframe = myIframe;
 		    const iframeContent = iframe.contentWindow || iframe.contentDocument;
 
-		    // 获取iframe内容的实际尺寸
 		    const contentHeight = iframeContent.document.body.scrollHeight;
 		    const contentWidth = iframeContent.document.body.scrollWidth;
 
-		    // 调整iframe的尺寸
 		    iframe.style.height = contentHeight + 'px';
 		    iframe.style.width = contentWidth + 'px';
 		}
 
 		window.addEventListener('resize', function() {
-		    // 检查是否处于全屏模式
 		    if (document.fullscreenElement) {
-		        // 如果是全屏模式，设置iframe的高度和宽度为100vh和100vw
 		        myIframe.style.height = '100vh';
 		        myIframe.style.width = '100vw';
 		    } else {
-		        // 如果不是全屏模式，调整iframe的高度以适应其内容
-		        adjustIframeHeight(myIframe);
+		        adjustIframeSize(myIframe);
 		    }
 		});
 
@@ -105,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function() {
         		myIframe.style.width = '100vw';
 		        exitFullscreenBtn.style.display = 'block';
 		    } else {
-		    	adjustIframeHeight(myIframe);
+		    	adjustIframeSize(myIframe);
 		        exitFullscreenBtn.style.display = 'none';
 		    }
 		});
