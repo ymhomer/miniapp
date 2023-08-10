@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const redD = document.getElementById('red-1');
     const blueD = document.getElementById('blue-1');
     const newGameBtn = document.getElementById('newGameBtn');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
     const confirmEndGame = document.getElementById('confirmEndGame');
     const cancelEndGame = document.getElementById('cancelEndGame');
     const scoreRed = document.getElementById('scoreRed');
@@ -51,7 +52,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function checkScore(team) {
         if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
-            var confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
             confirmModal.show();
         }
     }
@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", function() {
         var victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
         victoryModal.show();
 
-        var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
         confirmModal.hide();
     });
 
@@ -78,7 +77,6 @@ document.addEventListener("DOMContentLoaded", function() {
             scoreBlue.textContent = parseInt(scoreBlue.textContent,10)-1;
         }
 
-        var confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
-        confirmModal.hide();
+        confirmModall.hide();
     });
 });
