@@ -97,9 +97,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.getElementById('cancelEndGame').addEventListener('click', function() {
         // 扣除最后添加的分数
-        if (scoreRed >= maxScore) {
+        if (parseInt(scoreRed.textContent, 10) >= maxScore) {
             scoreRed.textContent = parseInt(scoreRed.textContent,10)-1;
-        } else if (scoreBlue >= maxScore) {
+        } else if (parseInt(scoreBlue.textContent, 10) >= maxScore) {
             scoreBlue.textContent = parseInt(scoreBlue.textContent,10)-1;
         }
 
