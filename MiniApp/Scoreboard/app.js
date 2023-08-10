@@ -6,37 +6,26 @@ document.addEventListener("DOMContentLoaded", function() {
     const newGameBtn = document.getElementById('newGameBtn');
     const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
     const confirmEndGame = document.getElementById('confirmEndGame');
     const cancelEndGame = document.getElementById('cancelEndGame');
-    const scoreRed = document.getElementById('scoreRed');
-    const scoreBlue = document.getElementById('scoreBlue');
+    const redScoreElem = document.getElementById('redScoreElem');
+    const blueScoreElem = document.getElementById('blueScoreElem');
     const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
     const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
-    var singleRoundScore = singleRoundScoreSlt.value;
-    var maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+    let singleRoundScore = singleRoundScoreSlt.value;
+    //Score
+    let redScore = parseInt(redScoreElem.textContent, 10);
+    let blueScore = parseInt(blueScoreElem.textContent, 10);
+    let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
-    teamRed.addEventListener('click', function() {
-        let currentScore = parseInt(scoreRed.textContent, 10);
-        scoreRed.textContent = currentScore + 1;
-        checkScore('red');
+    //UI
+    newGameBtn.addEventListener('click', function() {
+        redScoreElem.textContent = '0';
+        blueScoreElem.textContent = '0';
     });
 
-    teamBlue.addEventListener('click', function() {
-        let currentScore = parseInt(scoreBlue.textContent, 10);
-        scoreBlue.textContent = currentScore + 1;
-        checkScore('blue');
-    });
-
-    redD.addEventListener('click', function() {
-        let currentScore = parseInt(scoreRed.textContent, 10);
-        scoreRed.textContent = currentScore - 1;
-    });
-
-    blueD.addEventListener('click', function() {
-        let currentScore = parseInt(scoreBlue.textContent, 10);
-        scoreBlue.textContent = currentScore - 1;
-    });
-
+    //Setting
     singleRoundScoreSlt.addEventListener('change', function() {
         singleRoundScore = singleRoundScoreSlt.value;
         if (singleRoundScore === '0') {
@@ -46,29 +35,48 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    newGameBtn.addEventListener('click', function() {
-        scoreRed.textContent = '0';
-        scoreBlue.textContent = '0';
+    //Add point
+    teamRed.addEventListener('click', function() {
+        //let currentScore = parseInt(scoreRed.textContent, 10);
+        redScoreElem.textContent = redscore + 1;
+        checkScore('red');
+    });
+
+    teamBlue.addEventListener('click', function() {
+        //let currentScore = parseInt(scoreBlue.textContent, 10);
+        blueScoreElem.textContent = bluescore + 1;
+        checkScore('blue');
+    });
+
+    //Deduct point
+    redD.addEventListener('click', function() {
+        //let currentScore = parseInt(scoreRed.textContent, 10);
+        redScoreElem.textContent = redscore - 1;
+    });
+
+    blueD.addEventListener('click', function() {
+        //let currentScore = parseInt(scoreBlue.textContent, 10);
+        blueScoreElem.textContent = bluescore - 1;
     });
 
     confirmEndGame.addEventListener('click', function() {
-        if (parseInt(scoreRed.textContent, 10) >= maxScore) {
+        if (redScore >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
-        } else if (parseInt(scoreBlue.textContent, 10) >= maxScore) {
+        } else if (blueScore >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
 
-        var victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
+        //var victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
         victoryModal.show();
 
         confirmModal.hide();
     });
 
     cancelEndGame.addEventListener('click', function() {
-        if (parseInt(scoreRed.textContent, 10) >= maxScore) {
-            scoreRed.textContent = parseInt(scoreRed.textContent,10)-1;
-        } else if (parseInt(scoreBlue.textContent, 10) >= maxScore) {
-            scoreBlue.textContent = parseInt(scoreBlue.textContent,10)-1;
+        if (redscore >= maxScore) {
+            redScoreElem.textContent = redscore-1;
+        } else if (bluescore >= maxScore) {
+            blueScoreElem.textContent = bluescore-1;
         }
 
         confirmModal.hide();
@@ -81,21 +89,15 @@ document.addEventListener("DOMContentLoaded", function() {
         }*/
 
         if (useExtendedRuleChk.checked) {
-            if (parseInt(scoreRed.textContent, 10) >= (maxScore-1) && parseInt(scoreBlue.textContent, 10) >= (maxScore-1)) {
-                if (Math.abs(parseInt(scoreRed.textContent, 10) - parseInt(scoreBlue.textContent, 10)) >= 2) {
-                    // 一方领先2分，可以结束比赛
-                    //endGame(redScore > blueScore ? 'Red' : 'Blue');
+            if (redScore >= (maxScore-1) && blueScore>= (maxScore-1)) {
+                if (Math.abs(redScore - blueScore) >= 2) {
                     confirmModal.show();
                 }
-            } else if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
-                // 没有达到20:20，但一方达到了最大分数
-                //endGame(redScore > blueScore ? 'Red' : 'Blue');
+            } else if (redScore >= maxScore || blueScore >= maxScore) {
                 confirmModal.show();
             }
         } else {
-            // 不使用延长赛规则
-            if (parseInt(scoreRed.textContent, 10) >= maxScore || parseInt(scoreBlue.textContent, 10) >= maxScore) {
-                //endGame(redScore > blueScore ? 'Red' : 'Blue');
+            if (redScore >= maxScore || blueScore >= maxScore) {
                 confirmModal.show();
             }
         }
