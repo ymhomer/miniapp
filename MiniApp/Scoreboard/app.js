@@ -48,11 +48,13 @@ document.addEventListener("DOMContentLoaded", function() {
     //Deduct point
     redD.addEventListener('click', function() {
         redScore -= 1;
+        redScore = checkNegative(redScore, redScoreElem);
         redScoreElem.textContent = redScore;
     });
 
     blueD.addEventListener('click', function() {
         blueScore -= 1;
+        blueScore = checkNegative(blueScore, blueScoreElem);
         blueScoreElem.textContent = blueScore;
     });
 
@@ -80,6 +82,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         confirmModal.hide();
     });
+
+    function checkNegative(score, scoreElem) {
+    if (score < 0) {
+            score = 0;
+            scoreElem.textContent = '0';
+        }
+        return score; // 返回修正后的分数
+    }
 
     function checkScore(team) {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
