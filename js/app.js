@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
 	const mainNav = document.getElementById('mainNav');
-	//var navLinks = mainNav.querySelectorAll('a.nav-link');
-	var dropdownItems = mainNav.querySelectorAll('a.dropdown-item');
+	var navLinks = mainNav.querySelectorAll('a.dropdown-item');
+	//var dropdownItems = mainNav.querySelectorAll('a.dropdown-item');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const newtabBtn = document.getElementById('newtabBtn');
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
@@ -35,8 +35,17 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    dropdownItems.forEach(function(item) {
+    /*dropdownItems.forEach(function(item) {
         item.addEventListener('click', function() {
+            var navbarToggler = document.querySelector('.navbar-toggler');
+            if (navbarToggler && navbarToggler.getAttribute('aria-expanded') === 'true') {
+                navbarToggler.click();
+            }
+        });
+    });*/
+
+    navLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
             var navbarToggler = document.querySelector('.navbar-toggler');
             if (navbarToggler && navbarToggler.getAttribute('aria-expanded') === 'true') {
                 navbarToggler.click();
