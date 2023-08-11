@@ -102,6 +102,16 @@ document.addEventListener("DOMContentLoaded", function() {
         confirmModal.hide();
     });
 
+    document.getElementById('confirmModal').addEventListener('hide.bs.modal', function (event) {
+        // 检查是否是由于点击外部导致的
+        if (event.relatedTarget) {
+            maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+            redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
+            blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
+            // event.preventDefault();
+        }
+    });
+
     document.getElementById('confirmModalClose').addEventListener('click', function() {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
