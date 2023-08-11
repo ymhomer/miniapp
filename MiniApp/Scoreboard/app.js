@@ -35,8 +35,8 @@ document.addEventListener("DOMContentLoaded", function() {
     //UI
     newGameBtn.addEventListener('click', resetScores);
 
-    document.getElementById('historyBtn').addEventListener('click', historyPanel);
-    document.getElementById('ConfirmModalOKBtn').addEventListener('click', historyPanel);
+    document.getElementById('historyBtn').addEventListener('click', showHistory);
+    document.getElementById('ConfirmModalOKBtn').addEventListener('click', showHistory);
 
     //Setting
     singleRoundScoreSlt.addEventListener('change', function() {
@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
         updateHistoryButton();
     }
 
-    function showHistory(winningTeam, score) {
+    function showHistory() {
         const historyTableBody = document.getElementById('historyTableBody');
         historyTableBody.innerHTML = ''; // Clear previous entries
 
