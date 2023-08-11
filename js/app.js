@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	//const mainNav = document.getElementById('mainNav');
 	//var navLinks = mainNav.querySelectorAll('a.dropdown-item');
 	//var dropdownItems = mainNav.querySelectorAll('a.dropdown-item');
+	debugger;
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const newtabBtn = document.getElementById('newtabBtn');
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
