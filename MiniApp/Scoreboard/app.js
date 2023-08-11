@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let gameHistory = [];
 
-    //Modal setting
+    /*Modal setting
     var modals = document.querySelectorAll('.modal');
     
     modals.forEach(function(modalElement) {
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
             backdrop: 'static',
             keyboard: false
         });
-    });
+    });*/
 
     //UI
     newGameBtn.addEventListener('click', resetScores);
