@@ -2,7 +2,7 @@
 
 ## Introduction
 
-GeDniM is a personal project created to showcase web development skills and knowledge. It is built using HTML, CSS, JavaScript, Bootstrap, and jQuery. This website includes various mini games and demos for you to explore.
+GeDniM is a personal project created to showcase web development skills and knowledge. It is built using HTML, CSS, JavaScript, Bootstrap, and ~jQuery~. This website includes various mini games and demos for you to explore.
 
 ## About This Site
 
