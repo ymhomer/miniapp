@@ -22,6 +22,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let gameHistory = [];
 
+    //Modal setting
+    var modals = document.querySelectorAll('.modal');
+    
+    modals.forEach(function(modalElement) {
+        var modalInstance = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    });
+
     //UI
     newGameBtn.addEventListener('click', resetScores);
 
@@ -64,11 +74,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     confirmEndGame.addEventListener('click', function() {
-        /*if (redScore >= maxScore) {
-            document.getElementById('winningTeamName').textContent = "Red Team";
-        } else if (blueScore >= maxScore) {
-            document.getElementById('winningTeamName').textContent = "Blue Team";
-        }*/
         let winningTeam = "";
         let score = "";
 
@@ -88,6 +93,14 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     cancelEndGame.addEventListener('click', function() {
+        maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+        redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
+        blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
+        confirmModal.hide();
+    });
+
+    document.getElementById('confirmModalClose').addEventListener('click', function() {
+        maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
         blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
         confirmModal.hide();
