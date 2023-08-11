@@ -69,12 +69,18 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (blueScore >= maxScore) {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }*/
+        let winningTeam = "";
+        let score = "";
+
         if (redScore >= blueScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
         } else if (blueScore >= redScore) {
             document.getElementById('winningTeamName').textContent = "Blue Team";
         }
+        winningTeam = document.getElementById('winningTeamName').textContent;
+        score = redScore + "/" + blueScore;
 
+        addGameToHistory(winningTeam, score);
         victoryModal.show();
         confirmModal.hide();
         //Will update score to history then resetScore
@@ -116,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function() {
             confirmModal.show();
         }
     }
-    
+
     function updateHistoryButton() {
         const historyBtn = document.getElementById('historyBtn');
         if (gameHistory.length > 0) {
