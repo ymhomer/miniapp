@@ -1,6 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
-    var isLocal = (window.location.protocol === "file:");
-    //var basePath = isLocal ? "../../" : "/miniapp/";
+var isLocal = (window.location.protocol === "file:");
     var basePath = isLocal ? "../miniapp/" : "/miniapp/";
 
     function getResourcePath(filename) {
@@ -10,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function loadScript(src) {
         var script = document.createElement('script');
         script.src = src;
-        script.async = false; // 如果您希望脚本按顺序执行，请设置为false
+        script.defer = true; // Ensure the script is executed after the DOM is parsed
         document.head.appendChild(script);
     }
 
@@ -21,17 +19,16 @@ document.addEventListener("DOMContentLoaded", function() {
         document.head.appendChild(link);
     }
 
-    // 定义要加载的JS和CSS文件
+    // Define the JS and CSS files to load
     var scripts = ["js/bootstrap.bundle.min.js", "js/app.js"];
     var stylesheets = ["css/bootstrap.min.css", "css/index.css"];
 
-    // 加载JS文件
+    // Load JS files
     scripts.forEach(function(script) {
         loadScript(getResourcePath(script));
     });
 
-    // 加载CSS文件
+    // Load CSS files
     stylesheets.forEach(function(stylesheet) {
         loadStylesheet(getResourcePath(stylesheet));
     });
-});
