@@ -35,6 +35,9 @@ document.addEventListener("DOMContentLoaded", function() {
     //UI
     newGameBtn.addEventListener('click', resetScores);
 
+    document.getElementById('historyBtn').addEventListener('click', historyPanel);
+    document.getElementById('ConfirmModalOKBtn').addEventListener('click', historyPanel);
+
     //Setting
     singleRoundScoreSlt.addEventListener('change', function() {
         singleRoundScore = singleRoundScoreSlt.value;
@@ -115,10 +118,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function checkScore() {
-        /*let maxScoreValue = parseInt(singleRoundScoreSlt.value, 10);
-        if (singleRoundScoreSlt.value == 0) {
-            maxScoreValue = parseInt(singleRoundScoreCustom.value, 10);
-        }*/
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
         if (redScore >= maxScore || blueScore >= maxScore) {
@@ -150,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
         updateHistoryButton();
     }
 
-    document.getElementById('historyBtn').addEventListener('click', function() {
+    function showHistory(winningTeam, score) {
         const historyTableBody = document.getElementById('historyTableBody');
         historyTableBody.innerHTML = ''; // Clear previous entries
 
@@ -172,26 +171,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             historyTableBody.appendChild(row);
         });
-    });
-
-/*
-    function checkScore(team) {
-        maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-
-        if (useExtendedRuleChk.checked) {
-            if (redScore >= (maxScore-1) && blueScore>= (maxScore-1)) {
-                if (Math.abs(redScore - blueScore) >= 2) {
-                    confirmModal.show();
-                }
-            } else if (redScore >= maxScore || blueScore >= maxScore) {
-                confirmModal.show();
-            }
-        } else {
-            if (redScore >= maxScore || blueScore >= maxScore) {
-                confirmModal.show();
-            }
-        }
-    }*/
+    }    
 
     function decrementScoreIfExceedsMax(score, scoreElem, maxScoreValue) {
         if (score >= maxScoreValue) {
