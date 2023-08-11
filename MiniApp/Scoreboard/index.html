@@ -28,7 +28,7 @@
     </div>
     <div class="position-absolute top-0 start-50 translate-middle-x d-flex justify-content-between" style="width: 70%; max-width: 200px;">
         <button class="btn btn-secondary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#settingsModal"><img src="/miniapp/icon/gear.svg" alt="Settings" width="24" height="24"></button>
-        <button class="btn btn-secondary btn-sm me-1"><img src="/miniapp/icon/clock.svg" alt="History" width="24" height="24"></button>
+        <button class="btn btn-secondary btn-sm me-1" id="historyBtn" data-bs-toggle="modal" data-bs-target="#historyModal" disabled><img src="/miniapp/icon/clock.svg" alt="History" width="24" height="24"></button>
         <button class="btn btn-secondary btn-sm" id="newGameBtn">New Game</button>
     </div>
     <!-- mark -1 -->
@@ -78,7 +78,31 @@
         </div>
     </div>
 </div>
-<!-- Modal -->
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="historyModalLabel">Game History</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Rows will be added here dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ConfirmModal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">

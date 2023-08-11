@@ -20,6 +20,8 @@ document.addEventListener("DOMContentLoaded", function() {
     let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
     let winningTeam = null;
 
+    let gameHistory = [];
+
     //UI
     newGameBtn.addEventListener('click', resetScores);
 
@@ -114,6 +116,45 @@ document.addEventListener("DOMContentLoaded", function() {
             confirmModal.show();
         }
     }
+    
+    function updateHistoryButton() {
+        const historyBtn = document.getElementById('historyBtn');
+        if (gameHistory.length > 0) {
+            historyBtn.removeAttribute('disabled');
+        } else {
+            historyBtn.setAttribute('disabled', 'true');
+        }
+    }
+
+    function addGameToHistory(winningTeam, score) {
+        gameHistory.push({ team: winningTeam, score: score });
+        updateHistoryButton();
+    }
+
+    document.getElementById('historyBtn').addEventListener('click', function() {
+        const historyTableBody = document.getElementById('historyTableBody');
+        historyTableBody.innerHTML = ''; // Clear previous entries
+
+        gameHistory.forEach(record => {
+            const row = document.createElement('tr');
+            if (record.team === 'Red Team') {
+                row.classList.add('table-danger');
+            } else {
+                row.classList.add('table-primary');
+            }
+
+            const teamCell = document.createElement('td');
+            teamCell.textContent = record.team;
+            row.appendChild(teamCell);
+
+            const scoreCell = document.createElement('td');
+            scoreCell.textContent = record.score;
+            row.appendChild(scoreCell);
+
+            historyTableBody.appendChild(row);
+        });
+    });
+
 /*
     function checkScore(team) {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
