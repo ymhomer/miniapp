@@ -22,6 +22,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let gameHistory = [];
 
+    let modalClosedByButton = false;
+
     /*Modal setting
     var modals = document.querySelectorAll('.modal');
     
@@ -79,6 +81,7 @@ document.addEventListener("DOMContentLoaded", function() {
     confirmEndGame.addEventListener('click', function() {
         let winningTeam = "";
         let score = "";
+        modalClosedByButton = true;
 
         if (redScore >= blueScore) {
             document.getElementById('winningTeamName').textContent = "Red Team";
@@ -96,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     cancelEndGame.addEventListener('click', function() {
+        modalClosedByButton = true;
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
         blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
@@ -103,13 +107,13 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     document.getElementById('confirmModal').addEventListener('hide.bs.modal', function (event) {
-        // 检查是否是由于点击外部导致的
-        if (event.relatedTarget) {
+        if (!modalClosedByButton) {
             maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
             redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
             blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
             // event.preventDefault();
         }
+        modalClosedByButton = false;
     });
 
     document.getElementById('confirmModalClose').addEventListener('click', function() {
