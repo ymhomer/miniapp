@@ -1,31 +1,3 @@
-//Element
-const teamRed = document.getElementById('teamRed');
-const teamBlue = document.getElementById('teamBlue');
-const redD = document.getElementById('red-1');
-const blueD = document.getElementById('blue-1');
-const newGameBtn = document.getElementById('newGameBtn');
-const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
-const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-const confirmModalClose = new bootstrap.Modal(document.getElementById('confirmModalClose'));
-const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
-const confirmEndGame = document.getElementById('confirmEndGame');
-const cancelEndGame = document.getElementById('cancelEndGame');
-const redScoreElem = document.getElementById('redScoreElem');
-const blueScoreElem = document.getElementById('blueScoreElem');
-const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
-const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
-let singleRoundScore = singleRoundScoreSlt.value;
-//Score
-let redScore = parseInt(redScoreElem.textContent, 10);
-let blueScore = parseInt(blueScoreElem.textContent, 10);
-//let scoreAtEndGame = { redScore: 0, blueScore: 0 };
-let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-let winningTeam = null;
-
-let gameHistory = [];
-
-let modalClosedByButton = false;
-
 // Function
 function checkScore() {
     maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
@@ -207,5 +179,33 @@ newGameBtn.addEventListener('click', resetScores);
 
 // Main
 document.addEventListener("DOMContentLoaded", function() {
+    //Element
+    const teamRed = document.getElementById('teamRed');
+    const teamBlue = document.getElementById('teamBlue');
+    const redD = document.getElementById('red-1');
+    const blueD = document.getElementById('blue-1');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmModalClose = new bootstrap.Modal(document.getElementById('confirmModalClose'));
+    const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
+    const confirmEndGame = document.getElementById('confirmEndGame');
+    const cancelEndGame = document.getElementById('cancelEndGame');
+    const redScoreElem = document.getElementById('redScoreElem');
+    const blueScoreElem = document.getElementById('blueScoreElem');
+    const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
+    const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
+    let singleRoundScore = singleRoundScoreSlt.value;
+    //Score
+    let redScore = parseInt(redScoreElem.textContent, 10);
+    let blueScore = parseInt(blueScoreElem.textContent, 10);
+    //let scoreAtEndGame = { redScore: 0, blueScore: 0 };
+    let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+    let winningTeam = null;
+
+    let gameHistory = [];
+
+    let modalClosedByButton = false;
+    
     setUpEventHandlers();
 });
