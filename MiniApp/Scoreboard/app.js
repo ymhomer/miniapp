@@ -1,91 +1,42 @@
-// Function
-function checkScore() {
-    maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+document.addEventListener("DOMContentLoaded", function() {
+    const teamRed = document.getElementById('teamRed');
+    const teamBlue = document.getElementById('teamBlue');
+    const redD = document.getElementById('red-1');
+    const blueD = document.getElementById('blue-1');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
+    const confirmEndGame = document.getElementById('confirmEndGame');
+    const cancelEndGame = document.getElementById('cancelEndGame');
+    const redScoreElem = document.getElementById('redScoreElem');
+    const blueScoreElem = document.getElementById('blueScoreElem');
+    const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
+    const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
+    let singleRoundScore = singleRoundScoreSlt.value;
+    //Score
+    let redScore = parseInt(redScoreElem.textContent, 10);
+    let blueScore = parseInt(blueScoreElem.textContent, 10);
+    //let scoreAtEndGame = { redScore: 0, blueScore: 0 };
+    let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+    let winningTeam = null;
 
-    if (redScore >= maxScore || blueScore >= maxScore) {
-            //scoreAtEndGame.redScore = redScore;
-            //scoreAtEndGame.blueScore = blueScore;
+    let gameHistory = [];
 
-        if (useExtendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
-            return;
-        }
+    let modalClosedByButton = false;
 
-        if (redScore > blueScore) {
-            winningTeam = 'red';
-        } else {
-            winningTeam = 'blue';
-        }
+    /*Modal setting
+    var modals = document.querySelectorAll('.modal');
+    
+    modals.forEach(function(modalElement) {
+        var modalInstance = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+    });*/
 
-        confirmModal.show();
-    }
-}
-
-function updateHistoryButton() {
-    const historyBtn = document.getElementById('historyBtn');
-    if (gameHistory.length > 0) {
-        historyBtn.removeAttribute('disabled');
-    } else {
-        historyBtn.setAttribute('disabled', 'true');
-    }
-}
-
-function addGameToHistory(winningTeam, score) {
-    gameHistory.push({ team: winningTeam, score: score });
-    updateHistoryButton();
-}
-
-function showHistory() {
-    const historyTableBody = document.getElementById('historyTableBody');
-    historyTableBody.innerHTML = ''; // Clear previous entries
-
-    gameHistory.forEach(record => {
-        const row = document.createElement('tr');
-        if (record.team === 'Red Team') {
-            row.classList.add('table-danger');
-        } else {
-            row.classList.add('table-primary');
-        }
-
-        const teamCell = document.createElement('td');
-        teamCell.textContent = record.team;
-        row.appendChild(teamCell);
-
-        const scoreCell = document.createElement('td');
-        scoreCell.textContent = record.score;
-        row.appendChild(scoreCell);
-
-        historyTableBody.appendChild(row);
-    });
-}    
-
-function decrementScoreIfExceedsMax(score, scoreElem, maxScoreValue) {
-    if (score >= maxScoreValue) {
-        score -= 1;
-        scoreElem.textContent = score;
-    }
-    return score;
-}
-
-function updateScore(scoreElem, amount, maxScoreValue) {
-    let score = parseInt(scoreElem.textContent, 10);
-    score += amount;
-    score = Math.max(0, score);
-    //score = Math.min(score, maxScoreValue);
-    checkScore();
-    scoreElem.textContent = score;
-    return score;
-}
-
-function resetScores() {
-    redScoreElem.textContent = '0';
-    blueScoreElem.textContent = '0';
-    redScore = parseInt(redScoreElem.textContent, 10);
-    blueScore = parseInt(blueScoreElem.textContent, 10);
-}
-
-// Event Handler
-function setUpEventHandlers() {
-newGameBtn.addEventListener('click', resetScores);
+    //UI
+    newGameBtn.addEventListener('click', resetScores);
 
     document.getElementById('historyBtn').addEventListener('click', showHistory);
     document.getElementById('ConfirmModalOKBtn').addEventListener('click', showHistory);
@@ -119,6 +70,35 @@ newGameBtn.addEventListener('click', resetScores);
         blueScore = updateScore(blueScoreElem, -1, maxScore);
     });
 
+    /*
+    //Add point
+    teamRed.addEventListener('click', function() {
+        redScore += 1;
+        redScoreElem.textContent = redScore;
+        //checkScore('red');
+        checkScore();
+    });
+
+    teamBlue.addEventListener('click', function() {
+        blueScore += 1;
+        blueScoreElem.textContent = blueScore;
+        //checkScore('blue');
+        checkScore();
+    });
+
+    //Deduct point
+    redD.addEventListener('click', function() {
+        redScore -= 1;
+        redScore = checkNegative(redScore, redScoreElem);
+        redScoreElem.textContent = redScore;
+    });
+
+    blueD.addEventListener('click', function() {
+        blueScore -= 1;
+        blueScore = checkNegative(blueScore, blueScoreElem);
+        blueScoreElem.textContent = blueScore;
+    });
+    */
     confirmEndGame.addEventListener('click', function() {
         let winningTeam = "";
         let score = "";
@@ -142,8 +122,13 @@ newGameBtn.addEventListener('click', resetScores);
     cancelEndGame.addEventListener('click', function() {
         modalClosedByButton = true;
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-        redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
-        blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
+        
+        if(redScore>blueScore){
+            redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
+        }
+        else {
+            blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
+        }
         //redScore = scoreAtEndGame.redScore;
         //blueScore = scoreAtEndGame.blueScore;
         //redScoreElem.textContent = redScore;
@@ -154,7 +139,7 @@ newGameBtn.addEventListener('click', resetScores);
         confirmModal.hide();
     });
 
-    confirmModal.addEventListener('hide.bs.modal', function (event) {
+    document.getElementById('confirmModal').addEventListener('hide.bs.modal', function (event) {
         if (!modalClosedByButton) {
             maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
             redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
@@ -164,43 +149,94 @@ newGameBtn.addEventListener('click', resetScores);
         modalClosedByButton = false;
     });
 
-    confirmModalClose.addEventListener('click', function() {
+    document.getElementById('confirmModalClose').addEventListener('click', function() {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
         blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
         confirmModal.hide();
     });
-}
+    
+    function checkScore() {
+        maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
-// Main
-document.addEventListener("DOMContentLoaded", function() {
-    const teamRed = document.getElementById('teamRed');
-    const teamBlue = document.getElementById('teamBlue');
-    const redD = document.getElementById('red-1');
-    const blueD = document.getElementById('blue-1');
-    const newGameBtn = document.getElementById('newGameBtn');
-    const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
-    const confirmModalClose = document.getElementById('confirmModalClose');
-    const confirmEndGame = document.getElementById('confirmEndGame');
-    const cancelEndGame = document.getElementById('cancelEndGame');
-    const redScoreElem = document.getElementById('redScoreElem');
-    const blueScoreElem = document.getElementById('blueScoreElem');
-    const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
-    const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
-    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
+        if (redScore >= maxScore || blueScore >= maxScore) {
+            //scoreAtEndGame.redScore = redScore;
+            //scoreAtEndGame.blueScore = blueScore;
+            
+            if (useExtendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
+                return;
+            }
 
-    //Element
-    let singleRoundScore = singleRoundScoreSlt.value;
-    //Score
-    let redScore = parseInt(redScoreElem.textContent, 10);
-    let blueScore = parseInt(blueScoreElem.textContent, 10);
-    //let scoreAtEndGame = { redScore: 0, blueScore: 0 };
-    let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-    let winningTeam = null;
+            if (redScore > blueScore) {
+                winningTeam = 'red';
+            } else {
+                winningTeam = 'blue';
+            }
 
-    let gameHistory = [];
+            confirmModal.show();
+        }
+    }
 
-    let modalClosedByButton = false;
-    setUpEventHandlers();
+    function updateHistoryButton() {
+        const historyBtn = document.getElementById('historyBtn');
+        if (gameHistory.length > 0) {
+            historyBtn.removeAttribute('disabled');
+        } else {
+            historyBtn.setAttribute('disabled', 'true');
+        }
+    }
+
+    function addGameToHistory(winningTeam, score) {
+        gameHistory.push({ team: winningTeam, score: score });
+        updateHistoryButton();
+    }
+
+    function showHistory() {
+        const historyTableBody = document.getElementById('historyTableBody');
+        historyTableBody.innerHTML = ''; // Clear previous entries
+
+        gameHistory.forEach(record => {
+            const row = document.createElement('tr');
+            if (record.team === 'Red Team') {
+                row.classList.add('table-danger');
+            } else {
+                row.classList.add('table-primary');
+            }
+
+            const teamCell = document.createElement('td');
+            teamCell.textContent = record.team;
+            row.appendChild(teamCell);
+
+            const scoreCell = document.createElement('td');
+            scoreCell.textContent = record.score;
+            row.appendChild(scoreCell);
+
+            historyTableBody.appendChild(row);
+        });
+    }    
+
+    function decrementScoreIfExceedsMax(score, scoreElem, maxScoreValue) {
+        if (score >= maxScoreValue) {
+            score -= 1;
+            scoreElem.textContent = score;
+        }
+        return score;
+    }
+
+    function updateScore(scoreElem, amount, maxScoreValue) {
+        let score = parseInt(scoreElem.textContent, 10);
+        score += amount;
+        score = Math.max(0, score);
+        //score = Math.min(score, maxScoreValue);
+        checkScore();
+        scoreElem.textContent = score;
+        return score;
+    }
+
+    function resetScores() {
+        redScoreElem.textContent = '0';
+        blueScoreElem.textContent = '0';
+        redScore = parseInt(redScoreElem.textContent, 10);
+        blueScore = parseInt(blueScoreElem.textContent, 10);
+    }
 });
