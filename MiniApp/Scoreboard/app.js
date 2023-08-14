@@ -1,17 +1,4 @@
 //Element
-const teamRed = document.getElementById('teamRed');
-const teamBlue = document.getElementById('teamBlue');
-const redD = document.getElementById('red-1');
-const blueD = document.getElementById('blue-1');
-const newGameBtn = document.getElementById('newGameBtn');
-const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
-const confirmModalClose = document.getElementById('confirmModalClose');
-const confirmEndGame = document.getElementById('confirmEndGame');
-const cancelEndGame = document.getElementById('cancelEndGame');
-const redScoreElem = document.getElementById('redScoreElem');
-const blueScoreElem = document.getElementById('blueScoreElem');
-const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
-const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
 let singleRoundScore = singleRoundScoreSlt.value;
 //Score
 let redScore = parseInt(redScoreElem.textContent, 10);
@@ -205,6 +192,19 @@ newGameBtn.addEventListener('click', resetScores);
 
 // Main
 document.addEventListener("DOMContentLoaded", function() {
+    const teamRed = document.getElementById('teamRed');
+    const teamBlue = document.getElementById('teamBlue');
+    const redD = document.getElementById('red-1');
+    const blueD = document.getElementById('blue-1');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
+    const confirmModalClose = document.getElementById('confirmModalClose');
+    const confirmEndGame = document.getElementById('confirmEndGame');
+    const cancelEndGame = document.getElementById('cancelEndGame');
+    const redScoreElem = document.getElementById('redScoreElem');
+    const blueScoreElem = document.getElementById('blueScoreElem');
+    const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
+    const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
     const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
     setUpEventHandlers();
