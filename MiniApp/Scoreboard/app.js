@@ -5,9 +5,7 @@ const redD = document.getElementById('red-1');
 const blueD = document.getElementById('blue-1');
 const newGameBtn = document.getElementById('newGameBtn');
 const useExtendedRuleChk = document.getElementById('useExtendedRuleChk');
-const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 const confirmModalClose = document.getElementById('confirmModalClose');
-const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
 const confirmEndGame = document.getElementById('confirmEndGame');
 const cancelEndGame = document.getElementById('cancelEndGame');
 const redScoreElem = document.getElementById('redScoreElem');
@@ -207,5 +205,7 @@ newGameBtn.addEventListener('click', resetScores);
 
 // Main
 document.addEventListener("DOMContentLoaded", function() {
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
     setUpEventHandlers();
 });
