@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
     //Score
     let redScore = parseInt(redScoreElem.textContent, 10);
     let blueScore = parseInt(blueScoreElem.textContent, 10);
+    //let scoreAtEndGame = { redScore: 0, blueScore: 0 };
     let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
     let winningTeam = null;
 
@@ -123,6 +124,10 @@ document.addEventListener("DOMContentLoaded", function() {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
         redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
         blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
+        //redScore = scoreAtEndGame.redScore;
+        //blueScore = scoreAtEndGame.blueScore;
+        //redScoreElem.textContent = redScore;
+        //blueScoreElem.textContent = blueScore;
         confirmModal.hide();
     });
 
@@ -155,6 +160,9 @@ document.addEventListener("DOMContentLoaded", function() {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
 
         if (redScore >= maxScore || blueScore >= maxScore) {
+            //scoreAtEndGame.redScore = redScore;
+            //scoreAtEndGame.blueScore = blueScore;
+            
             if (useExtendedRuleChk.checked && Math.abs(redScore - blueScore) < 2) {
                 return;
             }
