@@ -128,6 +128,9 @@ document.addEventListener("DOMContentLoaded", function() {
         //blueScore = scoreAtEndGame.blueScore;
         //redScoreElem.textContent = redScore;
         //blueScoreElem.textContent = blueScore;
+        //maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+        //redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
+        //blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
         confirmModal.hide();
     });
 
