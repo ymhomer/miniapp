@@ -219,7 +219,8 @@ document.addEventListener("DOMContentLoaded", function() {
         let score = parseInt(scoreElem.textContent, 10);
         score += amount;
         score = Math.max(0, score);
-        score = Math.min(score, maxScoreValue);
+        //score = Math.min(score, maxScoreValue);
+        checkScore();
         scoreElem.textContent = score;
         return score;
     }
