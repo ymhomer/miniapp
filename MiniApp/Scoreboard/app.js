@@ -142,13 +142,8 @@ newGameBtn.addEventListener('click', resetScores);
     cancelEndGame.addEventListener('click', function() {
         modalClosedByButton = true;
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-        
-        if(redScore>blueScore){
-            redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
-        }
-        else {
-            blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
-        }
+        redScore = decrementScoreIfExceedsMax(redScore, redScoreElem, maxScore);
+        blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
         //redScore = scoreAtEndGame.redScore;
         //blueScore = scoreAtEndGame.blueScore;
         //redScoreElem.textContent = redScore;
