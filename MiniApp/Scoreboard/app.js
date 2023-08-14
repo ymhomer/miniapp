@@ -1,3 +1,15 @@
+let singleRoundScore = singleRoundScoreSlt.value;
+//Score
+let redScore = parseInt(redScoreElem.textContent, 10);
+let blueScore = parseInt(blueScoreElem.textContent, 10);
+//let scoreAtEndGame = { redScore: 0, blueScore: 0 };
+let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
+let winningTeam = null;
+
+let gameHistory = [];
+
+let modalClosedByButton = false;
+
 // Function
 function checkScore() {
     maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
@@ -195,17 +207,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const blueScoreElem = document.getElementById('blueScoreElem');
     const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
     const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
-    let singleRoundScore = singleRoundScoreSlt.value;
-    //Score
-    let redScore = parseInt(redScoreElem.textContent, 10);
-    let blueScore = parseInt(blueScoreElem.textContent, 10);
-    //let scoreAtEndGame = { redScore: 0, blueScore: 0 };
-    let maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
-    let winningTeam = null;
-
-    let gameHistory = [];
-
-    let modalClosedByButton = false;
     
+
     setUpEventHandlers();
 });
