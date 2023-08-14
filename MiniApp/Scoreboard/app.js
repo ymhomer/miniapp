@@ -61,12 +61,12 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     teamBlue.addEventListener('click', function() {
-        redScore = updateScore(blueScoreElem, 1, maxScore);
+        blueScore = updateScore(blueScoreElem, 1, maxScore);
         checkScore();
     });
 
     blueD.addEventListener('click', function() {
-        redScore = updateScore(blueScoreElem, -1, maxScore);
+        blueScore = updateScore(blueScoreElem, -1, maxScore);
     });
 
     /*
