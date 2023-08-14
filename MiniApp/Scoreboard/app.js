@@ -50,6 +50,26 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    //Update score
+    teamRed.addEventListener('click', function() {
+        redScore = updateScore(redScoreElem, 1, maxScore);
+        checkScore();
+    });
+
+    redD.addEventListener('click', function() {
+        redScore = updateScore(redScoreElem, -1, maxScore);
+    });
+
+    teamBlue.addEventListener('click', function() {
+        redScore = updateScore(blueScoreElem, 1, maxScore);
+        checkScore();
+    });
+
+    blueD.addEventListener('click', function() {
+        redScore = updateScore(blueScoreElem, -1, maxScore);
+    });
+
+    /*
     //Add point
     teamRed.addEventListener('click', function() {
         redScore += 1;
@@ -77,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function() {
         blueScore = checkNegative(blueScore, blueScoreElem);
         blueScoreElem.textContent = blueScore;
     });
-
+    */
     confirmEndGame.addEventListener('click', function() {
         let winningTeam = "";
         let score = "";
@@ -122,14 +142,14 @@ document.addEventListener("DOMContentLoaded", function() {
         blueScore = decrementScoreIfExceedsMax(blueScore, blueScoreElem, maxScore);
         confirmModal.hide();
     });
-
+    /*
     function checkNegative(score, scoreElem) {
     if (score < 0) {
             score = 0;
             scoreElem.textContent = '0';
         }
         return score;
-    }
+    }*/
 
     function checkScore() {
         maxScore = singleRoundScore !== '0' ? parseInt(singleRoundScore, 10) : parseInt(singleRoundScoreCustom.value, 10);
@@ -192,6 +212,15 @@ document.addEventListener("DOMContentLoaded", function() {
             score -= 1;
             scoreElem.textContent = score;
         }
+        return score;
+    }
+
+    function updateScore(scoreElem, amount, maxScoreValue) {
+        let score = parseInt(scoreElem.textContent, 10);
+        score += amount;
+        score = Math.max(0, score);
+        score = Math.min(score, maxScoreValue);
+        scoreElem.textContent = score;
         return score;
     }
 
