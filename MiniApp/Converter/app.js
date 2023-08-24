@@ -35,7 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var toastEl = new bootstrap.Toast(document.getElementById('toast'));
             toastEl.show();
         } catch (err) {
-            console.error('Failed to copy text: ', err);
+            //console.error('Failed to copy text: ', err);
+            alert('An error occurred while copying the text. Please try again. ' + err);
         }
     });
 
