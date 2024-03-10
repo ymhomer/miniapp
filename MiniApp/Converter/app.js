@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     let inputElement = document.getElementById('ta_text');
+    let formulaInput = document.getElementById('simplifiedConcatFomular');
     let status = checkTextareaStatus();
 
     document.getElementById("addQuote").addEventListener('click', convert);
@@ -39,6 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (err) {
             //console.error('Failed to copy text: ', err);
             alert('An error occurred while copying the text. Please try again. ' + err);
+        }
+    });
+
+    document.getElementById('simplified-concat-tab').addEventListener('click', function() {
+        if (status === 'converted') {
+            revert();
         }
     });
 
@@ -154,4 +161,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return true;
     }
+
+    document.getElementById('toSimplifiedConcat').addEventListener('click', simplifiedConcat);
+
+    function simplifiedConcat() {
+        let textLines = inputElement.value.split('\n');
+        let formula = formulaInput.value;
+        let result = textLines.map(line => formula.replace('%', line)).join('\n');
+
+        if (!formula.includes('%')) {
+            alert('The formula must contain a "%" character to indicate where to insert text.');
+            return;
+        }
+
+        document.getElementById('simplifiedConcatResult').value = result;
+
+        document.getElementById('simplifiedConcatResult').style.display = 'block';
+        document.getElementById('copySimplifiedResult').style.display = 'block';
+    }
+
+    document.getElementById('copySimplifiedResult').addEventListener('click', async function() {
+        let resultContent = document.getElementById('simplifiedConcatResult').value;
+        if (!resultContent) {
+            alert('The result area is empty. There is nothing to copy.');
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(resultContent);
+            
+            showToast('Content copied to clipboard!');
+        } catch (err) {
+            alert('An error occurred while copying the text. Please try again. ' + err);
+        }
+    });
+
+    function showToast(message) {
+        let toastBody = document.querySelector('.toast .toast-body');
+        if (toastBody) {
+            toastBody.textContent = message;
+            let toastEl = new bootstrap.Toast(document.querySelector('.toast'));
+            toastEl.show();
+        }
+    }
+
 });

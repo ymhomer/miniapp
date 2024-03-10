@@ -34,22 +34,47 @@
           <input class="form-check-input" type="checkbox" id="uppercaseCheck">
           <label class="form-check-label" for="uppercaseCheck">Uppercase</label>
         </div>
-        <div class="btn-group mt-2" role="group" aria-label="btnSQL">
-          <button type="button" class="btn btn-primary" id="addQuote">Add Quote</button>
-          <button type="button" class="btn btn-primary" id="removeQuote">Remove Quote</button>
-        </div>
-        <div class="form-check form-switch mt-2">
-          <input class="form-check-input" type="checkbox" id="selectCheck">
-          <label class="form-check-label" for="selectCheck">(Copy with SELECT) <small>SELECT * FROM</small></label>
-          <input type="text" id="txtTable" value="" placeholder="TABLE" class="mt-1" />
-          <label class="form-check-label" for="selectCheck_Condition"><small>WHERE</small></label>
-          <input type="text" id="txtCondition" value="" placeholder="Condition" class="mt-1" />
-        </div>
-        <div class="btn-group mt-2" role="group" aria-label="btnSQL2">
-          <button type="button" class="btn btn-outline-primary" id="copyText">Copy</button>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs mt-3" id="quoteQueryTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="quote-query-tab" data-bs-toggle="tab" href="#quoteQuery" role="tab" aria-controls="quoteQuery" aria-selected="true">Quote & Query</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="simplified-concat-tab" data-bs-toggle="tab" href="#simplifiedConcat" role="tab" aria-controls="simplifiedConcat" aria-selected="false">Simplified Concatenation</a>
+          </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content" id="myTabContent">
+          <div class="tab-pane fade show active" id="quoteQuery" role="tabpanel" aria-labelledby="quote-query-tab">
+            <div class="btn-group mt-3" role="group" aria-label="btnSQL">
+              <button type="button" class="btn btn-primary" id="addQuote">Add Quote</button>
+              <button type="button" class="btn btn-primary" id="removeQuote">Remove Quote</button>
+            </div>
+            <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" id="selectCheck">
+            <label class="form-check-label" for="selectCheck">(Copy with SELECT) <small>SELECT * FROM</small></label>
+            <input type="text" id="txtTable" value="" placeholder="TABLE" class="mt-1" />
+            <label class="form-check-label" for="selectCheck_Condition"><small>WHERE</small></label>
+            <input type="text" id="txtCondition" value="" placeholder="Condition" class="mt-1" />
+          </div>
+
+          <div class="btn-group mt-2" role="group" aria-label="btnSQL2">
+            <button type="button" class="btn btn-outline-primary" id="copyText">Copy</button>
+          </div>
+          </div>
+          <div class="tab-pane fade" id="simplifiedConcat" role="tabpanel" aria-labelledby="simplified-concat-tab">
+            <label for="exampleInputEmail1">Enter formular</label>
+            <input id="simplifiedConcatFomular" type="text" class="form-control" placeholder="E.g. INSERT INTO mytable (mycol) VALUES (%)">
+            <button type="button" class="btn btn-primary" id="toSimplifiedConcat">Convert</button>
+            <textarea class="form-control mt-2" id="simplifiedConcatResult" rows="5" readonly></textarea>
+            <button type="button" class="btn btn-outline-primary mt-2" id="copySimplifiedResult">Copy Result</button>
+          </div>
         </div>
       </div>
     </div>
+
     <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="toast" data-bs-autohide="true">
       <div class="toast-body">
         Content copied to clipboard!
