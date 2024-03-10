@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let conditionContent = document.getElementById("txtCondition").value;
         let contentToCopy = "";
 
+        if (!isNullStatus()) return;
+
         if (document.getElementById("selectCheck").checked) {
             //if default --> not convert
             if (status == 'default'){
@@ -62,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
+        if (!isNullStatus()) return;
         if (status == 'default'){
             // split content line by line
             let items = textareaContent.split("\n");
@@ -93,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
+        if (!isNullStatus()) return;
         if (status == 'converted'){
             // remove Brackets
             let removedBrackets = textareaContent.slice(2, -2);
@@ -123,6 +127,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let textareaContent = document.getElementById("ta_text").value.trim();
         let regexSelect = /^SELECT \* FROM\s+/i;
 
+        // Check if textarea is empty or contains only whitespace
+        if (!textareaContent) {
+            return "N/A";
+        }
+
         // Check select
         if (regexSelect.test(textareaContent)) {
             return "select_statement";
@@ -136,5 +145,13 @@ document.addEventListener('DOMContentLoaded', function() {
         else {
             return "default";
         }
+    }
+
+    function isNullStatus() {
+        if (status === 'N/A') {
+            alert('The text area is empty or contains only white spaces. Please enter some text.');
+            return false;
+        }
+        return true;
     }
 });
