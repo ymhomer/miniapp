@@ -32,9 +32,11 @@ function generateBarcodes() {
             });
         }
     });
-
-    document.getElementById("resultPanel").style.display = "block";
-    document.getElementById("printBtn").style.display = "block";
+    
+    if (container.innerHTML != ''){
+        document.getElementById("resultPanel").style.display = "block";
+        document.getElementById("printBtn").style.display = "block";
+    }
 }
 
 function generateQRCode() {
@@ -62,8 +64,10 @@ function generateQRCode() {
         }
     });
 
-    document.getElementById("resultPanel").style.display = "block";
-    document.getElementById("printBtn").style.display = "block";
+    if (container.innerHTML != ''){
+        document.getElementById("resultPanel").style.display = "block";
+        document.getElementById("printBtn").style.display = "block";
+    }
 }
 
 function addPrintStyles() {
