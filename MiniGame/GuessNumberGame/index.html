@@ -7,61 +7,69 @@
     <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self';">
     <meta http-equiv="X-Frame-Options" content="allow">
     <title>Guess Number Game</title>
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="style.css">
-	<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
-	<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
-    <script src="game.js"></script>
+    <!-- CSS, JS -->
+    <script src="/miniapp/js/bootstrap.bundle.min.js"></script>
+    <script src="/miniapp/MiniGame/GuessNumberGame/game.js"></script>
+    <link rel="stylesheet" href="/miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/miniapp/MiniGame/Converter/style.css">
+
+    <!-- CSS,JS (LOCAL) -->
+    <!--script src="../../js/bootstrap.bundle.min.js"></script>
+    <script src="../../MiniGame/GuessNumberGame/game.js"></script>
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../MiniGame/GuessNumberGame/style.css"-->
 </head>
 <body class="container-fluid">
-    <div class="row mt-5">
-        <div class="col-md-6">
-            <h1 class="mb-3">Guess Number Game</h1>
+    <div class="card">
+        <div class="card-header">
+            Guess Number Game
         </div>
-        <div class="col-md-6 text-right">
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#instructionsModal">
-                How to Play
-            </button>
+        <div class="card-body">
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <h1 class="mb-3">Guess Number Game</h1>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#instructionsModal">
+                        How to Play
+                    </button>
+                </div>
+            </div>
+            <p>Input four non-repeating numbers and press the "Enter" key or click the "Guess" button</p>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="input">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-primary" id="guess-btn" onclick="guess()">Guess</button>
+                    <button type="button" class="btn btn-success" id="new-game" onclick="newGame()">New Game</button>
+                </div>
+            </div>
+            <div id="guess-count"></div>
+            <div id="table-container" style="display: none;"></div>
         </div>
     </div>
-    <p>Input four non-repeating numbers and press the "Enter" key or click the "Guess" button</p>
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" id="input">
-        <div class="input-group-append">
-            <button type="button" class="btn btn-primary" id="guess-btn" onclick="guess()">Guess</button>
-        </div>
-    </div>
-    <br>
-    <div id="guess-count"></div>
-    <table class="table table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th scope="col">Guess</th>
-                <th scope="col">Result</th>
-            </tr>
-        </thead>
-        <tbody id="history"></tbody>
-    </table>
-    <br>
-    <button type="button" class="btn btn-success" id="new-game" onclick="newGame()">New Game</button>
 
-<!-- Modal -->
-<div class="modal fade" id="instructionsModal" tabindex="-1" role="dialog" aria-labelledby="instructionsModalLabel" aria-hidden="true">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content"> <div class="modal-header">
-			<h5 class="modal-title" id="instructionsModalLabel">How to Play</h5>
-			<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-				<span aria-hidden="true">&times;</span> </button> </div> <div class="modal-body">
-			<p>To play the game, you need to guess a 4-digit number, where each digit is different.</p>
-			<p>After each guess you will get feedback on how many digits are : </p>
-			<p>    (A) correct and in the right position </p>
-			<p>    (B) correct but in the wrong position </p>
-			<p>Keep guessing until you correctly guess the number!</p> </div> <div class="modal-footer">
-			<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-		</div>
-	</div>
-</div>
-</div>
+    <!-- Modal -->
+    <div class="modal fade" id="instructionsModal" tabindex="-1" role="dialog" aria-labelledby="instructionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="instructionsModalLabel">How to Play</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>To play the game, you need to guess a 4-digit number, where each digit is different.</p>
+                    <p>After each guess you will get feedback on how many digits are:</p>
+                    <p>(A) correct and in the right position</p>
+                    <p>(B) correct but in the wrong position</p>
+                    <p>Keep guessing until you correctly guess the number!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
