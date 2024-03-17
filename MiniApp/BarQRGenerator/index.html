@@ -28,13 +28,15 @@
 <div class="card">
 	<div class="card-header">Barcode & QR Code Generator</div>
     <div class="card-body">
-        <h5 class="card-title">Enter text: </h5>
+        <h5 class="card-title">Generate</h5>
         <div class="container">
             <div class="row">
                 <div class="col-md-4" id="inputArea">
-                    <textarea id="inputText" class="form-control" rows="10" placeholder="Enter text here and click `Generate Barcode` or `Generate QR Code` or press `Ctrl` + `Enter` to generate. Split in new line to generate multiple."></textarea><br>
-                    <button class="btn btn-primary" onclick="generateBarcodes()">Generate Barcode</button>
-                    <button class="btn btn-primary" onclick="generateQRCode()">Generate QR Code</button>
+                    <select id="modeSelector" class="form-select mb-3">
+                        <option value="barcode">Barcode</option>
+                        <option value="qrcode">QR Code</option>
+                    </select>
+                    <textarea id="inputText" class="form-control" rows="10" placeholder="Enter text here to generated (Barcode/QR code). Split in new line to generate multiple."></textarea><br>
                     <button id="printBtn" class="btn btn-primary" onclick="printResult()">Print</button>
                 </div>
                 <div class="col-md-8" id="resultPanel">

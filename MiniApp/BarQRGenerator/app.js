@@ -1,23 +1,52 @@
 window.onload = function() {
     addPrintStyles();
-    document.getElementById("inputText").focus();
+    var inputText = document.getElementById("inputText");
+    var modeSelector = document.getElementById("modeSelector");
+
+    inputText.focus();
     document.getElementById("resultPanel").style.display = "none";
     document.getElementById("printBtn").style.display = "none";
 
+    inputText.addEventListener('input', function() {
+        generateCode();
+    });
+
+    modeSelector.addEventListener('change', function() {
+        generateCode();
+    });
+/*
     document.getElementById("inputText").addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
-            generateBarcodes();
+            generateCode();
         }
-    });
+    });*/
 };
+
+function generateCode() {
+    var input = document.getElementById("inputText").value;
+
+    if (input.trim() === '') {
+        document.getElementById("results").innerHTML = '';
+        document.getElementById("resultPanel").style.display = "none";
+        document.getElementById("printBtn").style.display = "none";
+    } else {
+        var mode = document.getElementById("modeSelector").value;
+        if (mode === 'barcode') {
+            generateBarcodes();
+        } else if (mode === 'qrcode') {
+            generateQRCode();
+        }
+    }
+}
+
 
 function generateBarcodes() {
     var input = document.getElementById("inputText").value;
     var lines = input.split('\n');
     var container = document.getElementById("results");
 
-    container.innerHTML = ''; // Clear previous results
+    container.innerHTML = '';
 
     lines.forEach(function(line) {
         if (line.trim() !== '') {
@@ -30,10 +59,13 @@ function generateBarcodes() {
                 height: 40,
                 displayValue: true
             });
+
+            var br = document.createElement('br');
+            container.appendChild(br);
         }
     });
     
-    if (container.innerHTML != ''){
+    if (container.innerHTML != '') {
         document.getElementById("resultPanel").style.display = "block";
         document.getElementById("printBtn").style.display = "block";
     }
@@ -61,6 +93,11 @@ function generateQRCode() {
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
+
+            var textElement = document.createElement('p');
+            textElement.textContent = line;
+            //textElement.style.textAlign = 'center'; // 文本居中显示
+            container.appendChild(textElement);
         }
     });
 
