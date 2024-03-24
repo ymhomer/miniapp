@@ -1,7 +1,10 @@
+let currentStatus = 'N/A';
+
 document.addEventListener('DOMContentLoaded', function() {
+    
     let inputElement = document.getElementById('ta_text');
     let formulaInput = document.getElementById('simplifiedConcatFomular');
-    let status = checkTextareaStatus();
+    //let status = checkTextareaStatus();
 
     document.getElementById("addQuote").addEventListener('click', convert);
     document.getElementById("removeQuote").addEventListener('click', revert);
@@ -50,11 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     //Pendding feature - get textarea status
+    /*
     document.getElementById('ta_text').addEventListener('paste', function(event) {
         setTimeout(function() {
             
-            status = checkTextareaStatus();
-            document.getElementById('statusText').innerText = 'Status: '+ status;
+            //status = checkTextareaStatus();
+            document.getElementById('statusText').innerText = 'Status: '+ currentStatus;
             //console.log("Status after paste: " + status);
             //alert("Status after paste: " + status);
         }, 0);
@@ -62,49 +66,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('ta_text').addEventListener('keydown', function(event) {
         setTimeout(function() {
-            status = checkTextareaStatus();
-            document.getElementById('statusText').innerText = 'Status: '+ status;
+            //status = checkTextareaStatus();
+            //document.getElementById("ta_text").value = result;
+            document.getElementById('statusText').innerText = 'Status: '+ currentStatus;
+            //updateStatistics(result);
         }, 1);
+    });*/
+
+    document.getElementById('ta_text').addEventListener('paste', function(event) {
+        updateStatus();
+        updateStatistics(document.getElementById("ta_text").value);
     });
 
+    document.getElementById('ta_text').addEventListener('input', function(event) {
+
+        updateStatus();
+        updateStatistics(document.getElementById("ta_text").value);
+    });
+
+
     function convert() {
-        // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
         if (!isNullStatus()) return;
-        if (status == 'default'){
-            // split content line by line
-            let items = textareaContent.split("\n");
+        if (currentStatus === 'default'){
+            // Split content line by line and filter out empty lines
+            let lines = textareaContent.split("\n").filter(item => item.trim() !== "");
+            let processedLines = [];
 
-            // trim
-            items = items.map(item => item.trim());
+            // Process each line and build the array of processed lines
+            lines.forEach(line => {
+                // Trim and, if checked, convert to uppercase
+                let processedLine = document.getElementById("uppercaseCheck").checked ? line.trim().toUpperCase() : line.trim();
+                processedLines.push(processedLine);
+            });
 
-            // If Uppercase
-            if (document.getElementById("uppercaseCheck").checked) {
-                items = items.map(item => item.toUpperCase());
-            }
+            // Now we have an array of processed lines, we can join them
+            let result = "('" + processedLines.join("', '") + "')";
 
-            // convert
-            let result = "('" + items.join("', '") + "')";
-
-            // update the result to textarea
+            // Update the textarea and status
             document.getElementById("ta_text").value = result;
+            updateStatus();
+            
+            // Pass the processedLines array to updateStatistics for accurate count
+            updateStatistics(processedLines.join('\n')); // Use '\n' to simulate the actual text in textarea
         }
-        else{
-            alert('Status: '+ status + '. Please confirm before convert.');
+        else {
+            alert('Status: ' + currentStatus + '. Please confirm before converting.');
         }
-        
-        status = checkTextareaStatus();
-        document.getElementById('statusText').innerText = 'Status: '+ status;
-
     }
+
 
     function revert() {
         // get textarea
         let textareaContent = document.getElementById("ta_text").value;
 
         if (!isNullStatus()) return;
-        if (status == 'converted'){
+        if (currentStatus == 'converted'){
             // remove Brackets
             let removedBrackets = textareaContent.slice(2, -2);
 
@@ -121,41 +139,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // update the result to textarea
             document.getElementById("ta_text").value = result;
+            updateStatus();
+            updateStatistics(result);
         }
         else{
-            alert('Status: '+ status + '. Please confirm before convert.');
+            alert('Status: '+ currentStatus + '. Please confirm before convert.');
         }
-
-        status = checkTextareaStatus();
-        document.getElementById('statusText').innerText = 'Status: '+ status;
     }
 
-    function checkTextareaStatus() {
+    function updateStatus() {
         let textareaContent = document.getElementById("ta_text").value.trim();
         let regexSelect = /^SELECT \* FROM\s+/i;
 
-        // Check if textarea is empty or contains only whitespace
         if (!textareaContent) {
-            return "N/A";
+            currentStatus = "N/A";
+        } else if (regexSelect.test(textareaContent)) {
+            currentStatus = "select_statement";
+        } else if (textareaContent.startsWith("('") && textareaContent.endsWith("')")) {
+            currentStatus = "converted";
+        } else {
+            currentStatus = "default";
         }
-
-        // Check select
-        if (regexSelect.test(textareaContent)) {
-            return "select_statement";
-        }
-
-        // Check quote
-        else if (textareaContent.startsWith("('") && textareaContent.endsWith("')")) {
-            return "converted";
-        }
-        // Else "Default"
-        else {
-            return "default";
-        }
+        
+        document.getElementById('statusText').innerText = 'Status: '+ currentStatus;
     }
 
+    function updateStatistics(text) {
+        let units = new Set();
+        let unitFrequency = {};
+        let lines = text.split("\n");
+        let lineCount = lines.length;
+        let repeatedUnits = 0;
+        let totalRepeats = 0;
+
+        lines.forEach(line => {
+            let unit = line.trim();
+            if (unit) {
+                units.add(unit);
+
+                if (unitFrequency[unit]) {
+                    unitFrequency[unit]++;
+                    totalRepeats++;
+                    if (unitFrequency[unit] === 2) {
+                        repeatedUnits++;
+                    }
+                } else {
+                    unitFrequency[unit] = 1;
+                }
+            }
+        });
+
+        let unitCount = units.size;
+
+        document.getElementById('lineCount').textContent = `Line: ${lineCount}`;
+        document.getElementById('repeatedUnit').textContent = `Repeated unit: ${repeatedUnits} / ${totalRepeats}`;
+        document.getElementById('unitCount').textContent = `Unit Count: ${unitCount}`;
+    }
+
+    document.getElementById('ta_text').addEventListener('input', updateStatus);
+
     function isNullStatus() {
-        if (status === 'N/A') {
+        if (currentStatus === 'N/A') {
             alert('The text area is empty or contains only white spaces. Please enter some text.');
             return false;
         }
