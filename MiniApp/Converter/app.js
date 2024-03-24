@@ -79,12 +79,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('ta_text').addEventListener('input', function(event) {
-
         updateStatus();
         updateStatistics(document.getElementById("ta_text").value);
     });
 
-
+/*
     function convert() {
         let textareaContent = document.getElementById("ta_text").value;
 
@@ -114,8 +113,31 @@ document.addEventListener('DOMContentLoaded', function() {
         else {
             alert('Status: ' + currentStatus + '. Please confirm before converting.');
         }
-    }
+    }*/
 
+    function convert() {
+        let textareaContent = document.getElementById("ta_text").value;
+        if (!isNullStatus()) return;
+        if (currentStatus === 'default') {
+            let items = textareaContent.split("\n").filter(item => item.trim() !== "");
+            if (document.getElementById("removeDuplicateCheck").checked) {
+                items = [...new Set(items)];
+            }
+
+            // 应用 Uppercase 选项
+            if (document.getElementById("uppercaseCheck").checked) {
+                items = items.map(item => item.toUpperCase());
+            }
+
+            let result = "('" + items.join("', '") + "')";
+            document.getElementById("ta_text").value = result;
+
+            updateStatus();
+            updateStatistics(textareaContent);
+        } else {
+            alert('Status: ' + currentStatus + '. Please confirm before converting.');
+        }
+    }
 
     function revert() {
         // get textarea
