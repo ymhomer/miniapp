@@ -1,4 +1,4 @@
-#statusText {
+#statusText, #lineCount, #repeatedUnit, #unitCount {
     color: gray;
     font-size: 12px;
 }

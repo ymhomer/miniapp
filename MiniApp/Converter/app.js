@@ -52,27 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    //Pendding feature - get textarea status
-    /*
-    document.getElementById('ta_text').addEventListener('paste', function(event) {
-        setTimeout(function() {
-            
-            //status = checkTextareaStatus();
-            document.getElementById('statusText').innerText = 'Status: '+ currentStatus;
-            //console.log("Status after paste: " + status);
-            //alert("Status after paste: " + status);
-        }, 0);
-    });
-
-    document.getElementById('ta_text').addEventListener('keydown', function(event) {
-        setTimeout(function() {
-            //status = checkTextareaStatus();
-            //document.getElementById("ta_text").value = result;
-            document.getElementById('statusText').innerText = 'Status: '+ currentStatus;
-            //updateStatistics(result);
-        }, 1);
-    });*/
-
     document.getElementById('ta_text').addEventListener('paste', function(event) {
         updateStatus();
         updateStatistics(document.getElementById("ta_text").value);
@@ -83,51 +62,46 @@ document.addEventListener('DOMContentLoaded', function() {
         updateStatistics(document.getElementById("ta_text").value);
     });
 
-/*
-    function convert() {
-        let textareaContent = document.getElementById("ta_text").value;
-
-        if (!isNullStatus()) return;
-        if (currentStatus === 'default'){
-            // Split content line by line and filter out empty lines
-            let lines = textareaContent.split("\n").filter(item => item.trim() !== "");
-            let processedLines = [];
-
-            // Process each line and build the array of processed lines
-            lines.forEach(line => {
-                // Trim and, if checked, convert to uppercase
-                let processedLine = document.getElementById("uppercaseCheck").checked ? line.trim().toUpperCase() : line.trim();
-                processedLines.push(processedLine);
-            });
-
-            // Now we have an array of processed lines, we can join them
-            let result = "('" + processedLines.join("', '") + "')";
-
-            // Update the textarea and status
-            document.getElementById("ta_text").value = result;
-            updateStatus();
-            
-            // Pass the processedLines array to updateStatistics for accurate count
-            updateStatistics(processedLines.join('\n')); // Use '\n' to simulate the actual text in textarea
+    //Change to Simplified Concatenation event
+    document.getElementById('simplified-concat-tab').addEventListener('click', function() {
+        if (currentStatus === 'converted') {
+            revert();
         }
-        else {
-            alert('Status: ' + currentStatus + '. Please confirm before converting.');
+
+        if (currentStatus !== 'converted') {
+            updateStatistics(document.getElementById("ta_text").value);
         }
-    }*/
+    });
+
+    function processItems(items) {
+        // remove duplicate --> IF
+        if (document.getElementById("removeDuplicateCheck").checked) {
+            items = [...new Set(items)];
+        }
+
+        // Sort --> IF
+        if (document.getElementById("sortCheck").checked) {
+            let sortType = document.getElementById("sortType").value;
+            items.sort();
+            if (sortType === "descending") {
+                items.reverse();
+            }
+        }
+
+        // Uppercase --> IF
+        if (document.getElementById("uppercaseCheck").checked) {
+            items = items.map(item => item.toUpperCase());
+        }
+
+        return items;
+    }
 
     function convert() {
         let textareaContent = document.getElementById("ta_text").value;
         if (!isNullStatus()) return;
         if (currentStatus === 'default') {
             let items = textareaContent.split("\n").filter(item => item.trim() !== "");
-            if (document.getElementById("removeDuplicateCheck").checked) {
-                items = [...new Set(items)];
-            }
-
-            // 应用 Uppercase 选项
-            if (document.getElementById("uppercaseCheck").checked) {
-                items = items.map(item => item.toUpperCase());
-            }
+            items = processItems(items);
 
             let result = "('" + items.join("', '") + "')";
             document.getElementById("ta_text").value = result;
@@ -140,32 +114,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function revert() {
-        // get textarea
         let textareaContent = document.getElementById("ta_text").value;
-
         if (!isNullStatus()) return;
-        if (currentStatus == 'converted'){
-            // remove Brackets
-            let removedBrackets = textareaContent.slice(2, -2);
-
+        if (currentStatus === 'converted') {
             // split value
-            let items = removedBrackets.split("', '");
+            let items = textareaContent.slice(2, -2).split(/',\s?'/);
 
-            // If Uppercase
-            if (document.getElementById("uppercaseCheck").checked) {
-                items = items.map(item => item.toUpperCase());
-            }
+            // update statis before process item
+            updateStatistics(items.join("\n"));
 
-            // convert
+            // to process (remove duplicate, sort, uppercase)
+            items = processItems(items);
+
+            // revert to item list (default)
             let result = items.join("\n");
-
-            // update the result to textarea
             document.getElementById("ta_text").value = result;
+
             updateStatus();
-            updateStatistics(result);
-        }
-        else{
-            alert('Status: '+ currentStatus + '. Please confirm before convert.');
+        } else {
+            alert('Status: ' + currentStatus + '. Please confirm before reverting.');
         }
     }
 
@@ -183,14 +150,37 @@ document.addEventListener('DOMContentLoaded', function() {
             currentStatus = "default";
         }
         
-        document.getElementById('statusText').innerText = 'Status: '+ currentStatus;
+        document.getElementById('statusText').innerText = 'Status: ' + currentStatus;
+
+        // 根据当前状态更新按钮状态
+        let convertButton = document.getElementById("addQuote");
+        let revertButton = document.getElementById("removeQuote");
+
+        switch (currentStatus) {
+            case "N/A":
+                convertButton.disabled = true;
+                revertButton.disabled = true;
+                break;
+            case "default":
+                convertButton.disabled = false;
+                revertButton.disabled = true;
+                break;
+            case "converted":
+                convertButton.disabled = true;
+                revertButton.disabled = false;
+                break;
+            default:
+                convertButton.disabled = false;
+                revertButton.disabled = false;
+        }
     }
 
+
     function updateStatistics(text) {
+        // Calculate logic
+        let lines = text.split("\n").filter(line => line.trim() !== "");
         let units = new Set();
         let unitFrequency = {};
-        let lines = text.split("\n");
-        let lineCount = lines.length;
         let repeatedUnits = 0;
         let totalRepeats = 0;
 
@@ -212,13 +202,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         let unitCount = units.size;
+        let lineCount = lines.length;
 
         document.getElementById('lineCount').textContent = `Line: ${lineCount}`;
         document.getElementById('repeatedUnit').textContent = `Repeated unit: ${repeatedUnits} / ${totalRepeats}`;
         document.getElementById('unitCount').textContent = `Unit Count: ${unitCount}`;
     }
 
-    document.getElementById('ta_text').addEventListener('input', updateStatus);
+    document.getElementById('ta_text').addEventListener('input', function() {
+        updateStatus();
+        if (currentStatus === 'converted') {
+            let items = this.value.slice(2, -2).split(/',\s?'/);
+            updateStatistics(items.join("\n"));
+        } else {
+            updateStatistics(this.value);
+        }
+    });
 
     function isNullStatus() {
         if (currentStatus === 'N/A') {
@@ -269,5 +268,4 @@ document.addEventListener('DOMContentLoaded', function() {
             toastEl.show();
         }
     }
-
 });
