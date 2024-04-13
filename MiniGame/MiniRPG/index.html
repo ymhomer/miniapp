@@ -1,47 +1,101 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-<meta charset="UTF-8">
-<title>MINI RPG</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-    .hidden { display: none; }
-</style>
+    <meta charset="UTF-8">
+    <title>MINI RPG</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hidden { display: none; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255,0,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); }
+        }
+        .battle-log {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        #playerStats {
+            background-color: #f0f8ff;
+        }
+        #monsterStats {
+            background-color: #fff0f5;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .monster-card {
+            border: 1px solid #ddd;
+            background-color: #fafafa;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1 1 30%;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1 class="mt-3">屬性分配</h1>
-    <div id="attributePanel" class="mb-5">
-        <div class="mb-3">
-            <label for="health" class="form-label">血量</label>
-            <input type="number" class="form-control" id="health" value="0" min="0">
+    <div class="container mt-3">
+        <div class="card mt-4" id="attributePanel">
+            <div class="card-header">属性分配</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="health" class="form-label">血量</label>
+                    <input type="number" class="form-control" id="health" value="0" min="0">
+                </div>
+                <div class="mb-3">
+                    <label for="mana" class="form-label">魔力</label>
+                    <input type="number" class="form-control" id="mana" value="0" min="0">
+                </div>
+                <div class="mb-3">
+                    <label for="attack" class="form-label">攻击</label>
+                    <input type="number" class="form-control" id="attack" value="0" min="0">
+                </div>
+                <button class="btn btn-primary" id="assignAttributesBtn">确认</button>
+                <div id="pointsLeft" class="mt-3">点数剩余: 30</div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="mana" class="form-label">魔力</label>
-            <input type="number" class="form-control" id="mana" value="0" min="0">
+
+        <div class="card mt-4 hidden" id="battlePanel">
+			<div class="card-header">
+				战斗界面
+				<span id="levelInfo" class="float-end">第<span id="currentLevelInfo">1</span>层，怪物总属性：<span id="totalMonsterAttributes">0</span></span>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-4" id="playerStats">玩家状态</div>
+					<div class="col-md-8 monster-area" id="monsterStats">怪物信息</div>
+				</div>
+				<div id="battleLog" class="battle-log"></div>
+			</div>
+		</div>
+
+        <div class="card mt-4 hidden" id="rewardPanel">
+            <div class="card-header">选择你的奖励</div>
+            <div class="card-body">
+                <button class="btn btn-success" id="rewardHealthBtn">回复血量 (2)</button>
+                <button class="btn btn-success" id="rewardAttackBtn">增加攻击 (2)</button>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="attack" class="form-label">攻擊</label>
-            <input type="number" class="form-control" id="attack" value="0" min="0">
+
+        <div class="card mt-4 hidden" id="summaryPanel">
+            <div class="card-header">游戏结算</div>
+            <div class="card-body">
+                <div>总共攻击的层数: <span id="totalLevels"></span></div>
+                <div>击杀怪物数: <span id="totalMonstersKilled"></span></div>
+                <div>总共攻击的次数: <span id="totalAttacks"></span></div>
+                <div>总共给怪物的伤害: <span id="totalDamageDealt"></span></div>
+                <div>总共受到的伤害: <span id="totalDamageTaken"></span></div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary" id="restartGameBtn">重新开始</button>
+            </div>
         </div>
-        <button class="btn btn-primary" onclick="assignAttributes()">確認</button>
-        <div id="pointsLeft" class="mt-3">點數剩餘: 30</div>
     </div>
 
-    <div id="battlePanel" class="hidden">
-		<h1 class="mt-3">戰鬥界面</h1>
-		<div class="row">
-			<div class="col-md-6" id="playerStats"></div> <!-- 玩家信息 -->
-			<div class="col-md-6" id="monsterStats"></div> <!-- 怪物信息 -->
-		</div>
-		<div class="mt-3">
-			<button class="btn btn-danger" onclick="enableAttackMode()">攻擊</button>
-			<div id="battleLog" class="mt-3"></div> <!-- 攻擊日誌 -->
-		</div>
-	</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="game.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
