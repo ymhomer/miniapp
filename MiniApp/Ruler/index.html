@@ -56,6 +56,27 @@
                 display: none;
             }
         }
+        .calibration-code {
+            padding: 5px 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .calibration-code:hover {
+            background-color: #e9ecef;
+        }
+
+        .numeric-code {
+            color: #007bff;
+        }
+
+        .base64-code {
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -97,7 +118,10 @@
                 <input type="text" id="calibrationCode" class="form-control">
                 <button onclick="loadCalibrationCode()" class="btn btn-secondary mt-2">加载</button>
             </div>
-            <p>校准码: <span id="calibrationCodeDisplay"></span></p>
+            <div id="calibrationCodeDisplay">
+                <span class="calibration-code numeric-code" id="numericCalibrationCode">数字校准码: </span>
+                <span class="calibration-code base64-code" id="base64CalibrationCode">Base64校准码: </span>
+            </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -73,9 +73,14 @@ let pixelsPerCm;
             pixelsPerCm = marker.offsetLeft / calibrationLength;
             measurementLength.innerHTML = calibrationLength.toFixed(1);
 
+            // 生成校准码
             const numericCalibrationCodeValue = generateNumericCalibrationCode(pixelsPerCm);
             const base64CalibrationCodeValue = generateBase64CalibrationCode(pixelsPerCm);
-            calibrationCodeDisplay.textContent = `数字校准码: ${numericCalibrationCodeValue}, Base64校准码: ${base64CalibrationCodeValue}`;
+
+            // 更新校准码显示
+            document.getElementById('numericCalibrationCode').textContent = `数字校准码: ${numericCalibrationCodeValue}`;
+            document.getElementById('base64CalibrationCode').textContent = `Base64校准码: ${base64CalibrationCodeValue}`;
+
             drawTicks();
         }
 
@@ -194,6 +199,22 @@ let pixelsPerCm;
            }
            calibrationCode.value = '';
        });
+
+       document.getElementById('numericCalibrationCode').addEventListener('click', function() {
+            navigator.clipboard.writeText(this.textContent.replace('数字校准码: ', '')).then(() => {
+                alert('数字校准码已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        });
+
+        document.getElementById('base64CalibrationCode').addEventListener('click', function() {
+            navigator.clipboard.writeText(this.textContent.replace('Base64校准码: ', '')).then(() => {
+                alert('Base64校准码已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        });
 
        calibrationItem.addEventListener('change', function() {
             console.log('Selected item:', this.value); // 输出选择的值看是否正确
