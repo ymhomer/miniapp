@@ -194,3 +194,27 @@ let pixelsPerCm;
            }
            calibrationCode.value = '';
        });
+
+       calibrationItem.addEventListener('change', function() {
+            console.log('Selected item:', this.value); // 输出选择的值看是否正确
+            if (this.value === 'custom') {
+                console.log('Displaying custom length input'); // 确认逻辑分支被执行
+                customLengthContainer.style.display = 'block';
+            } else {
+                console.log('Hiding custom length input'); // 确认逻辑分支被执行
+                customLengthContainer.style.display = 'none';
+            }
+        });
+
+       document.addEventListener('DOMContentLoaded', function() {
+            const calibrationItem = document.getElementById('calibrationItem');
+            const customLengthContainer = document.getElementById('customLengthContainer');
+
+            calibrationItem.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customLengthContainer.style.display = 'block'; // 确保此处为block
+                } else {
+                    customLengthContainer.style.display = 'none';
+                }
+            });
+        });
