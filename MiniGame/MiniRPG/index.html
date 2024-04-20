@@ -8,37 +8,7 @@
     <meta http-equiv="X-Frame-Options" content="allow">
     <title>MINI RPG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .hidden { display: none; }
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255,0,0,0); }
-            100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); }
-        }
-        .battle-log {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-        #playerStats {
-            background-color: #f0f8ff;
-        }
-        #monsterStats {
-            background-color: #fff0f5;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .monster-card {
-            border: 1px solid #ddd;
-            background-color: #fafafa;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            flex: 1 1 30%;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container mt-3">
@@ -63,18 +33,18 @@
         </div>
 
         <div class="card mt-4 hidden" id="battlePanel">
-			<div class="card-header">
-				战斗界面
-				<span id="levelInfo" class="float-end">第<span id="currentLevelInfo">1</span>层，怪物总属性：<span id="totalMonsterAttributes">0</span></span>
-			</div>
-			<div class="card-body">
-				<div class="row">
-					<div class="col-md-4" id="playerStats">玩家状态</div>
-					<div class="col-md-8 monster-area" id="monsterStats">怪物信息</div>
-				</div>
-				<div id="battleLog" class="battle-log"></div>
-			</div>
-		</div>
+            <div class="card-header">
+                战斗界面
+                <span id="levelInfo" class="float-end">第<span id="currentLevelInfo">1</span>层，怪物总属性：<span id="totalMonsterAttributes">0</span></span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4" id="playerStats"></div>
+                    <div class="col-md-8 monster-area" id="monsterStats"></div>
+                </div>
+                <div id="battleLog" class="battle-log"></div>
+            </div>
+        </div>
 
         <div class="card mt-4 hidden" id="rewardPanel">
             <div class="card-header">选择你的奖励</div>

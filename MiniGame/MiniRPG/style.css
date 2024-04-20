@@ -1,0 +1,56 @@
+.hidden {
+    display: none;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+.battle-log {
+    margin-top:
+    20px;
+   border-top: 1px solid #eee;
+   padding-top: 10px;
+}
+
+#playerStats {
+   background-color: #f0f8ff;
+   padding: 20px;
+   border-radius: 5px;
+}
+
+#monsterStats {
+   background-color: #fff0f5;
+   display: flex;
+   flex-wrap: wrap;
+   gap: 10px;
+   padding: 20px;
+   border-radius: 5px;
+}
+
+.monster-card {
+   border: 1px solid #ddd;
+   background-color: #fafafa;
+   border-radius: 10px;
+   padding: 10px;
+   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+   flex: 1 1 30%;
+   cursor: pointer;
+   transition: transform 0.2s;
+}
+
+.monster-card:hover {
+   transform: scale(1.05);
+}
