@@ -3,6 +3,8 @@
 This project makes use of several open-source components, each under its own MIT License. Below are the acknowledgments for these components:
 
 - **Bootstrap**: Open-source toolkit for developing with HTML, CSS, and JS. [Bootstrap License](https://github.com/twbs/bootstrap/blob/main/LICENSE)
+- **jquery-qrcode**: Open-source toolkit for qrcode generation standalone, doesn't depend on external services [jquery-qrcode License] (https://github.com/jeromeetienne/jquery-qrcode/blob/master/MIT-LICENSE.txt)
+- **JsBarcode**: Barcode generation library written in JavaScript that works in both the browser and on Node.js [JsBarcode License] (https://github.com/lindell/JsBarcode/blob/master/MIT-LICENSE.txt)
 
 # License
 
