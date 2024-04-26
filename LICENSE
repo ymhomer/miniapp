@@ -1,4 +1,10 @@
-MIT License
+# Acknowledgments
+
+This project makes use of several open-source components, each under its own MIT License. Below are the acknowledgments for these components:
+
+- **Bootstrap**: Open-source toolkit for developing with HTML, CSS, and JS. [Bootstrap License](https://github.com/twbs/bootstrap/blob/main/LICENSE)
+
+# License
 
 Copyright (c) 2023 ymhomer
 
