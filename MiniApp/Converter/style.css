@@ -2,14 +2,3 @@
     color: gray;
     font-size: 12px;
 }
-
-/* 隐藏在 Seq tools 标签页中不需要的元素 */
-#seqTools ~ #statusText,
-#seqTools ~ #lineCount,
-#seqTools ~ #repeatedUnit,
-#seqTools ~ #unitCount,
-#seqTools ~ #uppercaseCheck,
-#seqTools ~ #removeDuplicateCheck,
-#seqTools ~ #sortCheck {
-    display: none;
-}

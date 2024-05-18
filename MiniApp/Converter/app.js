@@ -64,6 +64,18 @@ document.addEventListener('DOMContentLoaded', function() {
         updateStatistics(document.getElementById("ta_text").value);
     });
 
+    function toggleTabVisibility(tabName) {
+        const elements = document.querySelectorAll('.toggle-element');
+        elements.forEach(element => {
+          const tabs = element.getAttribute('data-tabs').split(',');
+          if (tabs.includes(tabName)) {
+            element.style.display = 'block';
+          } else {
+            element.style.display = 'none';
+          }
+        });
+    }
+
     //Change to Simplified Concatenation event
     document.getElementById('simplified-concat-tab').addEventListener('click', function() {
         if (currentStatus === 'converted') {
@@ -73,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStatus !== 'converted') {
             updateStatistics(document.getElementById("ta_text").value);
         }
+        toggleTabVisibility('simplified-concat');
     });
 
     document.getElementById('seq-tools-tab').addEventListener('click', function() {
@@ -83,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStatus !== 'converted') {
             updateStatistics(document.getElementById("ta_text").value);
         }
+        toggleTabVisibility('seq-tools');
     });
     /*
     document.querySelectorAll('.nav-link').forEach(tab => {
@@ -316,21 +330,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function processSeqTools() {
-        let input = inputElement.value.trim();
-        
+        let input = document.getElementById('ta_text').value.trim();
         let lines = input.split('\n').filter(line => line);
         if (lines.length > 1) {
-            input = lines[0];
+          input = lines[0];
         }
-        
-        console.log('Input:', input);
-        
-        let isUpperCase = /^[A-Z0-9]*$/.test(input);
-        let isLowerCase = /^[a-z0-9]*$/.test(input);
     
-        console.log('isUpperCase:', isUpperCase);
-        console.log('isLowerCase:', isLowerCase);
-        
+        console.log('Input:', input);
+    
         let mode = document.getElementById('seqToolsMode').value;
         let generateCount = parseInt(document.getElementById('generateCount').value);
         let results = [];
@@ -340,94 +347,96 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Generate Count:', generateCount);
     
         if (mode === 'mode1') {
-            let prefixMatch = input.match(/^[^\d]+/);
-            let suffixMatch = input.match(/\d+$/);
+          let prefixMatch = input.match(/^(.*?)(\d+)$/);
     
-            if (!suffixMatch) {
-                alert('Error: Last part of the input must be a number for Mode 1.');
-                return;
+          if (!prefixMatch) {
+            alert('Error: Input must end with a number for Mode 1.');
+            return;
+          }
+    
+          let prefix = prefixMatch[1];
+          let suffix = prefixMatch[2];
+          console.log('Prefix:', prefix);
+          console.log('Suffix:', suffix);
+    
+          for (let i = 0; i < generateCount; i++) {
+            let newSuffix = (parseInt(suffix) + i).toString();
+            if (newSuffix.length > suffix.length) {
+              alert(`Generated ${totalGenerated} items. Sequence limit reached.`);
+              break;
             }
-    
-            let prefix = prefixMatch ? prefixMatch[0] : '';
-            let suffix = suffixMatch[0];
-            console.log('Prefix:', prefix);
-            console.log('Suffix:', suffix);
-    
-            for (let i = 0; i < generateCount; i++) {
-                let newSuffix = (parseInt(suffix) + i).toString();
-                if (newSuffix.length > suffix.length) {
-                    alert(`Generated ${totalGenerated} items. Sequence limit reached.`);
-                    break;
-                }
-                let newItem = prefix + newSuffix;
-                results.push(newItem);
-                totalGenerated++;
-            }
+            let newItem = prefix + newSuffix.padStart(suffix.length, '0');
+            results.push(newItem);
+            totalGenerated++;
+          }
         } else if (mode === 'mode2') {
-            let hexMode = document.getElementById('hexModeCheck').checked;
-            let includeNumbers = document.getElementById('includeNumbersCheck').checked;
-            let alphaPosition = document.getElementById('alphaPosition').value;
+          let hexMode = document.getElementById('hexModeCheck').checked;
+          let includeNumbers = document.getElementById('includeNumbersCheck').checked;
+          let alphaPosition = document.getElementById('alphaPosition').value;
     
-            console.log('Hex Mode:', hexMode);
-            console.log('Include Numbers:', includeNumbers);
-            console.log('Alpha Position:', alphaPosition);
+          console.log('Hex Mode:', hexMode);
+          console.log('Include Numbers:', includeNumbers);
+          console.log('Alpha Position:', alphaPosition);
     
-            for (let i = 0; i < generateCount; i++) {
-                let newItem = incrementValue(input, i, hexMode, includeNumbers, alphaPosition, isUpperCase, isLowerCase);
-                results.push(newItem);
-            }
+          for (let i = 0; i < generateCount; i++) {
+            let newItem = incrementValue(input, i, hexMode, includeNumbers, alphaPosition);
+            results.push(newItem);
+          }
         }
     
         console.log('Results:', results);
-        inputElement.value = results.join('\n');
-    }     
-
-    function incrementValue(value, increment, hexMode, includeNumbers, alphaPosition, isUpperCase, isLowerCase) {
+        document.getElementById('ta_text').value = results.join('\n');
+      }
+    
+      function incrementValue(value, increment, hexMode, includeNumbers, alphaPosition) {
         let characters = value.split('');
         let carry = increment;
         let base = hexMode ? 16 : (includeNumbers ? 36 : 26);
         let charSet = hexMode ? '0123456789abcdef' : (includeNumbers ? '0123456789abcdefghijklmnopqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz');
-
+    
         if (!hexMode){
-            if (alphaPosition === 'prefix') {
-                charSet = includeNumbers ? 'abcdefghijklmnopqrstuvwxyz0123456789' : 'abcdefghijklmnopqrstuvwxyz';
-            } else {
-                charSet = includeNumbers ? '0123456789abcdefghijklmnopqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
-            }
+          if (alphaPosition === 'prefix') {
+            charSet = includeNumbers ? 'abcdefghijklmnopqrstuvwxyz0123456789' : 'abcdefghijklmnopqrstuvwxyz';
+          } else {
+            charSet = includeNumbers ? '0123456789abcdefghijklmnopqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
+          }
         }
-
+    
+        let isUpperCase = /^[A-Z0-9]*$/.test(value);
+        let isLowerCase = /^[a-z0-9]*$/.test(value);
+    
         if (isUpperCase) {
-            characters = characters.map(char => char.toUpperCase());
-            charSet = charSet.toUpperCase();
+          characters = characters.map(char => char.toUpperCase());
+          charSet = charSet.toUpperCase();
         } else if (!isUpperCase && !isLowerCase) {
-            characters = characters.map(char => char.toUpperCase());
-            charSet = charSet.toUpperCase();
+          characters = characters.map(char => char.toUpperCase());
+          charSet = charSet.toUpperCase();
         }
-
+    
         console.log('charSet:', charSet);
         for (let i = characters.length - 1; i >= 0; i--) {
-            let char = characters[i];
-            let index = charSet.indexOf(char);
-            if (index !== -1) {
-                let newIndex = (index + carry) % base;
-                carry = Math.floor((index + carry) / base);
-                characters[i] = charSet[newIndex];
-            } else if (carry > 0) {
-                carry = 0; // Stop carry if it's not a recognized character
-            }
+          let char = characters[i];
+          let index = charSet.indexOf(char);
+          if (index !== -1) {
+            let newIndex = (index + carry) % base;
+            carry = Math.floor((index + carry) / base);
+            characters[i] = charSet[newIndex];
+          } else if (carry > 0) {
+            carry = 0; // Stop carry if it's not a recognized character
+          }
         }
-
+    
         if (carry > 0) {
-            let prefix = new Array(carry + 1).join(charSet[0]);
-            if (alphaPosition === 'prefix') {
-                characters.unshift(prefix);
-            } else {
-                characters.push(prefix);
-            }
+          let prefix = new Array(carry + 1).join(charSet[0]);
+          if (alphaPosition === 'prefix') {
+            characters.unshift(prefix);
+          } else {
+            characters.push(prefix);
+          }
         }
-
+    
         return characters.join('');
-    }
+      }
 
     document.getElementById('copySeqToolsResult').addEventListener('click', async function() {
         let resultContent = inputElement.value;
