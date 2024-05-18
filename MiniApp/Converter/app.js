@@ -75,13 +75,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    document.getElementById('seq-tools-tab').addEventListener('click', function() {
+        if (currentStatus === 'converted') {
+            revert();
+        }
+
+        if (currentStatus !== 'converted') {
+            updateStatistics(document.getElementById("ta_text").value);
+        }
+    });
+    /*
     document.querySelectorAll('.nav-link').forEach(tab => {
         tab.addEventListener('click', function(event) {
             if (event.target.id === 'seq-tools-tab') {
                 checkSeqToolsInput();
             }
         });
-    });
+    });*/
 
     function processItems(items) {
         // remove duplicate --> IF
@@ -271,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('includeNumbersCheck').checked = true;
-
+    /*
     function checkSeqToolsInput() {
         let lines = inputElement.value.trim().split('\n').filter(line => line);
         if (lines.length !== 1 && lines.length > 0) {
@@ -288,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('.nav-link.active').click();
             }
         }
-    }
+    }*/
     
     document.getElementById('seqToolsMode').addEventListener('change', function() {
         let mode = this.value;
