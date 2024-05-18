@@ -60,6 +60,9 @@
           <li class="nav-item" role="presentation">
             <a class="nav-link" id="simplified-concat-tab" data-bs-toggle="tab" href="#simplifiedConcat" role="tab" aria-controls="simplifiedConcat" aria-selected="false">Simplified Concatenation</a>
           </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="seq-tools-tab" data-bs-toggle="tab" href="#seqTools" role="tab" aria-controls="seqTools" aria-selected="false">Seq tools</a>
+          </li>
         </ul>
 
         <!-- Tab panes -->
@@ -88,6 +91,37 @@
             <textarea class="form-control mt-2" id="simplifiedConcatResult" rows="5" readonly></textarea>
             <button type="button" class="btn btn-outline-primary mt-2" id="copySimplifiedResult">Copy Result</button>
           </div>
+          <div class="tab-pane fade" id="seqTools" role="tabpanel" aria-labelledby="seq-tools-tab">
+            <label for="seqToolsMode" class="form-label mt-2">Select Mode</label>
+            <select class="form-select" id="seqToolsMode">
+              <option value="mode1">Numeric Only</option>
+              <option value="mode2">Alpha + Numeric</option>
+            </select>
+          
+            <div id="mode2Options" style="display: none;">
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="hexModeCheck">
+                <label class="form-check-label" for="hexModeCheck">Hex mode</label>
+              </div>
+              
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="includeNumbersCheck">
+                <label class="form-check-label" for="includeNumbersCheck">Include numbers</label>
+              </div>
+          
+              <label for="alphaPosition" class="form-label mt-2">Alphabet Position</label>
+              <select class="form-select" id="alphaPosition">
+                <option value="prefix">Prefix</option>
+                <option value="suffix">Suffix</option>
+              </select>
+            </div>
+            
+            <label for="generateCount" class="form-label mt-2">Generate Count</label>
+            <input type="number" class="form-control" id="generateCount" value="10" min="1">
+            
+            <button type="button" class="btn btn-primary mt-2" id="seqToolsButton">Process</button>
+            <button type="button" class="btn btn-outline-primary mt-2" id="copySeqToolsResult">Copy Result</button>
+          </div>                            
         </div>
       </div>
     </div>
