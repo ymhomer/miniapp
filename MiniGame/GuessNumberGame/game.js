@@ -10,6 +10,7 @@ function initializeGame() {
             target += num;
         }
     }
+    console.log('Target:', target);    
 
     // Clear guess history and UI elements
     guessHistory = [];
@@ -23,6 +24,7 @@ function initializeGame() {
 
 function guess() {
     let input = document.getElementById('input').value.trim();
+    console.log('Input:', input);
     if (!/^[0-9]{4}$/.test(input) || new Set(input).size !== 4) {
         alert('Please enter four non-repeating numbers!');
         return;
