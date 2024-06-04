@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self';">
+    <meta http-equiv="X-Frame-Options" content="allow">
+    <!-- CSS, JS -->
+    <link rel="stylesheet" href="/miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/miniapp/MiniApp/T9/style.css">
+    <script src="/miniapp/js/bootstrap.min.js"></script>
+    <script src="/miniapp/js/bootstrap.bundle.min.js"></script>
+    <script src="/miniapp/MiniApp/T9/app.js"></script>
+
+    <!-- CSS,JS (LOCAL) -->
+    <!--link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../MiniApp/T9/style.css">
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/bootstrap.bundle.min.js"></script>
+    <script src="../../MiniApp/T9/app.js"></script-->
+    <title>T9 Number Keypad</title>
+</head>
+<body>
+    <div class="container">
+        <h2>T9 Number Keypad</h2>
+        <div id="numberInputs" class="d-flex justify-content-center">
+            <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+            <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+            <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+            <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+        </div>
+        <div id="keypadContainer" class="keypad-container">
+            <div class="keypad-row">
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="1">1</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="2">2</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="3">3</button></div>
+            </div>
+            <div class="keypad-row">
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="4">4</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="5">5</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="6">6</button></div>
+            </div>
+            <div class="keypad-row">
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="7">7</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="8">8</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="9">9</button></div>
+            </div>
+            <div class="keypad-row">
+                <div class="keypad-col"><button id="cancelBtn" class="btn btn-danger keypad-btn">Cancel</button></div>
+                <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="0">0</button></div>
+                <div class="keypad-col"><button id="okBtn" class="btn btn-success keypad-btn">OK</button></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
