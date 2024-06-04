@@ -1,8 +1,11 @@
+window.addEventListener("DOMContentLoaded", (event) => {
+    
+
 const numberInputs = document.querySelectorAll('.number-input');
-        const keypadContainer = document.getElementById('keypadContainer');
-        const keypadButtons = document.querySelectorAll('.keypad-btn');
-        const cancelButton = document.getElementById('cancelBtn');
-        const okButton = document.getElementById('okBtn');
+const keypadContainer = document.getElementById('keypadContainer');
+const keypadButtons = document.querySelectorAll('.keypad-btn');
+const cancelButton = document.getElementById('cancelBtn');
+const okButton = document.getElementById('okBtn');
 
         numberInputs.forEach((input, index) => {
             input.addEventListener('focus', () => {
@@ -75,3 +78,4 @@ const numberInputs = document.querySelectorAll('.number-input');
                 button.disabled = false;
             });
         });
+    });
