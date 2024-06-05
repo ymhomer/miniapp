@@ -1,11 +1,11 @@
 window.addEventListener("DOMContentLoaded", (event) => {
-    
+    const numberInputs = document.querySelectorAll('.number-input');
+        const keypadContainer = document.getElementById('keypadContainer');
+        const keypadButtons = document.querySelectorAll('.keypad-btn');
+        const cancelButton = document.getElementById('cancelBtn');
+        const okButton = document.getElementById('okBtn');
 
-const numberInputs = document.querySelectorAll('.number-input');
-const keypadContainer = document.getElementById('keypadContainer');
-const keypadButtons = document.querySelectorAll('.keypad-btn');
-const cancelButton = document.getElementById('cancelBtn');
-const okButton = document.getElementById('okBtn');
+        let dragIndex = null;
 
         numberInputs.forEach((input, index) => {
             input.addEventListener('focus', () => {
@@ -13,25 +13,30 @@ const okButton = document.getElementById('okBtn');
             });
 
             input.addEventListener('dragstart', (event) => {
-                event.dataTransfer.setData('text/plain', index);
+                dragIndex = index;
+            });
+
+            input.addEventListener('touchstart', (event) => {
+                dragIndex = index;
             });
 
             input.addEventListener('dragover', (event) => {
                 event.preventDefault();
             });
 
+            input.addEventListener('touchmove', (event) => {
+                event.preventDefault();
+            });
+
             input.addEventListener('drop', (event) => {
                 event.preventDefault();
-                const dragIndex = parseInt(event.dataTransfer.getData('text'));
                 const dropIndex = index;
+                swapInputValues(dragIndex, dropIndex);
+            });
 
-                if (dragIndex !== dropIndex) {
-                    const dragValue = numberInputs[dragIndex].value;
-                    const dropValue = numberInputs[dropIndex].value;
-
-                    numberInputs[dragIndex].value = dropValue;
-                    numberInputs[dropIndex].value = dragValue;
-                }
+            input.addEventListener('touchend', (event) => {
+                const dropIndex = index;
+                swapInputValues(dragIndex, dropIndex);
             });
         });
 
@@ -55,27 +60,35 @@ const okButton = document.getElementById('okBtn');
             });
         });
 
-        cancelButton.addEventListener('click', () => {
+        cancelButton.addEventListener('click', resetKeypad);
+        okButton.addEventListener('click', checkNumberInputs);
+
+        function swapInputValues(dragIndex, dropIndex) {
+            if (dragIndex !== null && dragIndex !== dropIndex) {
+                const dragValue = numberInputs[dragIndex].value;
+                const dropValue = numberInputs[dropIndex].value;
+
+                numberInputs[dragIndex].value = dropValue;
+                numberInputs[dropIndex].value = dragValue;
+            }
+        }
+
+        function resetKeypad() {
             numberInputs.forEach((input) => {
                 input.value = '';
             });
             keypadButtons.forEach((button) => {
                 button.disabled = false;
             });
-        });
+        }
 
-        okButton.addEventListener('click', () => {
+        function checkNumberInputs() {
             if (Array.from(numberInputs).every((input) => input.value !== '')) {
                 const numbers = Array.from(numberInputs).map((input) => input.value).join('');
-                alert(`Input：${numbers}`);
+                alert(`Input : ${numbers}`);
             } else {
                 alert('4 digits only');
             }
-            numberInputs.forEach((input) => {
-                input.value = '';
-            });
-            keypadButtons.forEach((button) => {
-                button.disabled = false;
-            });
-        });
+            resetKeypad();
+        }
     });
