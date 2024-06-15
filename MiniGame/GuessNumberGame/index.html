@@ -37,14 +37,38 @@
             </div>
             <p>Input four non-repeating numbers and press the "Enter" key or click the "Guess" button</p>
             <div class="input-group mb-3">
-                <input type="text" class="form-control" id="input">
+                <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+                <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+                <input type="text" class="form-control number-input" maxlength="1" draggable="true">
+                <input type="text" class="form-control number-input" maxlength="1" draggable="true">
                 <div class="input-group-append">
-                    <button type="button" class="btn btn-primary" id="guess-btn">Guess</button>
                     <button type="button" class="btn btn-success" id="new-game">New Game</button>
                 </div>
             </div>
             <div id="guess-count"></div>
             <div id="table-container" style="display: none;"></div>
+            <div id="keypadContainer" class="keypad-container">
+                <div class="keypad-row">
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="1">1</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="2">2</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="3">3</button></div>
+                </div>
+                <div class="keypad-row">
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="4">4</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="5">5</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="6">6</button></div>
+                </div>
+                <div class="keypad-row">
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="7">7</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="8">8</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="9">9</button></div>
+                </div>
+                <div class="keypad-row">
+                    <div class="keypad-col"><button id="cancelBtn" class="btn btn-danger keypad-btn">Cancel</button></div>
+                    <div class="keypad-col"><button class="btn btn-primary keypad-btn" data-number="0">0</button></div>
+                    <div class="keypad-col"><button id="okBtn" class="btn btn-success keypad-btn">OK</button></div>
+                </div>
+            </div>
         </div>
     </div>
 
