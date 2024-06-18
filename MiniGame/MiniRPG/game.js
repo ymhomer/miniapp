@@ -1,4 +1,3 @@
-// 立即調用的函數表達式（IIFE）來封裝遊戲邏輯
 (function() {
     const MAX_POINTS = 30;
     let gameState = {
@@ -31,17 +30,17 @@
     function updatePoints(input) {
         const totalUsed = Array.from(document.querySelectorAll(".card-body input")).reduce((acc, input) => acc + (parseInt(input.value) || 0), 0);
         gameState.pointsLeft = MAX_POINTS - totalUsed;
-        document.getElementById("pointsLeft").textContent = `點數剩餘: ${gameState.pointsLeft}`;
+        document.getElementById("pointsLeft").textContent = `Point remain: ${gameState.pointsLeft}`;
 
         if (gameState.pointsLeft < 0) {
-            alert("點數分配超過了總點數，請重新分配！");
+            alert("The points allocated exceed the total points, please reallocate!");
             resetInputValues();
             updatePointsDisplay();
         }
     }
 	
 	function updatePointsDisplay() {
-		document.getElementById("pointsLeft").textContent = `點數剩餘: ${gameState.pointsLeft}`;
+		document.getElementById("pointsLeft").textContent = `Point remain: ${gameState.pointsLeft}`;
 	}
 
     function resetInputValues() {
@@ -50,7 +49,7 @@
 
     function assignAttributes() {
         if (gameState.pointsLeft !== 0) {
-            alert("點數必須剛好分配完，共30點。");
+            alert("The points must be distributed exactly, 30 points in total.");
             return;
         }
 
@@ -139,13 +138,13 @@
 	function updatePlayerDisplay() {
         let playerStats = document.getElementById('playerStats');
         if (playerStats) {
-            playerStats.innerHTML = `<h3>玩家状态</h3>
-                                     <p>血量: ${gameState.player.health}</p>
-                                     <p>魔力: ${gameState.player.mana}</p>
-                                     <p>攻击: ${gameState.player.attack}</p>`;
+            playerStats.innerHTML = `<h3>Player status</h3>
+                                     <p>HP: ${gameState.player.health}</p>
+                                     <p>MP: ${gameState.player.mana}</p>
+                                     <p>ATT: ${gameState.player.attack}</p>`;
             const attackBtn = document.createElement('button');
             attackBtn.classList.add('btn', 'btn-danger', 'mt-3');
-            attackBtn.textContent = '攻击';
+            attackBtn.textContent = 'Attack';
             attackBtn.addEventListener('click', enableAttackMode);
             playerStats.appendChild(attackBtn);
         }
@@ -153,11 +152,11 @@
 
     function enableAttackMode() {
         if (gameState.monsters.length === 0) {
-            document.getElementById('battleLog').innerHTML = '<p>没有怪物可以攻击！</p>';
+            document.getElementById('battleLog').innerHTML = '<p>No monsters can attack!</p>';
             return;
         }
         attackMode = true;
-        document.getElementById('battleLog').innerHTML = '<p>请选择一个怪物来攻击。</p>';
+        document.getElementById('battleLog').innerHTML = '<p>Please select a monster to attack.</p>';
         gameState.monsters.forEach((_, index) => {
             let monsterCard = document.getElementById(`monster-card-${index}`);
             if (monsterCard) {
@@ -173,11 +172,11 @@
             gameState.monsters.forEach((monster, index) => {
                 let card = document.createElement('div');
                 card.className = 'monster-card';
-                card.innerHTML = `<div class="monster-header h3">怪物 ${index + 1}</div>
+                card.innerHTML = `<div class="monster-header h3">Monster ${index + 1}</div>
                                   <div class="monster-stats">
-                                      <p>血量: ${monster.health}</p>
-                                      <p>魔力: ${monster.mana}</p>
-                                      <p>攻击: ${monster.attack}</p>
+                                      <p>HP: ${monster.health}</p>
+                                      <p>MP: ${monster.mana}</p>
+                                      <p>ATT: ${monster.attack}</p>
                                   </div>`;
                 card.addEventListener('click', () => attackMonster(index));
                 monsterArea.appendChild(card);
@@ -195,9 +194,9 @@
         gameState.totalAttacks++;
 
         let attackLog = document.getElementById('battleLog');
-        attackLog.innerHTML = `<p>你攻擊了怪物 ${index + 1} 造成了 ${damage} 點傷害。</p>`;
+        attackLog.innerHTML = `<p>You attacked monster ${index + 1} and caused ${damage} points of damage.</p>`;
         if (target.health <= 0) {
-            attackLog.innerHTML += `<p>怪物 ${index + 1} 已被擊敗！</p>`;
+            attackLog.innerHTML += `<p>Monster ${index + 1} has been defeated!</p>`;
             gameState.monsters.splice(index, 1);
             gameState.totalMonstersKilled++;
         }
@@ -219,7 +218,7 @@
             const damage = Math.min(gameState.player.health, monster.attack);
             gameState.player.health -= damage;
             gameState.totalDamageTaken += damage;
-            attackLog.innerHTML += `<p>怪物攻击你，造成了 ${damage} 点伤害。</p>`;
+            attackLog.innerHTML += `<p>The monster attacked you, causing ${damage} damage.</p>`;
         });
 
         updatePlayerDisplay();
