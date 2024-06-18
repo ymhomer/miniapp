@@ -1,5 +1,5 @@
 (function() {
-    const MAX_POINTS = 30;
+    const MAX_POINTS = 50;
     let gameState = {
         pointsLeft: MAX_POINTS,
 		roundPoints: MAX_POINTS,
