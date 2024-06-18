@@ -1,8 +1,9 @@
 (function() {
     const MAX_POINTS = 50;
+    const MAX_POINTS_MONSTER = 30;
     let gameState = {
         pointsLeft: MAX_POINTS,
-		roundPoints: MAX_POINTS,
+		roundPoints: MAX_POINTS_MONSTER,
         player: { health: 0, mana: 0, attack: 0 },
         monsters: [],
         currentLevel: 1,
