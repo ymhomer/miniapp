@@ -6,6 +6,7 @@
     <title>Rhythm Game</title>
     <!-- CSS, JS -->
     <link rel="stylesheet" href="/miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/miniapp/MiniGame/RhythmGame/style.css">
     <script src="/miniapp/js/bootstrap.bundle.min.js"></script>
     <script src="/miniapp/MiniGame/RhythmGame/game.js"></script>
 
@@ -14,26 +15,6 @@
     <link rel="stylesheet" href="../../MiniGame/RhythmGame/style.css">
     <script src="../../js/bootstrap.bundle.min.js"></script>
     <script src="../../MiniGame/RhythmGame/game.js"></script-->
-    <style>
-        .game-area {
-            height: 600px;
-            position: relative;
-            overflow: hidden;
-        }
-        .lane {
-            position: relative;
-        }
-        .block {
-            width: 100%;
-            height: 50px;
-            position: absolute;
-            top: -50px;
-        }
-        .hit-area {
-            height: 100px;
-            background-color: rgba(0,0,0,0.1);
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -64,13 +45,40 @@
 
     <!-- Start Game Modal -->
     <div class="modal fade" id="start-game-modal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Start Game</h5>
+                    <h5 class="modal-title">Rhythm Challenge</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <h4>How to Play</h4>
+                    <p>Click the hit area or use arrow keys when blocks reach the bottom.</p>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-2">
+                            <div class="block-example" style="background-color: black;"></div>
+                        </div>
+                        <div class="col-10">
+                            <strong>Normal Block:</strong> Click on the corresponding side for 1 point.
+                        </div>
+                    </div>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-2">
+                            <div class="block-example" style="background-color: red;"></div>
+                        </div>
+                        <div class="col-10">
+                            <strong>Reverse Block:</strong> Click on the opposite side for 2 points.
+                        </div>
+                    </div>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-2">
+                            <div class="block-example" style="background-color: orange;"></div>
+                        </div>
+                        <div class="col-10">
+                            <strong>Trap Block:</strong> Don't click! It will pass safely.
+                        </div>
+                    </div>
+                    <p>Miss or wrong clicks cost one life. You have 3 lives. Good luck!</p>
                     <p>High Score: <span id="modal-high-score">0</span></p>
                 </div>
                 <div class="modal-footer">

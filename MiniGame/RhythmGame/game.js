@@ -180,17 +180,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Blocks in hit area: ${hitBlock ? 'Yes' : 'No'}`);
         console.log(`Opposite blocks in hit area: ${oppositeHitBlock ? 'Yes' : 'No'}`);
 
+        let handled = false;
+
         if (hitBlock) {
             console.log(`Hit block found in same lane. Type: ${hitBlock.dataset.type}`);
             handleBlockHit(hitBlock, side, false);
+            handled = true;
         } else if (oppositeHitBlock && oppositeHitBlock.dataset.type === BLOCK_TYPES.REVERSE) {
             console.log(`Hit block found in opposite lane. Type: ${oppositeHitBlock.dataset.type}`);
             handleBlockHit(oppositeHitBlock, side, true);
-        } else {
+            handled = true;
+        }
+
+        if (!handled) {
             console.log('No valid hit block found. Missing.');
             missBlock();
             playHitEffect(side, 'error');
+            playMissSound();
         }
+
+        // 清理所有在点击区域内的方块
+        if (hitBlock) hitBlock.remove();
+        if (oppositeHitBlock) oppositeHitBlock.remove();
 
         updateDisplay();
         checkGameOver();
@@ -258,10 +269,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function playHitEffect(side, type) {
         const hitArea = side === 'left' ? leftHit : rightHit;
-        hitArea.style.backgroundColor = type === 'success' ? 'rgba(0,255,0,0.5)' : 'rgba(255,0,0,0.5)';
+        
+        hitArea.classList.add('hit-effect');
+        
+        if (type === 'success') {
+            hitArea.classList.add('success-effect');
+        } else {
+            hitArea.classList.add('miss-effect');
+        }
+        
         setTimeout(() => {
-            hitArea.style.backgroundColor = 'rgba(0,0,0,0.1)';
-        }, 100);
+            hitArea.classList.remove('hit-effect', 'success-effect', 'miss-effect');
+        }, 500);
     }
 
     function updateDisplay() {

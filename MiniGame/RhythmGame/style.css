@@ -1,0 +1,45 @@
+.game-area {
+    height: 600px;
+    position: relative;
+    overflow: hidden;
+}
+.lane {
+    position: relative;
+}
+.block {
+    width: 100%;
+    height: 50px;
+    position: absolute;
+    top: -50px;
+}
+.block-example {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+}
+.hit-area {
+    height: 100px;
+    background-color: rgba(0,0,0,0.1);
+}
+    @keyframes hitEffect {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+.hit-effect {
+    animation: hitEffect 0.5s ease-out;
+}
+    @keyframes successEffect {
+    0% { background-color: rgba(0, 255, 0, 0.5); }
+    100% { background-color: rgba(0, 0, 0, 0.1); }
+}
+.success-effect {
+    animation: successEffect 0.5s ease-out;
+}
+    @keyframes missEffect {
+    0% { background-color: rgba(255, 0, 0, 0.5); }
+    100% { background-color: rgba(0, 0, 0, 0.1); }
+}
+.miss-effect {
+    animation: missEffect 0.5s ease-out;
+}
