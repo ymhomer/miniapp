@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lives = 3;
     let highScore = 0;
     let gameInterval;
-    let gameSpeed = 600; // milliseconds per beat
+    let gameSpeed = 1000; // milliseconds per beat
     let hitTolerance = 100; // milliseconds
 
     // DOM elements
