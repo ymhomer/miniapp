@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lives = 3;
     let highScore = 0;
     let gameInterval;
-    let gameSpeed = 500; // milliseconds per beat
+    let gameSpeed = 600; // milliseconds per beat
     let hitTolerance = 100; // milliseconds
 
     // DOM elements
@@ -64,6 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const blockType = getRandomBlockType();
         const block = createBlock(blockType);
         lane.appendChild(block);
+        
+        // 设置方块宽度为通道宽度
+        block.style.width = `${lane.offsetWidth}px`;
+        
         animateBlock(block);
     }
 
