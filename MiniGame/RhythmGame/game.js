@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let gameInterval;
     let gameSpeed = 1000; // milliseconds per beat
     let hitTolerance = 100; // milliseconds
+    let audioContext;
 
     // DOM elements
     const leftLane = document.getElementById('left-lane');
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startGameModal = new bootstrap.Modal(document.getElementById('start-game-modal'));
     const modalHighScore = document.getElementById('modal-high-score');
     const modalHighScoreEnd = document.getElementById('modal-high-score-end');
+    document.addEventListener('click', initAudio, { once: true });
 
     // Block types
     const BLOCK_TYPES = {
@@ -84,6 +86,50 @@ document.addEventListener('DOMContentLoaded', () => {
         block.style.backgroundColor = type;
         block.dataset.type = type;
         return block;
+    }
+
+    function initAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playSuccessSound() {
+        if (!audioContext) return;
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(660, audioContext.currentTime); // 高音
+        oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1); // 上升
+
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.3);
+    }
+
+    function playMissSound() {
+        if (!audioContext) return;
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // 低音
+        oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.2); // 下降
+
+        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
     }
 
     function animateBlock(block) {
@@ -160,12 +206,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Correct hit on normal block');
                     score++;
                     block.dataset.hit = 'true';
-                    block.remove(); // 只在成功击中时移除
+                    block.remove();
                     playHitEffect(side, 'success');
+                    playSuccessSound();
                 } else {
                     console.log('Incorrect hit on normal block');
                     missBlock();
                     playHitEffect(side, 'error');
+                    playMissSound();
                 }
                 break;
             case BLOCK_TYPES.REVERSE:
@@ -173,18 +221,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Correct hit on reverse block');
                     score += 2;
                     block.dataset.hit = 'true';
-                    block.remove(); // 只在成功击中时移除
+                    block.remove();
                     playHitEffect(side, 'success');
+                    playSuccessSound();
                 } else {
                     console.log('Incorrect hit on reverse block');
                     missBlock();
                     playHitEffect(side, 'error');
+                    playMissSound();
                 }
                 break;
             case BLOCK_TYPES.TRAP:
                 console.log('Hit on trap block');
                 missBlock();
                 playHitEffect(side, 'error');
+                playMissSound();
                 break;
         }
         console.log(`After hit - Score: ${score}, Lives: ${lives}`);
@@ -193,9 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function missBlock() {
         console.log('Missing block. Deducting life.');
         lives--;
-        updateDisplay(); // 确保这里调用了 updateDisplay
+        updateDisplay();
         console.log(`Lives remaining: ${lives}`);
-        checkGameOver(); // 检查是否游戏结束
+        checkGameOver();
+        playMissSound();
     }
 
     function isInHitArea(block, side) {
