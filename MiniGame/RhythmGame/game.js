@@ -5,9 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lives = 3;
     let highScore = 0;
     let gameInterval;
-    let baseSpeed = 2000;
-    let halfBeatSpeed = baseSpeed / 2;
-    let doubleBeatSpeed = baseSpeed * 2;
+    let gameSpeed = 2000; // milliseconds per beat
     let hitTolerance = 100; // milliseconds
 
     // DOM elements
@@ -58,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameOverModal.hide();
 
         // Start spawning blocks
-        spawnBlock();
+        gameInterval = setInterval(spawnBlock, gameSpeed);
     }
 
     function spawnBlock() {
@@ -67,15 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const block = createBlock(blockType);
         lane.appendChild(block);
         animateBlock(block);
-
-        // 根据最快的速度（半拍）来设置下一个方块的生成时间
-        setTimeout(spawnBlock, halfBeatSpeed);
-    }
-
-    function getRandomSpeed() {
-        const speeds = [halfBeatSpeed, baseSpeed, doubleBeatSpeed];
-        const randomIndex = Math.floor(Math.random() * speeds.length);
-        return speeds[randomIndex];
     }
 
     function getRandomBlockType() {
@@ -90,24 +79,22 @@ document.addEventListener('DOMContentLoaded', () => {
         block.className = 'block';
         block.style.backgroundColor = type;
         block.dataset.type = type;
-        block.dataset.speed = getRandomSpeed();
         return block;
     }
 
     function animateBlock(block) {
-        console.log(`Animating block. Type: ${block.dataset.type}, Speed: ${block.dataset.speed}`);
-        const speed = parseInt(block.dataset.speed);
+        console.log(`Animating block. Type: ${block.dataset.type}`);
         const animation = block.animate([
             { top: '-50px' },
             { top: '600px' }
         ], {
-            duration: speed * 1.5, // 调整这个乘数以适应你的游戏区域高度
+            duration: 3000,
             easing: 'linear'
         });
 
         animation.onfinish = () => {
             console.log(`Block animation finished. Type: ${block.dataset.type}`);
-            if (block.parentNode) {
+            if (block.parentNode) { // 检查方块是否还在 DOM 中
                 if (block.dataset.type !== BLOCK_TYPES.TRAP && block.dataset.hit !== 'true') {
                     console.log('Non-trap block missed. Deducting life.');
                     missBlock();
