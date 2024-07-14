@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lives = 3;
         updateDisplay();
         startGameModal.hide();
+        gameOverModal.hide();
 
         // Start spawning blocks
         gameInterval = setInterval(spawnBlock, gameSpeed);
@@ -226,4 +227,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
