@@ -21,25 +21,43 @@
     height: 100px;
     background-color: rgba(0,0,0,0.1);
 }
-    @keyframes hitEffect {
-    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-    70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+
+@keyframes hitEffect {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+    50% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
 }
-.hit-effect {
-    animation: hitEffect 0.5s ease-out;
+
+@keyframes rotateLight {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
-    @keyframes successEffect {
-    0% { background-color: rgba(0, 255, 0, 0.5); }
-    100% { background-color: rgba(0, 0, 0, 0.1); }
+
+.hit-effect::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border: 2px solid white;
+    border-radius: 50%;
+    animation: hitEffect 0.5s ease-out, rotateLight 1s linear infinite;
 }
+
+@keyframes successEffect {
+    0%, 100% { background-color: rgba(0, 255, 0, 0.2); }
+    50% { background-color: rgba(0, 255, 0, 0.8); }
+}
+
 .success-effect {
-    animation: successEffect 0.5s ease-out;
+    animation: successEffect 0.5s ease-out 3;
 }
-    @keyframes missEffect {
-    0% { background-color: rgba(255, 0, 0, 0.5); }
-    100% { background-color: rgba(0, 0, 0, 0.1); }
+
+@keyframes missEffect {
+    0%, 100% { background-color: rgba(255, 0, 0, 0.2); }
+    50% { background-color: rgba(255, 0, 0, 0.8); }
 }
+
 .miss-effect {
-    animation: missEffect 0.5s ease-out;
+    animation: missEffect 0.5s ease-out 3;
 }

@@ -5,10 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let lives = 3;
     let highScore = 0;
     let gameInterval;
-    let gameSpeed = 2000; // 初始速度，毫秒
-    const minGameSpeed = 500; // 最小速度（最快）
-    const speedIncreaseInterval = 10000; // 每10秒增加速度
-    const speedIncreaseFactor = 0.9; // 每次速度增加10%
+    let gameSpeed = 2000;
+    const minGameSpeed = 500;
+    const speedIncreaseInterval = 10000;
+    const speedIncreaseFactor = 0.9;
     let speedIncreaseTimer;
     let hitTolerance = 50; // milliseconds
     let audioContext;
@@ -23,8 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const highScoreElement = document.getElementById('high-score');
     const startButton = document.getElementById('start-button');
     const restartButton = document.getElementById('restart-button');
-    const gameOverModal = new bootstrap.Modal(document.getElementById('game-over-modal'));
-    const startGameModal = new bootstrap.Modal(document.getElementById('start-game-modal'));
+    const startGameModal = new bootstrap.Modal(document.getElementById('start-game-modal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    const gameOverModal = new bootstrap.Modal(document.getElementById('game-over-modal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
     const modalHighScore = document.getElementById('modal-high-score');
     const modalHighScoreEnd = document.getElementById('modal-high-score-end');
     document.addEventListener('click', initAudio, { once: true });
@@ -155,13 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
             { top: '-50px' },
             { top: '600px' }
         ], {
-            duration: gameSpeed * 1.5, // 动画持续时间随游戏速度变化
+            duration: gameSpeed * 1.5,
             easing: 'linear'
         });
     
         animation.onfinish = () => {
             console.log(`Block animation finished. Type: ${block.dataset.type}`);
-            if (block.parentNode) { // 检查方块是否还在 DOM 中
+            if (block.parentNode) {
                 if (block.dataset.type !== BLOCK_TYPES.TRAP && block.dataset.hit !== 'true') {
                     console.log('Non-trap block missed. Deducting life.');
                     missBlock();
@@ -216,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
             playMissSound();
         }
 
-        // 清理所有在点击区域内的方块
         if (hitBlock) hitBlock.remove();
         if (oppositeHitBlock) oppositeHitBlock.remove();
 
