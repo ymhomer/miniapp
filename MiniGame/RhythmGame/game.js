@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lives = 3;
     let highScore = 0;
     let gameInterval;
-    let gameSpeed = 600; // milliseconds per beat
+    let gameSpeed = 1000; // milliseconds per beat
     let hitTolerance = 50; // milliseconds
     let audioContext;
 
@@ -248,7 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 playMissSound();
                 break;
         }
+        gameSpeed-=5;
         console.log(`After hit - Score: ${score}, Lives: ${lives}`);
+        console.log(`Game speed: ${gameSpeed}`);
     }
 
     function missBlock() {
