@@ -5,7 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let lives = 3;
     let highScore = 0;
     let gameInterval;
-    let gameSpeed = 1000; // milliseconds per beat
+    let gameSpeed = 2000; // 初始速度，毫秒
+    const minGameSpeed = 500; // 最小速度（最快）
+    const speedIncreaseInterval = 10000; // 每10秒增加速度
+    const speedIncreaseFactor = 0.9; // 每次速度增加10%
+    let speedIncreaseTimer;
     let hitTolerance = 50; // milliseconds
     let audioContext;
 
@@ -50,15 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        // Reset game state
         score = 0;
         lives = 3;
+        gameSpeed = 2000;
         updateDisplay();
         startGameModal.hide();
         gameOverModal.hide();
-
-        // Start spawning blocks
+    
         gameInterval = setInterval(spawnBlock, gameSpeed);
+    
+        speedIncreaseTimer = setInterval(increaseSpeed, speedIncreaseInterval);
     }
 
     function spawnBlock() {
@@ -85,6 +90,19 @@ document.addEventListener('DOMContentLoaded', () => {
         block.style.backgroundColor = type;
         block.dataset.type = type;
         return block;
+    }
+
+    function increaseSpeed() {
+        if (gameSpeed > minGameSpeed) {
+            gameSpeed *= speedIncreaseFactor;
+            if (gameSpeed < minGameSpeed) {
+                gameSpeed = minGameSpeed;
+            }
+            console.log(`Speed increased. New interval: ${gameSpeed}ms`);
+            
+            clearInterval(gameInterval);
+            gameInterval = setInterval(spawnBlock, gameSpeed);
+        }
     }
 
     function initAudio() {
@@ -137,10 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
             { top: '-50px' },
             { top: '600px' }
         ], {
-            duration: 3000,
+            duration: gameSpeed * 1.5, // 动画持续时间随游戏速度变化
             easing: 'linear'
         });
-
+    
         animation.onfinish = () => {
             console.log(`Block animation finished. Type: ${block.dataset.type}`);
             if (block.parentNode) { // 检查方块是否还在 DOM 中
@@ -297,10 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkGameOver() {
         if (lives <= 0) {
             clearInterval(gameInterval);
+            clearInterval(speedIncreaseTimer);
             document.getElementById('final-score').textContent = score;
-            updateHighScore();
+            document.getElementById('modal-high-score-end').textContent = highScore;
             gameOverModal.show();
-            gameSpeed = 1000;
         }
     }
 });
