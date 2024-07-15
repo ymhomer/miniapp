@@ -300,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('final-score').textContent = score;
             updateHighScore();
             gameOverModal.show();
+            gameSpeed = 1000;
         }
     }
 });
