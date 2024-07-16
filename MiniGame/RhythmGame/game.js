@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
     // Game variables
     let score = 0;
@@ -34,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalHighScore = document.getElementById('modal-high-score');
     const modalHighScoreEnd = document.getElementById('modal-high-score-end');
     document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('keydown', initAudio, { once: true });
 
     // Block types
     const BLOCK_TYPES = {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listeners
     restartButton.addEventListener('click', startGame);
-    document.getElementById('start-button').addEventListener('click', startGame);
+    startButton.addEventListener('click', startGame);
     document.addEventListener('keydown', handleKeyPress);
     leftHit.addEventListener('click', () => handleHit('left'));
     rightHit.addEventListener('click', () => handleHit('right'));
@@ -66,9 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDisplay();
         startGameModal.hide();
         gameOverModal.hide();
-    
+
         gameInterval = setInterval(spawnBlock, gameSpeed);
-    
         speedIncreaseTimer = setInterval(increaseSpeed, speedIncreaseInterval);
     }
 
@@ -77,9 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const blockType = getRandomBlockType();
         const block = createBlock(blockType);
         lane.appendChild(block);
-        
+
         block.style.width = `${lane.offsetWidth}px`;
-        
         animateBlock(block);
     }
 
@@ -105,14 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameSpeed = minGameSpeed;
             }
             console.log(`Speed increased. New interval: ${gameSpeed}ms`);
-            
+
             clearInterval(gameInterval);
             gameInterval = setInterval(spawnBlock, gameSpeed);
         }
     }
 
     function initAudio() {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
     }
 
     function playSuccessSound() {
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             duration: gameSpeed * 1.5,
             easing: 'linear'
         });
-    
+
         animation.onfinish = () => {
             console.log(`Block animation finished. Type: ${block.dataset.type}`);
             if (block.parentNode) {
@@ -293,15 +293,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function playHitEffect(side, type) {
         const hitArea = side === 'left' ? leftHit : rightHit;
-        
+
         hitArea.classList.add('hit-effect');
-        
+
         if (type === 'success') {
             hitArea.classList.add('success-effect');
         } else {
             hitArea.classList.add('miss-effect');
         }
-        
+
         setTimeout(() => {
             hitArea.classList.remove('hit-effect', 'success-effect', 'miss-effect');
         }, 500);
