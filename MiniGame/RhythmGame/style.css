@@ -1,5 +1,5 @@
 .game-area {
-    height: 600px;
+    height: calc(100vh - 80px); /* 适应窗口高度，减去顶部信息和按钮的高度 */
     position: relative;
     overflow: hidden;
 }
@@ -18,7 +18,7 @@
     border-radius: 5px;
 }
 .hit-area {
-    height: 100px;
+    height: 50px;
     background-color: rgba(0,0,0,0.1);
 }
 

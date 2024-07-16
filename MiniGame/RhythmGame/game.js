@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (gameSpeed < minGameSpeed) {
                 gameSpeed = minGameSpeed;
             }
-            console.log(`Speed increased. New interval: ${gameSpeed}ms`);
+            //console.log(`Speed increased. New interval: ${gameSpeed}ms`);
 
             clearInterval(gameInterval);
             gameInterval = setInterval(spawnBlock, gameSpeed);
@@ -156,29 +156,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animateBlock(block) {
-        console.log(`Animating block. Type: ${block.dataset.type}`);
+        const gameAreaHeight = document.querySelector('.game-area').offsetHeight;
+        //console.log(`Animating block. Type: ${block.dataset.type}`);
         const animation = block.animate([
-            { top: '-50px' },
-            { top: '600px' }
+            { top: '0px' },
+            { top: `${gameAreaHeight}px` }
         ], {
             duration: gameSpeed * 1.5,
             easing: 'linear'
         });
 
         animation.onfinish = () => {
-            console.log(`Block animation finished. Type: ${block.dataset.type}`);
+            //console.log(`Block animation finished. Type: ${block.dataset.type}`);
             if (block.parentNode) {
                 if (block.dataset.type !== BLOCK_TYPES.TRAP && block.dataset.hit !== 'true') {
-                    console.log('Non-trap block missed. Deducting life.');
+                    //console.log('Non-trap block missed. Deducting life.');
                     missBlock();
                 } else if (block.dataset.type === BLOCK_TYPES.TRAP) {
-                    console.log('Trap block passed without interaction.');
+                    //console.log('Trap block passed without interaction.');
                 } else {
-                    console.log('Block was already hit, no action needed.');
+                    //console.log('Block was already hit, no action needed.');
                 }
                 block.remove();
             } else {
-                console.log('Block was already removed, no action needed.');
+                //console.log('Block was already removed, no action needed.');
             }
         };
     }
@@ -192,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleHit(side) {
-        console.log(`Handling hit on ${side} side`);
+        //console.log(`Handling hit on ${side} side`);
         const lane = side === 'left' ? leftLane : rightLane;
         const oppositeLane = side === 'left' ? rightLane : leftLane;
         const blocks = lane.querySelectorAll('.block');
@@ -200,23 +201,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const hitBlock = Array.from(blocks).find(block => isInHitArea(block, side));
         const oppositeHitBlock = Array.from(oppositeBlocks).find(block => isInHitArea(block, side));
 
-        console.log(`Blocks in hit area: ${hitBlock ? 'Yes' : 'No'}`);
-        console.log(`Opposite blocks in hit area: ${oppositeHitBlock ? 'Yes' : 'No'}`);
+        //console.log(`Blocks in hit area: ${hitBlock ? 'Yes' : 'No'}`);
+        //console.log(`Opposite blocks in hit area: ${oppositeHitBlock ? 'Yes' : 'No'}`);
 
         let handled = false;
 
         if (hitBlock) {
-            console.log(`Hit block found in same lane. Type: ${hitBlock.dataset.type}`);
+            //console.log(`Hit block found in same lane. Type: ${hitBlock.dataset.type}`);
             handleBlockHit(hitBlock, side, false);
             handled = true;
         } else if (oppositeHitBlock && oppositeHitBlock.dataset.type === BLOCK_TYPES.REVERSE) {
-            console.log(`Hit block found in opposite lane. Type: ${oppositeHitBlock.dataset.type}`);
+            //console.log(`Hit block found in opposite lane. Type: ${oppositeHitBlock.dataset.type}`);
             handleBlockHit(oppositeHitBlock, side, true);
             handled = true;
         }
 
         if (!handled) {
-            console.log('No valid hit block found. Missing.');
+            //console.log('No valid hit block found. Missing.');
             missBlock();
             playHitEffect(side, 'error');
             playMissSound();
@@ -231,19 +232,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleBlockHit(block, side, isOpposite) {
         const blockType = block.dataset.type;
-        console.log(`Handling block hit. Type: ${blockType}, Side: ${side}, IsOpposite: ${isOpposite}`);
+        //console.log(`Handling block hit. Type: ${blockType}, Side: ${side}, IsOpposite: ${isOpposite}`);
 
         switch (blockType) {
             case BLOCK_TYPES.NORMAL:
                 if (!isOpposite) {
-                    console.log('Correct hit on normal block');
+                    //console.log('Correct hit on normal block');
                     score++;
                     block.dataset.hit = 'true';
                     block.remove();
                     playHitEffect(side, 'success');
                     playSuccessSound();
                 } else {
-                    console.log('Incorrect hit on normal block');
+                    //console.log('Incorrect hit on normal block');
                     missBlock();
                     playHitEffect(side, 'error');
                     playMissSound();
@@ -251,36 +252,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case BLOCK_TYPES.REVERSE:
                 if (isOpposite) {
-                    console.log('Correct hit on reverse block');
+                    //console.log('Correct hit on reverse block');
                     score += 2;
                     block.dataset.hit = 'true';
                     block.remove();
                     playHitEffect(side, 'success');
                     playSuccessSound();
                 } else {
-                    console.log('Incorrect hit on reverse block');
+                    //console.log('Incorrect hit on reverse block');
                     missBlock();
                     playHitEffect(side, 'error');
                     playMissSound();
                 }
                 break;
             case BLOCK_TYPES.TRAP:
-                console.log('Hit on trap block');
+                //console.log('Hit on trap block');
                 missBlock();
                 playHitEffect(side, 'error');
                 playMissSound();
                 break;
         }
         gameSpeed-=5;
-        console.log(`After hit - Score: ${score}, Lives: ${lives}`);
-        console.log(`Game speed: ${gameSpeed}`);
+        //console.log(`After hit - Score: ${score}, Lives: ${lives}`);
+        //console.log(`Game speed: ${gameSpeed}`);
     }
 
     function missBlock() {
-        console.log('Missing block. Deducting life.');
+        //console.log('Missing block. Deducting life.');
         lives--;
         updateDisplay();
-        console.log(`Lives remaining: ${lives}`);
+        //console.log(`Lives remaining: ${lives}`);
         checkGameOver();
         playMissSound();
     }
