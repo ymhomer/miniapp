@@ -289,7 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function isInHitArea(block, side) {
         const rect = block.getBoundingClientRect();
         const hitAreaRect = (side === 'left' ? leftHit : rightHit).getBoundingClientRect();
-        return Math.abs(rect.bottom - hitAreaRect.top) < hitTolerance;
+        //return Math.abs(rect.bottom - hitAreaRect.top) < hitTolerance;
+        return rect.bottom >= hitAreaRect.top && rect.top <= hitAreaRect.bottom;
     }
 
     function playHitEffect(side, type) {
