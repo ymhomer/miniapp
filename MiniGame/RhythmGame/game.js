@@ -32,8 +32,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const modalHighScore = document.getElementById('modal-high-score');
     const modalHighScoreEnd = document.getElementById('modal-high-score-end');
+    const settingsButton = document.getElementById('settings-button');
+    const settingsButtonsModal = document.querySelectorAll('#settings-button-modal');
+    const settingsModal = new bootstrap.Modal(document.getElementById('settings-modal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    const gameArea = document.querySelector('.game-area');
+    const gameAreaHeightInput = document.getElementById('game-area-height');
+    const currentHeight = document.getElementById('current-height');
+    const saveSettingsButton = document.getElementById('save-settings');
+    const resetHighScoreButton = document.getElementById('reset-high-score');
+    const resetDynamicHeightButton = document.getElementById('reset-dynamic-height');
+
     document.addEventListener('click', initAudio, { once: true });
     document.addEventListener('keydown', initAudio, { once: true });
+
+    settingsButton.addEventListener('click', () => {
+        currentHeight.textContent = gameArea.offsetHeight + 'px';
+        settingsModal.show();
+    });
+
+    settingsButtonsModal.forEach(button => {
+        button.addEventListener('click', () => {
+            currentHeight.textContent = gameArea.offsetHeight + 'px';
+            settingsModal.show();
+        });
+    });
+
+    saveSettingsButton.addEventListener('click', () => {
+        const newHeight = gameAreaHeightInput.value;
+        if (newHeight) {
+            gameArea.style.height = newHeight + 'px';
+        }
+        settingsModal.hide();
+    });
+
+    resetHighScoreButton.addEventListener('click', () => {
+        localStorage.setItem('highScore', 0);
+        highScore = 0;
+        updateHighScore();
+    });
+
+    resetDynamicHeightButton.addEventListener('click', () => {
+        gameArea.style.height = 'calc(100vh - 80px)';
+        settingsModal.hide();
+    });
 
     // Block types
     const BLOCK_TYPES = {
@@ -48,9 +92,25 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', handleKeyPress);
     leftHit.addEventListener('click', () => handleHit('left'));
     rightHit.addEventListener('click', () => handleHit('right'));
+    saveSettingsButton.addEventListener('click', saveSettings);
+    resetHighScoreButton.addEventListener('click', resetHighScore);
 
     updateHighScore();
     startGameModal.show();
+
+    function saveSettings() {
+        const newHeight = gameAreaHeightInput.value;
+        if (newHeight) {
+            gameArea.style.height = `${newHeight}px`;
+        }
+        bootstrap.Modal.getInstance(document.getElementById('settings-modal')).hide();
+    }
+
+    function resetHighScore() {
+        highScore = 0;
+        localStorage.setItem('highScore', highScore);
+        updateHighScore();
+    }
 
     function updateHighScore() {
         highScore = localStorage.getItem('highScore') || 0;

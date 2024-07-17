@@ -24,6 +24,7 @@
                     <div>Score: <span id="score">0</span></div>
                     <div>Lives: <span id="lives">3</span></div>
                     <div>High Score: <span id="high-score">0</span></div>
+                    <button type="button" class="btn btn-secondary" id="settings-button">Settings</button>
                 </div>
                 <div class="game-area border">
                     <div class="row h-100">
@@ -50,6 +51,7 @@
                 <div class="modal-header">
                     <h5 class="modal-title">Rhythm Challenge</h5>
                     <!--button type="button" class="btn-close" data-bs-dismiss="modal"></button-->
+                    <button type="button" class="btn btn-secondary" id="settings-button-modal">Settings</button>
                 </div>
                 <div class="modal-body">
                     <h4>How to Play</h4>
@@ -95,6 +97,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Game Over</h5>
+                    <button type="button" class="btn btn-secondary" id="settings-button-modal">Settings</button>
                     <!--button type="button" class="btn-close" data-bs-dismiss="modal"></button-->
                 </div>
                 <div class="modal-body">
@@ -108,5 +111,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settings-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="game-area-height" class="form-label">Game Area Height</label>
+                        <input type="number" class="form-control" id="game-area-height" placeholder="Enter height in px">
+                        <div class="form-text">Current height: <span id="current-height"></span></div>
+                    </div>
+                    <button type="button" class="btn btn-danger" id="reset-high-score">Reset High Score</button>
+                    <button type="button" class="btn btn-warning" id="reset-dynamic-height">Reset to Dynamic Height</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="save-settings">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
