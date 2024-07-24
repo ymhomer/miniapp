@@ -17,11 +17,11 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="bg-gray-100 text-gray-900">
 
     <!-- Hero Section -->
     <header class="bg-cover bg-center h-screen" style="background-image: url('https://via.placeholder.com/1920x1080');">
-        <div class="flex items-center justify-center h-full bg-black bg-opacity-50">
+        <div class="flex items-center justify-center h-full bg-white bg-opacity-75">
             <div class="text-center">
                 <h1 class="text-5xl font-bold mb-4">Welcome to GeDniM</h1>
                 <p class="text-xl mb-8">Your ultimate destination for amazing software and games</p>
@@ -33,8 +33,8 @@
     <!-- Tab Navigation -->
     <div class="container mx-auto py-6">
         <div class="flex justify-center space-x-4">
-            <button id="softwareTab" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Software</button>
-            <button id="gamesTab" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Games</button>
+            <button id="softwareTab" class="bg-white hover:bg-gray-200 text-gray-900 font-bold py-2 px-4 rounded">Software</button>
+            <button id="gamesTab" class="bg-white hover:bg-gray-200 text-gray-900 font-bold py-2 px-4 rounded">Games</button>
         </div>
     </div>
 
@@ -44,11 +44,11 @@
         <div id="softwareContent" class="py-12 active">
             <h2 class="text-4xl font-bold text-center mb-8">Popular Software</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition-colors">
+                <div class="bg-white p-4 rounded-lg shadow-lg hover:bg-gray-200 transition-colors">
                     <img src="https://via.placeholder.com/400x300" alt="Software 1" class="w-full h-48 object-cover rounded-lg mb-4">
                     <h3 class="text-2xl font-bold mb-2">Software Title 1</h3>
                     <p class="mb-4">Brief description of the software goes here.</p>
-                    <a href="#" class="text-blue-400 hover:underline" data-app="/MiniApp/Software1">Learn More</a>
+                    <a href="#" class="text-blue-500 hover:underline" data-app="/MiniApp/Software1">Learn More</a>
                 </div>
                 <!-- Repeat for other software -->
             </div>
@@ -58,23 +58,23 @@
         <div id="gamesContent" class="py-12">
             <h2 class="text-4xl font-bold text-center mb-8">Popular Games</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition-colors">
+                <div class="bg-white p-4 rounded-lg shadow-lg hover:bg-gray-200 transition-colors">
                     <img src="https://via.placeholder.com/400x300" alt="Guess Number Game" class="w-full h-48 object-cover rounded-lg mb-4">
                     <h3 class="text-2xl font-bold mb-2">Guess Number Game</h3>
                     <p class="mb-4">Brief description of the game goes here.</p>
-                    <a href="#" class="text-blue-400 hover:underline" data-app="/MiniGame/GuessNumberGame">Learn More</a>
+                    <a href="#" class="text-blue-500 hover:underline" data-app="/MiniGame/GuessNumberGame">Learn More</a>
                 </div>
-                <div class="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition-colors">
+                <div class="bg-white p-4 rounded-lg shadow-lg hover:bg-gray-200 transition-colors">
                     <img src="https://via.placeholder.com/400x300" alt="Mini RPG" class="w-full h-48 object-cover rounded-lg mb-4">
                     <h3 class="text-2xl font-bold mb-2">Mini RPG (Alpha)</h3>
                     <p class="mb-4">Brief description of the game goes here.</p>
-                    <a href="#" class="text-blue-400 hover:underline" data-app="/MiniGame/MiniRPG">Learn More</a>
+                    <a href="#" class="text-blue-500 hover:underline" data-app="/MiniGame/MiniRPG">Learn More</a>
                 </div>
-                <div class="bg-gray-800 p-4 rounded-lg shadow-lg hover:bg-gray-700 transition-colors">
+                <div class="bg-white p-4 rounded-lg shadow-lg hover:bg-gray-200 transition-colors">
                     <img src="https://via.placeholder.com/400x300" alt="Rhythm Game" class="w-full h-48 object-cover rounded-lg mb-4">
                     <h3 class="text-2xl font-bold mb-2">Rhythm Game</h3>
                     <p class="mb-4">Brief description of the game goes here.</p>
-                    <a href="#" class="text-blue-400 hover:underline" data-app="/MiniGame/RhythmGame">Learn More</a>
+                    <a href="#" class="text-blue-500 hover:underline" data-app="/MiniGame/RhythmGame">Learn More</a>
                 </div>
                 <!-- Repeat for other games -->
             </div>
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Featured Section -->
-    <section class="py-12 bg-gray-800">
+    <section class="py-12 bg-gray-100">
         <div class="container mx-auto">
             <h2 class="text-4xl font-bold text-center mb-8">Featured Software and Games</h2>
             <div class="relative overflow-hidden">
@@ -97,8 +97,8 @@
                 </div>
             </div>
             <div class="flex justify-center mt-4">
-                <button id="prev" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full mx-2">Prev</button>
-                <button id="next" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full mx-2">Next</button>
+                <button id="prev" class="bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-2 px-4 rounded-full mx-2">Prev</button>
+                <button id="next" class="bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold py-2 px-4 rounded-full mx-2">Next</button>
             </div>
         </div>
     </section>
@@ -142,7 +142,6 @@
                     var app = dataAppElements[i].getAttribute('data-app');
                     var targetUrl = projectPath + app + '/index.html';
                     window.location.href = targetUrl;
-                    console.log(targetUrl);
                 });
             }
         });
