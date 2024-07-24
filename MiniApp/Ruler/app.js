@@ -13,28 +13,28 @@ let pixelsPerCm;
         ruler.addEventListener('mousedown', dragStart);
         ruler.addEventListener('mouseup', dragEnd);
         ruler.addEventListener('mousemove', drag);
-		
-		ruler.addEventListener('touchstart', function(e) {
-			e.preventDefault();  // 防止觸屏滾動等預設行為
-			isDragging = true;
-			startX = e.touches[0].clientX - marker.offsetLeft;  // 使用第一個觸點的位置
-			drawTicks();
-		});
+        
+        ruler.addEventListener('touchstart', function(e) {
+            e.preventDefault();  // 防止觸屏滾動等預設行為
+            isDragging = true;
+            startX = e.touches[0].clientX - marker.offsetLeft;  // 使用第一個觸點的位置
+            drawTicks();
+        });
 
-		ruler.addEventListener('touchmove', function(e) {
-			if (!isDragging) return;
-			e.preventDefault();  // 防止觸屏滾動等預設行為
-			currentX = e.touches[0].clientX - startX;
-			marker.style.left = currentX + 'px';
-			if (pixelsPerCm) {
-				measurementLength.innerHTML = (currentX / pixelsPerCm).toFixed(1);
-			}
-			drawTicks();
-		});
+        ruler.addEventListener('touchmove', function(e) {
+            if (!isDragging) return;
+            e.preventDefault();  // 防止觸屏滾動等預設行為
+            currentX = e.touches[0].clientX - startX;
+            marker.style.left = currentX + 'px';
+            if (pixelsPerCm) {
+                measurementLength.innerHTML = (currentX / pixelsPerCm).toFixed(1);
+            }
+            drawTicks();
+        });
 
-		ruler.addEventListener('touchend', function(e) {
-			isDragging = false;
-		});
+        ruler.addEventListener('touchend', function(e) {
+            isDragging = false;
+        });
 
         function dragStart(e) {
             isDragging = true;
@@ -124,12 +124,12 @@ let pixelsPerCm;
         }
 
         function decodeBase64CalibrationCode(encoded) {
-            const decoded = decodeFloat(encoded);
-            if (!isNaN(decoded)) {
-                return decoded;
-            } else {
-                return null;
+            const decoded = atob(encoded);
+            const bytes = new Uint8Array(decoded.length);
+            for (let i = 0; i < decoded.length; i++) {
+                bytes[i] = decoded.charCodeAt(i);
             }
+            return new Float64Array(bytes.buffer)[0];
         }
 
         function encodeFloat(float) {
@@ -151,34 +151,34 @@ let pixelsPerCm;
         }
 
         function drawTicks() {
-			const rulerWidth = ruler.offsetWidth;
-			const tickContainer = document.createElement('div');
-			tickContainer.style.position = 'absolute';
-			tickContainer.style.top = '0';
-			tickContainer.style.left = '0';
-			tickContainer.style.width = `${rulerWidth}px`;
-			tickContainer.style.height = '50px';
-			ruler.appendChild(tickContainer);
+            const rulerWidth = ruler.offsetWidth;
+            const tickContainer = document.createElement('div');
+            tickContainer.style.position = 'absolute';
+            tickContainer.style.top = '0';
+            tickContainer.style.left = '0';
+            tickContainer.style.width = `${rulerWidth}px`;
+            tickContainer.style.height = '50px';
+            ruler.appendChild(tickContainer);
 
-			const numTicks = Math.floor(rulerWidth / pixelsPerCm) + 1;
-			for (let i = 0; i <= numTicks; i++) {
-				const tick = document.createElement('div');
-				tick.className = 'tick';
-				if (i % 10 === 0) {
-					tick.classList.add('major');
-					const label = document.createElement('div');
-					label.className = 'tick-label';
-					label.textContent = `${i} cm`;
-					label.style.left = `${i * pixelsPerCm - 5}px`;
-					tickContainer.appendChild(label);
-				}
-				tick.style.left = `${i * pixelsPerCm}px`;
-				tickContainer.appendChild(tick);
-			}
+            const numTicks = Math.floor(rulerWidth / pixelsPerCm) + 1;
+            for (let i = 0; i <= numTicks; i++) {
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                if (i % 10 === 0) {
+                    tick.classList.add('major');
+                    const label = document.createElement('div');
+                    label.className = 'tick-label';
+                    label.textContent = `${i} cm`;
+                    label.style.left = `${i * pixelsPerCm - 5}px`;
+                    tickContainer.appendChild(label);
+                }
+                tick.style.left = `${i * pixelsPerCm}px`;
+                tickContainer.appendChild(tick);
+            }
 
-			const existingTicks = ruler.querySelectorAll('.tick, .tick-label');
-			existingTicks.forEach(tick => tick.remove());
-		}
+            const existingTicks = ruler.querySelectorAll('.tick, .tick-label');
+            existingTicks.forEach(tick => tick.remove());
+        }
 
        const calibrationItem = document.getElementById('calibrationItem');
        calibrationItem.addEventListener('change', function() {
