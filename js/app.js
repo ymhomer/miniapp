@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const fullscreenContainer = document.getElementById('fullscreenContainer');
 
     var projectPath = window.location.origin + '/' + window.location.pathname.split('/')[1];
-    var defaultUrl = projectPath + '/About/index.html';
+    var defaultUrl = projectPath + '/Home/index.html';
     myIframe.setAttribute('src', defaultUrl);
     document.getElementById("debuglog").innerHTML = defaultUrl;
 
