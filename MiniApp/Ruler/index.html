@@ -10,10 +10,11 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
         }
         #ruler {
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 50px;
             background-color: #eee;
@@ -21,7 +22,6 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 10px;
-            box-sizing: border-box;
         }
         #marker {
             position: absolute;
@@ -56,6 +56,22 @@
                 display: none;
             }
         }
+        @media (orientation: landscape) and (max-width: 768px) {
+            #ruler {
+                flex-direction: column;
+                height: auto;
+            }
+            #marker {
+                width: 100%;
+                height: 2px;
+                top: 0;
+                left: 0;
+            }
+            #measurement-display {
+                margin-top: 10px;
+                margin-left: 0;
+            }
+        }
         .calibration-code {
             padding: 5px 10px;
             margin: 5px;
@@ -65,22 +81,17 @@
             cursor: pointer;
             display: inline-block;
         }
+
         .calibration-code:hover {
             background-color: #e9ecef;
         }
+
         .numeric-code {
             color: #007bff;
         }
+
         .base64-code {
             color: #28a745;
-        }
-        @media (max-width: 768px) {
-            #ruler {
-                height: 40px;
-            }
-            #measurement-display {
-                font-size: 16px;
-            }
         }
     </style>
 </head>
@@ -129,5 +140,7 @@
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
