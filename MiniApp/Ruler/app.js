@@ -25,6 +25,7 @@ let pixelsPerCm;
         if (!isDragging) return;
         e.preventDefault();  // 防止触屏滚动等预设行为
         currentX = e.touches[0].clientX - startX;
+        if (currentX < 0) currentX = 0; // 防止移动到初始位置的更前面
         marker.style.left = currentX + 'px';
         if (pixelsPerCm) {
             measurementLength.innerHTML = (currentX / pixelsPerCm).toFixed(1);
@@ -50,6 +51,7 @@ let pixelsPerCm;
         if (!isDragging) return;
         e.preventDefault();
         currentX = e.clientX - startX;
+        if (currentX < 0) currentX = 0; // 防止移动到初始位置的更前面
         marker.style.left = currentX + 'px';
         if (pixelsPerCm) {
             measurementLength.innerHTML = (currentX / pixelsPerCm).toFixed(1);
