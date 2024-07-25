@@ -5,10 +5,14 @@ document.addEventListener("DOMContentLoaded", function() {
     const myIframe = document.getElementById('app-iframe');
     const fullscreenContainer = document.getElementById('fullscreenContainer');
 
+
+
     var projectPath = window.location.origin + '/' + window.location.pathname.split('/')[1];
     var defaultUrl = projectPath + '/Home/index.html';
     myIframe.setAttribute('src', defaultUrl);
     console.log("Default URL set to:", defaultUrl);
+
+    let currentIframeSrc = defaultUrl;
 
     // Adjust iframe height function
     function adjustIframeHeight(iframe) {
@@ -57,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function() {
     newtabBtn.addEventListener('click', function() {
         console.log('New Tab button clicked');
         var iframeSrc = document.getElementById('app-iframe').src;
-        window.open(iframeSrc, '_blank');
+        window.open(currentIframeSrc, '_blank');
     });
 
     // Handle fullscreen change event
@@ -95,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var logoUrl = logoUrlElements[i].getAttribute('logoUrl');
             var targetUrl = projectPath;
             window.location.href = targetUrl;
+            currentIframeSrc = targetUrl;
             console.log("Navigating to:", targetUrl);
         });
     }
