@@ -99,7 +99,6 @@ document.addEventListener("DOMContentLoaded", function() {
             var logoUrl = logoUrlElements[i].getAttribute('logoUrl');
             var targetUrl = projectPath;
             window.location.href = targetUrl;
-            currentIframeSrc = targetUrl;
             console.log("Navigating to:", targetUrl);
         });
     }
@@ -112,6 +111,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var app = dataAppElements[i].getAttribute('data-app');
             var targetUrl = projectPath + app + '/index.html';
             myIframe.setAttribute('src', targetUrl);
+            currentIframeSrc = targetUrl;
             console.log("Setting iframe source to:", targetUrl);
         });
     }
