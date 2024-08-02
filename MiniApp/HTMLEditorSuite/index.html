@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self';">
+    <meta http-equiv="X-Frame-Options" content="allow">
+    <title>HTML Editor Suite</title>
+    <!-- CSS, JS -->
+    <!--link rel="stylesheet" href="/miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/miniapp/MiniApp/HTMLEditorSuite/style.css">
+    <script src="/miniapp/js/bootstrap.min.js"></script>
+    <script src="/miniapp/js/bootstrap.bundle.min.js"></script>
+    <script src="/miniapp/MiniApp/HTMLEditorSuite/app.js"></script-->
+
+    <!-- CSS,JS (LOCAL) -->
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../MiniApp/HTMLEditorSuite/style.css">
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/bootstrap.bundle.min.js"></script>
+    <script src="../../MiniApp/HTMLEditorSuite/app.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="html-tab" data-bs-toggle="tab" data-bs-target="#html" type="button" role="tab" aria-controls="html" aria-selected="true">HTML</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="css-tab" data-bs-toggle="tab" data-bs-target="#css" type="button" role="tab" aria-controls="css" aria-selected="false">CSS</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="js-tab" data-bs-toggle="tab" data-bs-target="#js" type="button" role="tab" aria-controls="js" aria-selected="false">JavaScript</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="more-tab" data-bs-toggle="tab" data-bs-target="#more" type="button" role="tab" aria-controls="more" aria-selected="false">More</button>
+            </li>
+            <li class="nav-item ms-auto" role="presentation">
+                <button class="nav-link" id="result-tab" data-bs-toggle="tab" data-bs-target="#result" type="button" role="tab" aria-controls="result" aria-selected="false">Result</button>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="html" role="tabpanel" aria-labelledby="html-tab">
+                <div class="h-100 d-flex flex-column">
+                    <textarea id="html-code" class="form-control flex-grow-1" placeholder="Enter HTML code here..."></textarea>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="css" role="tabpanel" aria-labelledby="css-tab">
+                <div class="h-100 d-flex flex-column">
+                    <textarea id="css-code" class="form-control flex-grow-1" placeholder="Enter CSS code here..."></textarea>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="js" role="tabpanel" aria-labelledby="js-tab">
+                <div class="h-100 d-flex flex-column">
+                    <textarea id="js-code" class="form-control flex-grow-1" placeholder="Enter JavaScript code here..."></textarea>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="result" role="tabpanel" aria-labelledby="result-tab">
+                <iframe id="preview"></iframe>
+            </div>
+            <div class="tab-pane fade" id="more" role="tabpanel" aria-labelledby="more-tab">
+                <div class="p-3">
+                    <div class="mb-3">
+                        <label for="import-files" class="form-label">Import Files</label>
+                        <input type="file" class="form-control" id="import-files" multiple>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportFiles()">Export Files</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
