@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let highScore = 0;
     let gameInterval;
     let gameSpeed = 2000;
-    const minGameSpeed = 500;
+    const minGameSpeed = 300;
     const speedIncreaseInterval = 10000;
     const speedIncreaseFactor = 0.9;
     let speedIncreaseTimer;
