@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const blueScoreElem = document.getElementById('blueScoreElem');
     const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
     const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
+    const fullscreenChk = document.getElementById('fullscreenChk');
     let singleRoundScore = singleRoundScoreSlt.value;
     //Score
     let redScore = parseInt(redScoreElem.textContent, 10);
@@ -48,6 +49,30 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('singleRoundScoreCustomForm').style.display = 'block';
         } else {
             document.getElementById('singleRoundScoreCustomForm').style.display = 'none';
+        }
+    });
+
+    fullscreenChk.addEventListener('change', function() {
+        if (fullscreenChk.checked) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                document.documentElement.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+            }
         }
     });
 
