@@ -9,9 +9,8 @@
 }
 
 #app-iframe {
-    /*min-height: 500px;*/
     width: 100%;
-    height: 100%;
+    border: none;
 }
 
 #fullscreenContainer {
