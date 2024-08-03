@@ -16,8 +16,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Adjust iframe height function
     function adjustIframeHeight(iframe) {
-        iframe.style.height = (iframe.contentWindow.document.body.scrollHeight - 50) + 'px';
-        //iframe.style.height = iframe.contentWindow.document.documentElement.scrollHeight + 'px';
+        //iframe.style.height = (iframe.contentWindow.document.body.scrollHeight - 50) + 'px';
+        iframe.style.height = (iframe.contentWindow.document.documentElement.scrollHeight -50) + 'px';
     }
 
     // Adjust iframe size function
