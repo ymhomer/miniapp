@@ -17,15 +17,27 @@ document.addEventListener("DOMContentLoaded", function() {
     // Adjust iframe height function
     function adjustIframeHeight(iframe) {
         iframe.style.height = (iframe.contentWindow.document.body.scrollHeight - 50) + 'px';
+        //iframe.style.height = iframe.contentWindow.document.documentElement.scrollHeight + 'px';
     }
 
     // Adjust iframe size function
-    function adjustIframeSize() {
+    /*function adjustIframeSize() {
         const iframe = myIframe;
         const iframeContent = iframe.contentWindow || iframe.contentDocument;
 
         const contentHeight = iframeContent.document.body.scrollHeight;
         const contentWidth = iframeContent.document.body.scrollWidth;
+
+        iframe.style.height = contentHeight + 'px';
+        iframe.style.width = contentWidth + 'px';
+    }*/
+
+    function adjustIframeSize() {
+        const iframe = myIframe;
+        const iframeContent = iframe.contentWindow || iframe.contentDocument;
+
+        const contentHeight = iframeContent.document.documentElement.scrollHeight;
+        const contentWidth = iframeContent.document.documentElement.scrollWidth;
 
         iframe.style.height = contentHeight + 'px';
         iframe.style.width = contentWidth + 'px';

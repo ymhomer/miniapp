@@ -1,7 +1,7 @@
 @media (max-width: 767px) {
-	.navbar-nav {
-		padding-left: 15px;
-	}
+    .navbar-nav {
+        padding-left: 15px;
+    }
 }
 
 .navbar-brand-custom {
@@ -10,4 +10,15 @@
 
 #app-iframe {
     min-height: 500px;
+    width: 100%;
+    height: 100%;
+}
+
+#fullscreenContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
