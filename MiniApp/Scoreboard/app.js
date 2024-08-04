@@ -82,9 +82,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
     landscapeChk.addEventListener('change', function() {
         if (landscapeChk.checked) {
-            window.screen.orientation.lock('landscape-primary');
+            if (window.screen.orientation && window.screen.orientation.lock) {
+                window.screen.orientation.lock('landscape-primary').catch(function(error) {
+                    console.error('Orientation lock failed:', error);
+                });
+            }
         } else {
-            window.screen.orientation.unlock();
+            if (window.screen.orientation && window.screen.orientation.unlock) {
+                window.screen.orientation.unlock();
+            }
         }
     });
 
@@ -94,6 +100,7 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
             exitFullscreenBtn.style.display = 'none';
             fullscreenChk.checked = false;
+            enterFullscreenBtn.style.display = 'block'; // Show the button to re-enter fullscreen
         }
     });
 
