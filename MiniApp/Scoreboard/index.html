@@ -155,15 +155,16 @@
   </div>
 </div>
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="fullscreenToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="settingsToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
-            <strong class="me-auto">Tip</strong>
+            <strong class="me-auto">Notification</strong>
             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <div class="toast-body">
-            You can enable fullscreen mode in settings for a better experience.
+        <div class="toast-body" id="settingsToastBody">
+            <!-- The message will be injected here -->
         </div>
     </div>
 </div>
+
 </body>
 </html>

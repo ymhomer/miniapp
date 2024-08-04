@@ -17,7 +17,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     const fullscreenChk = document.getElementById('fullscreenChk');
     const enterFullscreenBtn = document.getElementById('enterFullscreenBtn');
-    const fullscreenToast = new bootstrap.Toast(document.getElementById('fullscreenToast'));
+    const settingsToast = new bootstrap.Toast(document.getElementById('settingsToast'));
+    const settingsToastBody = document.getElementById('settingsToastBody');
     let singleRoundScore = singleRoundScoreSlt.value;
     //Score
     let redScore = parseInt(redScoreElem.textContent, 10);
@@ -85,6 +86,8 @@ document.addEventListener("DOMContentLoaded", function() {
             if (window.screen.orientation && window.screen.orientation.lock) {
                 window.screen.orientation.lock('landscape-primary').catch(function(error) {
                     console.error('Orientation lock failed:', error);
+                    landscapeChk.checked = false;
+                    showToast("Failed to enable landscape mode.");
                 });
             }
         } else {
@@ -119,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     if (!document.fullscreenElement) {
-        fullscreenToast.show();
+        showToast("You can enable fullscreen mode in settings for a better experience.");
     }
 
     if (window.screen.orientation.type !== 'landscape-primary') {
@@ -314,5 +317,10 @@ document.addEventListener("DOMContentLoaded", function() {
         blueScoreElem.textContent = '0';
         redScore = parseInt(redScoreElem.textContent, 10);
         blueScore = parseInt(blueScoreElem.textContent, 10);
+    }
+
+    function showToast(message) {
+        settingsToastBody.textContent = message;
+        settingsToast.show();
     }
 });
