@@ -84,11 +84,19 @@ document.addEventListener("DOMContentLoaded", function() {
     landscapeChk.addEventListener('change', function() {
         if (landscapeChk.checked) {
             if (window.screen.orientation && window.screen.orientation.lock) {
-                window.screen.orientation.lock('landscape-primary').catch(function(error) {
-                    console.error('Orientation lock failed:', error);
-                    landscapeChk.checked = false;
-                    showToast("Failed to enable landscape mode. <br />" + error);
+                document.documentElement.requestFullscreen().then(() => {
+                    screen.orientation.lock('landscape-primary').catch(function(error) {
+                        console.error('Orientation lock failed:', error);
+                        landscapeChk.checked = false;
+                        showToast(`Failed to enable landscape mode.<br>Error: ${error.message}`);
+                    });
+                }).catch(function(error) {
+                    console.error('Fullscreen request failed:', error);
+                    showToast(`Failed to enter fullscreen mode.<br>Error: ${error.message}`);
                 });
+            } else {
+                showToast("Screen orientation lock is not supported in this browser.<br>Please try a different browser.");
+                landscapeChk.checked = false;
             }
         } else {
             if (window.screen.orientation && window.screen.orientation.unlock) {
@@ -96,6 +104,17 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     });
+
+    document.addEventListener('fullscreenchange', function() {
+        if (document.fullscreenElement) {
+            exitFullscreenBtn.style.display = 'block';
+        } else {
+            exitFullscreenBtn.style.display = 'none';
+            fullscreenChk.checked = false;
+            enterFullscreenBtn.style.display = 'block'; // Show the button to re-enter fullscreen
+        }
+    });
+
 
     document.addEventListener('fullscreenchange', function() {
         if (document.fullscreenElement) {
@@ -129,6 +148,16 @@ document.addEventListener("DOMContentLoaded", function() {
         window.screen.orientation.lock('landscape-primary');
         landscapeChk.checked = true;
     }
+
+    document.documentElement.requestFullscreen().then(() => {
+        screen.orientation.lock('landscape-primary').catch(error => {
+            console.error('Orientation lock failed:', error);
+            showToast(`Failed to enable landscape mode.<br>Error: ${error.message}`);
+        });
+    }).catch(error => {
+        console.error('Fullscreen request failed:', error);
+        showToast(`Failed to enter fullscreen mode.<br>Error: ${error.message}`);
+    });
 
     //Update score
     teamRed.addEventListener('click', function() {
