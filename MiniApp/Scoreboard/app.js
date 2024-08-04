@@ -109,17 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
     keepScreenOnChk.addEventListener('change', function() {
         if (keepScreenOnChk.checked) {
             if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Screen Wake Lock was released');
-                    });
-                    console.log('Screen Wake Lock is active');
-                } catch (error) {
-                    console.error('Screen Wake Lock failed:', error);
-                    keepScreenOnChk.checked = false;
-                    showToast(`Failed to keep screen on.<br>Error: ${error.message}`);
-                }
+                requestWakeLock();
             } else {
                 showToast("Screen Wake Lock API is not supported in this browser.<br>Please try a different browser.");
                 keepScreenOnChk.checked = false;
@@ -188,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function() {
         showToast(`Failed to enter fullscreen mode.<br>Error: ${error.message}`);
     });
 
-    if ('wakeLock' in navigator) {
+    async function requestWakeLock() {
         try {
             wakeLock = await navigator.wakeLock.request('screen');
             wakeLock.addEventListener('release', () => {
@@ -200,6 +190,10 @@ document.addEventListener("DOMContentLoaded", function() {
             keepScreenOnChk.checked = false;
             showToast(`Failed to keep screen on.<br>Error: ${error.message}`);
         }
+    }
+
+    if ('wakeLock' in navigator) {
+        requestWakeLock();
     } else {
         showToast("Screen Wake Lock API is not supported in this browser.<br>Please try a different browser.");
         keepScreenOnChk.checked = false;
