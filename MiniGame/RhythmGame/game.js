@@ -5,9 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let highScore = 0;
     let gameInterval;
     let gameSpeed = 2000;
-    const minGameSpeed = 300;
-    const speedIncreaseInterval = 10000;
-    const speedIncreaseFactor = 0.9;
+    const minGameSpeed = 200;
+    const speedIncreaseInterval = 2000;
+    const speedIncreaseFactor = 0.9791;
     let speedIncreaseTimer;
     let hitTolerance = 50; // milliseconds
     let audioContext;
