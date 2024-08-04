@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 window.screen.orientation.lock('landscape-primary').catch(function(error) {
                     console.error('Orientation lock failed:', error);
                     landscapeChk.checked = false;
-                    showToast("Failed to enable landscape mode.");
+                    showToast("Failed to enable landscape mode. <br />" + error);
                 });
             }
         } else {
@@ -320,7 +320,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function showToast(message) {
-        settingsToastBody.textContent = message;
+        //settingsToastBody.textContent = message;
+        settingsToastBody.innerHTML = message;
         settingsToast.show();
     }
 });
