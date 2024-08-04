@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
     const teamRed = document.getElementById('teamRed');
     const teamBlue = document.getElementById('teamBlue');
+    const redPreview = document.getElementById('redPreview');
+    const bluePreview = document.getElementById('bluePreview');
     const redD = document.getElementById('red-1');
     const blueD = document.getElementById('blue-1');
     const newGameBtn = document.getElementById('newGameBtn');
@@ -20,6 +22,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const enterFullscreenBtn = document.getElementById('enterFullscreenBtn');
     const settingsToast = new bootstrap.Toast(document.getElementById('settingsToast'));
     const settingsToastBody = document.getElementById('settingsToastBody');
+    const colorThemeSelect = document.getElementById('colorThemeSelect');
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+    const savedTheme = localStorage.getItem('colorTheme') || 'default';
+    document.body.classList.add(savedTheme + '-theme');
+    applyTheme(savedTheme);
+    colorThemeSelect.value = savedTheme;
+    logCurrentColors(savedTheme); 
     let singleRoundScore = singleRoundScoreSlt.value;
     let wakeLock = null;
     //Score
@@ -42,6 +51,74 @@ document.addEventListener("DOMContentLoaded", function() {
             keyboard: false
         });
     });*/
+
+    colorThemeSelect.addEventListener('change', function() {
+        const selectedTheme = colorThemeSelect.value;
+
+        applyTheme(selectedTheme);
+        localStorage.setItem('colorTheme', selectedTheme);
+        logCurrentColors(selectedTheme);
+    });
+
+    function updateDropdownButtonText(theme) {
+        const selectedItem = document.querySelector(`.dropdown-item[data-theme="${theme}"]`);
+        if (selectedItem) {
+            colorThemeSelect.textContent = selectedItem.textContent.trim();
+        }
+    }
+
+    function applyTheme(theme) {
+        switch(theme) {
+           case 'default':
+                teamRed.style.backgroundColor = '#dc3545';
+                teamRed.style.color = 'white';
+                teamBlue.style.backgroundColor = '#007bff';
+                teamBlue.style.color = 'white';
+                break;
+            case 'pastel':
+                teamRed.style.backgroundColor = '#ff9999';
+                teamRed.style.color = '#660000';
+                teamBlue.style.backgroundColor = '#99ccff';
+                teamBlue.style.color = '#003366';
+                break;
+            case 'dark':
+                teamRed.style.backgroundColor = '#800000';
+                teamRed.style.color = '#ffcccc';
+                teamBlue.style.backgroundColor = '#000066';
+                teamBlue.style.color = '#ccccff';
+                break;
+            case 'neon':
+                teamRed.style.backgroundColor = '#ff073a';
+                teamRed.style.color = '#ffe600';
+                teamBlue.style.backgroundColor = '#00f7ff';
+                teamBlue.style.color = '#ff00e6';
+                break;
+            case 'bw':
+                teamRed.style.backgroundColor = '#303030';
+                teamRed.style.color = '#DDDDDD';
+                teamBlue.style.backgroundColor = '#DDDDDD';
+                teamBlue.style.color = '#303030';
+                break;
+            default:
+                console.error('Unknown theme:', theme);
+        }
+    }
+
+    function logCurrentColors(theme) {
+        let redTeamColor = getComputedStyle(teamRed).backgroundColor + '; color: ' + getComputedStyle(teamRed).color;
+        let blueTeamColor = getComputedStyle(teamBlue).backgroundColor + '; color: ' + getComputedStyle(teamBlue).color;
+        console.log(`Current Theme: ${theme}`);
+        console.log(`Red Team CSS: background-color: ${redTeamColor}`);
+        console.log(`Blue Team CSS: background-color: ${blueTeamColor}`);
+    }
+
+    function updatePreview() {
+        const selectedOption = colorThemeSelect.selectedOptions[0];
+        const redColor = selectedOption.getAttribute('data-red');
+        const blueColor = selectedOption.getAttribute('data-blue');
+        redPreview.style.backgroundColor = redColor;
+        bluePreview.style.backgroundColor = blueColor;
+    }
 
     //UI
     newGameBtn.addEventListener('click', resetScores);

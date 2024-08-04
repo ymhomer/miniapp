@@ -37,10 +37,10 @@
 </div>
 <div class="container-fluid h-100 position-relative">
     <div class="row h-100">
-        <div class="col-6 bg-danger text-white d-flex align-items-center justify-content-center no-select" id='teamRed'>
+        <div class="col-6 d-flex align-items-center justify-content-center no-select" id='teamRed'>
             <h1 id="redScoreElem" class="scoreTxt">0</h1>
         </div>
-        <div class="col-6 bg-primary text-white d-flex align-items-center justify-content-center no-select" id='teamBlue'>
+        <div class="col-6 d-flex align-items-center justify-content-center no-select" id='teamBlue'>
             <h1 id="blueScoreElem" class="scoreTxt">0</h1>
         </div>
     </div>
@@ -83,6 +83,16 @@
                 <div class="mb-3 form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="voiceScoreChk" checked>
                     <label class="form-check-label" for="voiceScoreChk">Voice Score Announcement</label>
+                </div>
+                <div class="mb-3">
+                    <label for="colorThemeSelect" class="form-label">Color Theme</label>
+                    <select class="form-select" id="colorThemeSelect">
+                        <option value="default" selected>Default</option>
+                        <option value="pastel">Pastel</option>
+                        <option value="dark">Dark</option>
+                        <option value="neon">Neon</option>
+                        <option value="bw">Black and white</option>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label for="singleRoundScoreSlt" class="form-label" id="scoreSlt">Single Round Score</label>

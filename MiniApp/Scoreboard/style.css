@@ -12,7 +12,6 @@ body, html {
     font-size: calc(30vw);
 }
 
-/* 当设备处于横屏模式时 */
 @media (orientation: landscape) {
     .scoreTxt {
         font-size: calc(30vh);
