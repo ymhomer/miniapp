@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const settingsToast = new bootstrap.Toast(document.getElementById('settingsToast'));
     const settingsToastBody = document.getElementById('settingsToastBody');
     let singleRoundScore = singleRoundScoreSlt.value;
+    let wakeLock = null;
     //Score
     let redScore = parseInt(redScoreElem.textContent, 10);
     let blueScore = parseInt(blueScoreElem.textContent, 10);
@@ -105,6 +106,34 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    keepScreenOnChk.addEventListener('change', function() {
+        if (keepScreenOnChk.checked) {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Screen Wake Lock was released');
+                    });
+                    console.log('Screen Wake Lock is active');
+                } catch (error) {
+                    console.error('Screen Wake Lock failed:', error);
+                    keepScreenOnChk.checked = false;
+                    showToast(`Failed to keep screen on.<br>Error: ${error.message}`);
+                }
+            } else {
+                showToast("Screen Wake Lock API is not supported in this browser.<br>Please try a different browser.");
+                keepScreenOnChk.checked = false;
+            }
+        } else {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    console.log('Screen Wake Lock was released');
+                });
+            }
+        }
+    });
+
     document.addEventListener('fullscreenchange', function() {
         if (document.fullscreenElement) {
             exitFullscreenBtn.style.display = 'block';
@@ -158,6 +187,23 @@ document.addEventListener("DOMContentLoaded", function() {
         console.error('Fullscreen request failed:', error);
         showToast(`Failed to enter fullscreen mode.<br>Error: ${error.message}`);
     });
+
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {
+                console.log('Screen Wake Lock was released');
+            });
+            console.log('Screen Wake Lock is active');
+        } catch (error) {
+            console.error('Screen Wake Lock failed:', error);
+            keepScreenOnChk.checked = false;
+            showToast(`Failed to keep screen on.<br>Error: ${error.message}`);
+        }
+    } else {
+        showToast("Screen Wake Lock API is not supported in this browser.<br>Please try a different browser.");
+        keepScreenOnChk.checked = false;
+    }
 
     //Update score
     teamRed.addEventListener('click', function() {
