@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const landscapeChk = document.getElementById('landscapeChk');
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     const fullscreenChk = document.getElementById('fullscreenChk');
+    const voiceScoreChk = document.getElementById('voiceScoreChk');
     const enterFullscreenBtn = document.getElementById('enterFullscreenBtn');
     const settingsToast = new bootstrap.Toast(document.getElementById('settingsToast'));
     const settingsToastBody = document.getElementById('settingsToastBody');
@@ -159,6 +160,15 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    voiceScoreChk.addEventListener('change', function() {
+        if (voiceScoreChk.checked) {
+            if (!('speechSynthesis' in window)) {
+                showToast("Speech Synthesis API is not supported in this browser.<br>Please try a different browser.");
+                voiceScoreChk.checked = false;
+            }
+        }
+    });
+
     if (!document.fullscreenElement) {
         showToast("You can enable fullscreen mode in settings for a better experience.");
     }
@@ -203,19 +213,31 @@ document.addEventListener("DOMContentLoaded", function() {
     teamRed.addEventListener('click', function() {
         redScore = updateScore(redScoreElem, 1, maxScore);
         checkScore();
+        if (voiceScoreChk.checked) {
+            announceScore(redScore, blueScore);
+        }
     });
 
     redD.addEventListener('click', function() {
         redScore = updateScore(redScoreElem, -1, maxScore);
+        if (voiceScoreChk.checked) {
+            announceScore(redScore, blueScore);
+        }
     });
 
     teamBlue.addEventListener('click', function() {
         blueScore = updateScore(blueScoreElem, 1, maxScore);
         checkScore();
+        if (voiceScoreChk.checked) {
+            announceScore(redScore, blueScore);
+        }
     });
 
     blueD.addEventListener('click', function() {
         blueScore = updateScore(blueScoreElem, -1, maxScore);
+        if (voiceScoreChk.checked) {
+            announceScore(redScore, blueScore);
+        }
     });
 
     /*
@@ -392,5 +414,16 @@ document.addEventListener("DOMContentLoaded", function() {
         //settingsToastBody.textContent = message;
         settingsToastBody.innerHTML = message;
         settingsToast.show();
+    }
+
+    function announceScore(redScore, blueScore) {
+        if ('speechSynthesis' in window) {
+            const message = `${redScore}.  ${blueScore}.`;
+            const utterance = new SpeechSynthesisUtterance(message);
+            speechSynthesis.speak(utterance);
+        } else {
+            showToast("Speech Synthesis API is not supported in this browser.<br>Please try a different browser.");
+            voiceScoreChk.checked = false;
+        }
     }
 });
