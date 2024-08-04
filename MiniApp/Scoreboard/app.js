@@ -13,7 +13,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const blueScoreElem = document.getElementById('blueScoreElem');
     const singleRoundScoreSlt = document.getElementById('singleRoundScoreSlt');
     const singleRoundScoreCustom = document.getElementById('singleRoundScoreCustom');
+    const landscapeChk = document.getElementById('landscapeChk');
+    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     const fullscreenChk = document.getElementById('fullscreenChk');
+    const enterFullscreenBtn = document.getElementById('enterFullscreenBtn');
+    const fullscreenToast = new bootstrap.Toast(document.getElementById('fullscreenToast'));
     let singleRoundScore = singleRoundScoreSlt.value;
     //Score
     let redScore = parseInt(redScoreElem.textContent, 10);
@@ -75,6 +79,46 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     });
+
+    landscapeChk.addEventListener('change', function() {
+        if (landscapeChk.checked) {
+            window.screen.orientation.lock('landscape-primary');
+        } else {
+            window.screen.orientation.unlock();
+        }
+    });
+
+    document.addEventListener('fullscreenchange', function() {
+        if (document.fullscreenElement) {
+            exitFullscreenBtn.style.display = 'block';
+        } else {
+            exitFullscreenBtn.style.display = 'none';
+            fullscreenChk.checked = false;
+        }
+    });
+
+    exitFullscreenBtn.addEventListener('click', function() {
+        if (document.fullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+            }
+        }
+    });
+
+    if (!document.fullscreenElement) {
+        fullscreenToast.show();
+    }
+
+    if (window.screen.orientation.type !== 'landscape-primary') {
+        window.screen.orientation.lock('landscape-primary');
+        landscapeChk.checked = true;
+    }
 
     //Update score
     teamRed.addEventListener('click', function() {
