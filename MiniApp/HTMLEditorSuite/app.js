@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const files = event.target.files;
         hasCssFile = false;
         hasJsFile = false;
+        const extractCss = document.getElementById('extract-css').checked;
+        const extractJs = document.getElementById('extract-js').checked;
 
         for (let file of files) {
             const reader = new FileReader();
@@ -21,15 +23,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return function(e) {
                     if (file.name.endsWith('.html')) {
                         const doc = new DOMParser().parseFromString(e.target.result, 'text/html');
-                        if (!hasJsFile) {
-                            const jsContent = extractJs(doc);
+                        if (extractJs && !hasJsFile) {
+                            const jsContent = extractJsContent(doc);
                             document.getElementById('js-code').value = jsContent;
                         }
-                        if (!hasCssFile) {
-                            const cssContent = extractCss(doc);
+                        if (extractCss && !hasCssFile) {
+                            const cssContent = extractCssContent(doc);
                             document.getElementById('css-code').value = cssContent;
                         }
-                        const htmlContent = extractHtml(doc);
+                        const htmlContent = extractHtmlContent(doc);
                         document.getElementById('html-code').value = htmlContent;
                         fileNames.html = file.name;
                     } else if (file.name.endsWith('.css')) {
@@ -45,6 +47,35 @@ document.addEventListener('DOMContentLoaded', function() {
             })(file);
             reader.readAsText(file);
         }
+    }
+
+    function extractHtmlContent(doc) {
+        const scripts = doc.querySelectorAll('script');
+        if (!document.getElementById('extract-js').checked) {
+            scripts.forEach(script => script.remove());
+        }
+        const htmlContent = doc.documentElement.outerHTML;
+        return cleanContent(htmlContent);
+    }
+
+    function extractCssContent(doc) {
+        if (hasCssFile || !document.getElementById('extract-css').checked) return '';
+        const styles = [];
+        for (const style of doc.querySelectorAll('style')) {
+            styles.push(style.textContent);
+            style.remove();
+        }
+        return cleanContent(styles.join('\n'));
+    }
+
+    function extractJsContent(doc) {
+        if (hasJsFile || !document.getElementById('extract-js').checked) return '';
+        const scripts = [];
+        for (const script of doc.querySelectorAll('script')) {
+            scripts.push(script.textContent);
+            script.remove();
+        }
+        return cleanContent(scripts.join('\n'));
     }
 
     function extractHtml(doc) {
