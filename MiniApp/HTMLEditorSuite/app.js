@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let hasJsFile = false;
 
     document.getElementById('import-files').addEventListener('change', handleFileSelect);
+    document.querySelector('.btn.btn-primary').addEventListener('click', exportFiles);
 
     function handleFileSelect(event) {
         const files = event.target.files;
