@@ -55,6 +55,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function extractHtml(doc, removeJs) {
+        if (removeJs) {
+            const scripts = doc.querySelectorAll('script');
+            scripts.forEach(script => script.remove());
+        }
+        const htmlContent = doc.documentElement.outerHTML;
+        return cleanContent(htmlContent);
+    }
+
     function extractCss(doc) {
         if (hasCssFile || !extractCssJs) return '';
         const styles = [];
