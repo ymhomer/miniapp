@@ -20,22 +20,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const files = event.target.files;
         hasCssFile = false;
         hasJsFile = false;
-    
+
         for (let file of files) {
             const reader = new FileReader();
             reader.onload = (function(file) {
                 return function(e) {
                     if (file.name.endsWith('.html')) {
                         const doc = new DOMParser().parseFromString(e.target.result, 'text/html');
-                        if (!hasJsFile && extractCssJs) {
-                            const jsContent = extractJs(doc);
-                            document.getElementById('js-code').value = jsContent;
+                        if (extractCssJs) {
+                            if (!hasJsFile) {
+                                const jsContent = extractJs(doc);
+                                document.getElementById('js-code').value = jsContent;
+                            }
+                            if (!hasCssFile) {
+                                const cssContent = extractCss(doc);
+                                document.getElementById('css-code').value = cssContent;
+                            }
                         }
-                        if (!hasCssFile && extractCssJs) {
-                            const cssContent = extractCss(doc);
-                            document.getElementById('css-code').value = cssContent;
-                        }
-                        const htmlContent = extractHtml(doc);
+                        const htmlContent = extractHtml(doc, extractCssJs);
                         document.getElementById('html-code').value = htmlContent;
                         fileNames.html = file.name;
                     } else if (file.name.endsWith('.css')) {
