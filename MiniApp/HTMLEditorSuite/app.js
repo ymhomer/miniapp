@@ -6,26 +6,32 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     let hasCssFile = false;
     let hasJsFile = false;
+    let extractCssJs = document.getElementById('extract-css-js').checked;
 
     document.getElementById('import-files').addEventListener('change', handleFileSelect);
     document.querySelector('.btn.btn-primary').addEventListener('click', exportFiles);
+    document.getElementById('extract-css-js').addEventListener('change', toggleExtractCssJs);
 
+    function toggleExtractCssJs(event) {
+        extractCssJs = event.target.checked;
+    }
+    
     function handleFileSelect(event) {
         const files = event.target.files;
         hasCssFile = false;
         hasJsFile = false;
-
+    
         for (let file of files) {
             const reader = new FileReader();
             reader.onload = (function(file) {
                 return function(e) {
                     if (file.name.endsWith('.html')) {
                         const doc = new DOMParser().parseFromString(e.target.result, 'text/html');
-                        if (!hasJsFile) {
+                        if (!hasJsFile && extractCssJs) {
                             const jsContent = extractJs(doc);
                             document.getElementById('js-code').value = jsContent;
                         }
-                        if (!hasCssFile) {
+                        if (!hasCssFile && extractCssJs) {
                             const cssContent = extractCss(doc);
                             document.getElementById('css-code').value = cssContent;
                         }
@@ -47,17 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function extractHtml(doc) {
-        const scripts = doc.querySelectorAll('script');
-        if (!hasJsFile) {
-            scripts.forEach(script => script.remove());
-        }
-        const htmlContent = doc.documentElement.outerHTML;
-        return cleanContent(htmlContent);
-    }
-
     function extractCss(doc) {
-        if (hasCssFile) return '';
+        if (hasCssFile || !extractCssJs) return '';
         const styles = [];
         for (const style of doc.querySelectorAll('style')) {
             styles.push(style.textContent);
@@ -65,9 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return cleanContent(styles.join('\n'));
     }
-
+    
     function extractJs(doc) {
-        if (hasJsFile) return '';
+        if (hasJsFile || !extractCssJs) return '';
         const scripts = [];
         for (const script of doc.querySelectorAll('script')) {
             scripts.push(script.textContent);
@@ -75,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return cleanContent(scripts.join('\n'));
     }
-
+    
     function cleanContent(content) {
         return content
             .split('\n')
