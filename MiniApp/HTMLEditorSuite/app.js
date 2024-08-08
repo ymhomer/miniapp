@@ -12,6 +12,27 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.btn.btn-primary').addEventListener('click', exportFiles);
     document.getElementById('extract-css-js').addEventListener('change', toggleExtractCssJs);
 
+    document.getElementById('process-text').addEventListener('click', function() {
+        const htmlContent = document.getElementById('html-code').value;
+        const cssContent = document.getElementById('css-code').value;
+        const jsContent = document.getElementById('js-code').value;
+
+        const processedText = `
+${fileNames.html}
+------------
+${htmlContent}
+
+${fileNames.css}
+------------
+${cssContent}
+
+${fileNames.js}
+------------
+${jsContent}
+        `;
+        document.getElementById('card-textarea').value = processedText;
+    });
+
     function toggleExtractCssJs(event) {
         extractCssJs = event.target.checked;
     }

@@ -36,3 +36,15 @@ iframe {
     height: 100%;
     border: none;
 }
+.card {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+#card-textarea {
+    height: 150px;
+    resize: none;
+    user-select: none;
+}
+.position-relative .btn {
+    z-index: 1;
+}
