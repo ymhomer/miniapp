@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const newtabBtn = document.getElementById('newtabBtn');
-    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+    //const fullscreenBtn = document.getElementById('fullscreenBtn');
+    //const newtabBtn = document.getElementById('newtabBtn');
+    //const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     const myIframe = document.getElementById('app-iframe');
     const fullscreenContainer = document.getElementById('fullscreenContainer');
 
@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Event listeners for fullscreen and new tab buttons
+    /*
     fullscreenBtn.addEventListener('click', function() {
         console.log('Fullscreen button clicked');
         if (fullscreenContainer.requestFullscreen) {
@@ -56,7 +57,8 @@ document.addEventListener("DOMContentLoaded", function() {
             fullscreenContainer.msRequestFullscreen();
         }
     });
-
+    */
+    /*
     exitFullscreenBtn.addEventListener('click', function() {
         console.log('Exit Fullscreen button clicked');
         if (document.exitFullscreen) {
@@ -69,14 +71,18 @@ document.addEventListener("DOMContentLoaded", function() {
             document.msExitFullscreen();
         }
     });
+    */
 
+    /*
     newtabBtn.addEventListener('click', function() {
         console.log('New Tab button clicked');
         var iframeSrc = document.getElementById('app-iframe').src;
         window.open(currentIframeSrc, '_blank');
     });
+    */
 
     // Handle fullscreen change event
+    /*
     document.addEventListener('fullscreenchange', function() {
         if (document.fullscreenElement) {
             myIframe.style.height = '100vh';
@@ -86,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function() {
             adjustIframeHeight();
             exitFullscreenBtn.style.display = 'none';
         }
-    });
+    });*/
 
     // Handle iframe load event to adjust its height
     myIframe.onload = function() {
