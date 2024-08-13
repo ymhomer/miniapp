@@ -39,10 +39,13 @@ function toggleStopwatch() {
     if (stopwatchRunning) {
         clearInterval(stopwatchInterval);
         stopwatchRunning = false;
+        stopwatchPaused = false;
         stopwatchTime = 0;
         document.getElementById('stopwatch').textContent = '0:00';
-    } else if (!stopwatchRunning && stopwatchTime > 0) {
-        return;
+    } else if (stopwatchPaused) {
+        stopwatchPaused = false;
+        stopwatchTime = 0;
+        document.getElementById('stopwatch').textContent = '0:00';
     } else {
         stopwatchRunning = true;
         startStopwatch();
