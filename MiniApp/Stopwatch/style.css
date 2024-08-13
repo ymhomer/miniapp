@@ -4,7 +4,7 @@ body {
     font-family: Arial, sans-serif;
     background-color: black;
     color: white;
-    user-select: none; /* 禁止字体被选中 */
+    user-select: none;
 }
 
 .container {
@@ -23,28 +23,37 @@ body {
     grid-row: 1;
 }
 
-.time {
-    font-size: 8vw;
+.time-wrapper {
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.time {
+    font-size: 20vw;
+    display: flex;
+    align-items: baseline;
 }
 
 .seconds {
-    font-size: 4vw; /* 秒数字体大小为时分的一半 */
-    position: absolute;
-    bottom: 0;
-    right: -1.5em;
+    font-size: 10vw;
+    margin-left: 0.5em;
+    position: relative;
 }
 
 .am-pm {
-    font-size: 3vw;
+    font-size: 5vw;
     position: absolute;
-    top: -1em;
-    right: -2.5em;
+    bottom: 50%;
+    right: 0;
+    transform: translateY(-0.5em);
 }
 
 .date {
     font-size: 3vw;
     margin-top: 10px;
+    text-align: center;
 }
 
 .stopwatch-container {
@@ -55,7 +64,7 @@ body {
 }
 
 .stopwatch {
-    font-size: 10vw;
+    font-size: 15vw;
     background-color: rgba(128, 128, 128, 0.5);
     padding: 10px 20px;
     border-radius: 15px;
@@ -75,23 +84,23 @@ body {
 
 @media (min-width: 768px) {
     .time-container .time {
-        font-size: 5vw;
+        font-size: 30vw;
     }
 
     .seconds {
-        font-size: 2.5vw;
+        font-size: 10vw;
     }
 
     .am-pm {
-        font-size: 2vw;
+        font-size: 6vw;
     }
 
     .date {
-        font-size: 2vw;
+        font-size: 5vw;
     }
 
     .stopwatch {
-        font-size: 6vw;
+        font-size: 10vw;
     }
 }
 

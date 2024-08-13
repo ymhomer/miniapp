@@ -32,16 +32,13 @@ function toggleTimeFormat() {
 
 function toggleStopwatch() {
     if (stopwatchRunning) {
-        // 秒表正在运行，双击停止并重置秒表
         clearInterval(stopwatchInterval);
         stopwatchRunning = false;
         stopwatchTime = 0;
         document.getElementById('stopwatch').textContent = '0:00';
     } else if (!stopwatchRunning && stopwatchTime > 0) {
-        // 秒表已暂停，双击无效
         return;
     } else {
-        // 秒表处于初始状态，双击开始计时
         stopwatchRunning = true;
         startStopwatch();
     }
