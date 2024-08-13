@@ -3,6 +3,7 @@ let stopwatchRunning = false;
 let stopwatchPaused = false;
 let stopwatchTime = 0;
 let stopwatchInterval;
+//let wakeLock = null;
 
 function updateTime() {
     const now = new Date();
@@ -77,7 +78,8 @@ function updateStopwatchDisplay() {
 
 function initializeSettings() {
     const keepAwakeCheckbox = document.getElementById('keep-awake');
-    keepAwakeCheckbox.checked = true; // 默认开启屏幕常亮
+    keepAwakeCheckbox.checked = true;
+    
     if ('wakeLock' in navigator) {
         navigator.wakeLock.request('screen');
     }
@@ -94,6 +96,40 @@ function initializeSettings() {
         }
     });
 
+    const fullscreenCheckbox = document.getElementById('fullscreen');
+    fullscreenCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+            enterFullscreen();
+        } else {
+            exitFullscreen();
+        }
+    });
+
+    function enterFullscreen() {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.mozRequestFullScreen) { // Firefox
+            elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { // IE/Edge
+            elem.msRequestFullscreen();
+        }
+    }
+
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) { // Firefox
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { // IE/Edge
+            document.msExitFullscreen();
+        }
+    }
+
     document.getElementById('fullscreen').addEventListener('change', function () {
         if (this.checked) {
             if (document.fullscreenElement) {
@@ -105,6 +141,16 @@ function initializeSettings() {
     });
 }
 
+function handleFullscreenChange() {
+    const fullscreenCheckbox = document.getElementById('fullscreen');
+    const isFullscreen = !!document.fullscreenElement || 
+                         !!document.mozFullScreenElement || 
+                         !!document.webkitFullscreenElement || 
+                         !!document.msFullscreenElement;
+                         
+    fullscreenCheckbox.checked = isFullscreen;
+}
+
 setInterval(updateTime, 1000);
 updateTime();
-initializeSettings(); // 初始化设置
+initializeSettings();
