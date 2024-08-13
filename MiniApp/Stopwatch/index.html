@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time and Stopwatch</title>
+<link rel="stylesheet" href="style.css"></head>
+<body>
+    <div class="container">
+        <div class="time-container" ondblclick="toggleTimeFormat()">
+            <div class="time">
+                <span id="hours">09</span>:<span id="minutes">30</span>
+                <span class="seconds" id="seconds">28</span>
+            </div>
+            <div class="am-pm" id="am-pm">AM</div>
+            <div class="date" id="date">Tuesday, August 13, 2024</div>
+        </div>
+        <div class="stopwatch-container" ondblclick="toggleStopwatch()" onclick="pauseResumeStopwatch()">
+            <div class="stopwatch" id="stopwatch">0:00</div>
+        </div>
+    </div>
+
+    <div class="settings-container">
+        <label>
+            <input type="checkbox" id="keep-awake">
+            Keep screen awake
+        </label>
+        <label>
+            <input type="checkbox" id="fullscreen">
+            Fullscreen mode
+        </label>
+    </div>
+
+
+
+<script src="script.js"></script></body></html>
