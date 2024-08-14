@@ -9,6 +9,7 @@ let wakeLock = null;
 
 const keepAwakeCheckbox = document.getElementById('keep-awake');
 const fullscreenCheckbox = document.getElementById('fullscreen');
+const brightnessRange = document.getElementById('brightness-range');
 
 function updateTime() {
     const now = new Date();
@@ -113,6 +114,10 @@ function initializeSettings() {
         } else {
             exitFullscreen();
         }
+    });
+
+    brightnessRange.addEventListener('input', function () {
+        adjustBrightness(this.value);
     });
     /*
     function enterFullscreen() {
@@ -249,6 +254,11 @@ function exitFullscreen() {
     } else if (document.msExitFullscreen) { // IE/Edge
         document.msExitFullscreen();
     }
+}
+
+function adjustBrightness(brightness) {
+    const brightnessValue = brightness / 100;
+    document.body.style.color = `rgba(255, 255, 255, ${brightnessValue})`;
 }
 
 function openSettingsDialog() {
