@@ -64,10 +64,17 @@ body {
 }
 
 .stopwatch {
+    font-variant-numeric: tabular-nums;
     font-size: 15vw;
     background-color: rgba(128, 128, 128, 0.5);
     padding: 10px 20px;
     border-radius: 15px;
+}
+
+.milliseconds {
+    font-size: 4vw;
+    margin-left: 0.2em;
+    vertical-align: baseline;
 }
 
 .settings-container {
@@ -82,25 +89,122 @@ body {
     margin-bottom: 10px;
 }
 
+#settings-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 6vw;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+dialog {
+    border: none;
+    border-radius: 15px;
+    padding: 20px;
+    background: rgba(50, 50, 50, 0.9);
+    color: white;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    width: 80vw;
+    max-width: 400px;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+dialog h3 {
+    font-size: 5vw;
+    margin-bottom: 15px;
+}
+
+dialog label {
+    font-size: 4vw;
+    line-height: 1.5;
+}
+
+dialog button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+    font-size: 4vw;
+}
+
+dialog button:hover {
+    background-color: #555;
+}
+
 @media (min-width: 768px) {
+    .container {
+        grid-template-rows: 1fr;
+        grid-template-columns: 1fr 1fr; /* 改为两列布局 */
+    }
+
+    .time-container {
+        grid-column: 1; /* 时间放在左侧 */
+        grid-row: 1;
+    }
+
+    .stopwatch-container {
+        grid-column: 2; /* 秒表放在右侧 */
+        grid-row: 1;
+    }
+
     .time-container .time {
-        font-size: 20vw;
+        font-size: 15vw;
     }
 
     .seconds {
-        font-size: 10vw;
+        font-size: 7vw;
     }
 
     .am-pm {
-        font-size: 6vw;
+        font-size: 4vw;
     }
 
     .date {
-        font-size: 5vw;
+        font-size: 3vw;
     }
 
     .stopwatch {
         font-size: 10vw;
+    }
+
+    dialog {
+        padding: 20px;
+        width: 60vw;
+        max-width: 500px;
+    }
+
+    dialog h3 {
+        font-size: 24px;
+    }
+
+    dialog label {
+        font-size: 18px;
+    }
+
+    dialog button {
+        font-size: 18px;
+        padding: 10px 20px;
+    }
+
+    #settings-button {
+        font-size: 24px;
     }
 }
 

@@ -9,19 +9,40 @@
         <div class="time-container" ondblclick="toggleTimeFormat()">
             <div class="time-wrapper">
                 <div class="time">
-                    <span id="hours">09</span>:<span id="minutes">30</span>
-                    <span class="seconds" id="seconds">28</span>
+                    <span id="hours">00</span>:<span id="minutes">00</span>
+                    <span class="seconds" id="seconds">00</span>
                 </div>
                 <div class="am-pm" id="am-pm">AM</div>
             </div>
             <div class="date" id="date">Tuesday, August 13, 2024</div>
         </div>        
         <div class="stopwatch-container" ondblclick="toggleStopwatch()" onclick="pauseResumeStopwatch()">
-            <div class="stopwatch" id="stopwatch">0:00</div>
+            <div class="stopwatch" id="stopwatch">0:00<span class="milliseconds">00</span></div>
         </div>
     </div>
 
-    <div class="settings-container">
+    <!-- 设置按钮 -->
+    <button id="settings-button" onclick="openSettingsDialog()">⚙️</button>
+
+    <!-- 设置对话框 -->
+    <dialog id="settings-dialog">
+        <form method="dialog">
+            <h3>Settings</h3>
+            <label>
+                <input type="checkbox" id="keep-awake">
+                Keep screen awake
+            </label>
+            <br>
+            <label>
+                <input type="checkbox" id="fullscreen">
+                Fullscreen mode
+            </label>
+            <br>
+            <button type="submit">Close</button>
+        </form>
+    </dialog>
+
+    <!--div class="settings-container">
         <label>
             <input type="checkbox" id="keep-awake">
             Keep screen awake
@@ -30,7 +51,7 @@
             <input type="checkbox" id="fullscreen">
             Fullscreen mode
         </label>
-    </div>
+    </div-->
 
 
 

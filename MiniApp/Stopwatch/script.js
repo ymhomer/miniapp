@@ -3,6 +3,7 @@ let stopwatchRunning = false;
 let stopwatchPaused = false;
 let stopwatchTime = 0;
 let stopwatchInterval;
+let stopwatchStartTime;
 let wakeLock = null;
 
 
@@ -41,11 +42,11 @@ function toggleStopwatch() {
         stopwatchRunning = false;
         stopwatchPaused = false;
         stopwatchTime = 0;
-        document.getElementById('stopwatch').textContent = '0:00';
+        document.getElementById('stopwatch').innerHTML = `0:00<span class="milliseconds">00</span>`;
     } else if (stopwatchPaused) {
         stopwatchPaused = false;
         stopwatchTime = 0;
-        document.getElementById('stopwatch').textContent = '0:00';
+        document.getElementById('stopwatch').innerHTML = `0:00<span class="milliseconds">00</span>`;
     } else {
         stopwatchRunning = true;
         startStopwatch();
@@ -53,10 +54,11 @@ function toggleStopwatch() {
 }
 
 function startStopwatch() {
+    stopwatchStartTime = Date.now() - stopwatchTime;
     stopwatchInterval = setInterval(() => {
-        stopwatchTime++;
+        stopwatchTime = Date.now() - stopwatchStartTime;
         updateStopwatchDisplay();
-    }, 1000);
+    }, 10);
 }
 
 function pauseResumeStopwatch() {
@@ -72,15 +74,20 @@ function pauseResumeStopwatch() {
 }
 
 function updateStopwatchDisplay() {
-    let hours = Math.floor(stopwatchTime / 3600);
-    let minutes = Math.floor((stopwatchTime % 3600) / 60);
-    let seconds = stopwatchTime % 60;
+    let hours = Math.floor(stopwatchTime / 3600000);
+    let minutes = Math.floor((stopwatchTime % 3600000) / 60000);
+    let seconds = Math.floor((stopwatchTime % 60000) / 1000);
+    let milliseconds = Math.floor((stopwatchTime % 1000) / 10); // 取两位毫秒数
+
+    let timeDisplay = '';
 
     if (hours > 0) {
-        document.getElementById('stopwatch').textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timeDisplay = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     } else {
-        document.getElementById('stopwatch').textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+        timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
     }
+
+    document.getElementById('stopwatch').innerHTML = `${timeDisplay}<span class="milliseconds">${String(milliseconds).padStart(2, '0')}</span>`;
 }
 
 function initializeSettings() {
@@ -242,6 +249,11 @@ function exitFullscreen() {
     } else if (document.msExitFullscreen) { // IE/Edge
         document.msExitFullscreen();
     }
+}
+
+function openSettingsDialog() {
+    const dialog = document.getElementById('settings-dialog');
+    dialog.showModal();
 }
 
 setInterval(updateTime, 1000);
