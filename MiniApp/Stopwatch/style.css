@@ -9,7 +9,7 @@ body {
 
 .container {
     display: grid;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: 1fr 3fr;
     height: 100vh;
     padding: 20px;
     box-sizing: border-box;
@@ -84,7 +84,7 @@ body {
 
 @media (min-width: 768px) {
     .time-container .time {
-        font-size: 30vw;
+        font-size: 20vw;
     }
 
     .seconds {
