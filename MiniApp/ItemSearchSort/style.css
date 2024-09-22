@@ -1,0 +1,4 @@
+.found { background-color: lightgreen; }
+.status-success { color: green; }
+.status-duplicate { color: orange; }
+.status-not-found { color: red; }
