@@ -42,6 +42,13 @@ document.addEventListener("DOMContentLoaded", function() {
         iframe.style.height = contentHeight + 'px';
         iframe.style.width = contentWidth + 'px';
     }
+    //extra event to receveive resize event from iframe
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'resize') {
+            const iframe = document.getElementById('myIframe');
+            iframe.style.height = event.data.height + 'px';
+        }
+    });
 
     // Event listeners for fullscreen and new tab buttons
     /*
