@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        html, body {
+            touch-action: none;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Number Gate Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        #gameArea {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #player {
+            position: absolute;
+            bottom: 10px;
+            left: calc(50% - 25px);
+            width: 50px;
+            height: 50px;
+            background-color: #ff5722;
+            text-align: center;
+            line-height: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            user-select: none;
+        }
+        .gate {
+            position: absolute;
+            width: 50vw;
+            height: 50px;
+            background-color: #3f51b5;
+            text-align: center;
+            line-height: 50px;
+            font-size: 20px;
+            color: white;
+            border-left: 5px solid black;
+            border-right: 5px solid black;
+        }
+        .monster {
+            position: absolute;
+            width: 100vw;
+            height: 70px;
+            background-color: #b71c1c;
+            text-align: center;
+            line-height: 70px;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="score">Score: 0</div>
+        <div id="player">10</div>
+    </div>
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const player = document.getElementById('player');
+        let playerNumber = 10;
+        let score = 0;
+        let gameSpeed = 2;
+        let playerX = window.innerWidth / 2 - 25;
+        let gates = [];
+        let gateCount = 0;
+let monsterPenalty = 5;
+let monsterMultiplier = 2;
+        
+        function startGame() {
+            generateGates();
+            requestAnimationFrame(updateGame);
+        }
+
+        function generateGates() {
+            gateCount++;
+            if (gateCount % 4 === 0) {
+                generateMonster();
+            } else {
+                const gate1 = document.createElement('div');
+                const gate2 = document.createElement('div');
+                gate1.className = 'gate';
+                gate2.className = 'gate';
+                gate1.style.left = '0';
+                gate2.style.left = '50vw';
+                gate1.dataset.value = getGateValue();
+                gate2.dataset.value = getGateValue();
+                gate1.innerHTML = gate1.dataset.value;
+                gate2.innerHTML = gate2.dataset.value;
+                gate1.style.top = '-50px';
+                gate2.style.top = '-50px';
+                gameArea.appendChild(gate1);
+                gameArea.appendChild(gate2);
+                gates.push(gate1, gate2);
+            }
+        }
+
+        function getGateValue() {
+            let randomValue = Math.random();
+            if (randomValue < 0.4) {
+                // Addition or subtraction within range of 1-5
+                let addSubValue = Math.floor(Math.random() * 5) + 1;
+                return Math.random() > 0.5 ? `+${addSubValue}` : `-${addSubValue}`;
+            } else {
+                // Multiplication or division based on score
+                let multiplier = Math.min(Math.floor(score / 10) + 2, 5);
+                return Math.random() > 0.5 ? `*${Math.floor(Math.random() * multiplier) + 1}` : `/${Math.floor(Math.random() * multiplier) + 1}`;
+            }
+        }
+
+        function generateMonster() {
+            let monsterCount = Math.max(Math.floor(playerNumber / 500) + 1, 1);
+            monsterPenalty += monsterMultiplier;
+            for (let i = 0; i < monsterCount; i++) {
+                const monster = document.createElement('div');
+                monster.className = 'monster';
+                monster.style.top = `${-70 * (i + 1)}px`;
+                monster.innerHTML = `-${monsterPenalty}`;
+                monster.dataset.value = `-${monsterPenalty}`;
+                gameArea.appendChild(monster);
+                gates.push(monster);
+            }
+        }
+
+function updateGame() {
+            gates.forEach(gate => {
+                let top = parseFloat(gate.style.top);
+                
+                top += gameSpeed;
+                gate.style.top = top + 'px';
+                if (top > window.innerHeight - 60) {
+                    // Check collision with player
+                    const gateCenter = gate.offsetLeft + gate.offsetWidth / 2;
+                    const playerCenter = playerX + player.offsetWidth / 2;
+                    if (Math.abs(gateCenter - playerCenter) < gate.offsetWidth / 2) {
+                        applyGateValue(gate.dataset.value);
+                    }
+                    gameArea.removeChild(gate);
+                    gates = gates.filter(g => g !== gate);
+                }
+            });
+            if (gates.length === 0) {
+                generateGates();
+                score++;
+                document.getElementById('score').innerHTML = `Score: ${score}`;
+                gameSpeed += 0.1;
+            }
+            requestAnimationFrame(updateGame);
+        }
+
+        function applyGateValue(value) {
+            switch (value) {
+                case '+1':
+                    playerNumber += 1;
+                    break;
+                case '-1':
+                    playerNumber -= 1;
+                    break;
+                case '*2':
+                    playerNumber *= 2;
+                    break;
+                case '/2':
+                    playerNumber = Math.floor(playerNumber / 2);
+                    break;
+                default:
+                    if (value.startsWith('-')) {
+                        playerNumber -= Math.abs(parseInt(value));
+                    } else if (value.startsWith('+')) {
+                        playerNumber += parseInt(value);
+                    } else if (value.startsWith('*')) {
+                        playerNumber *= parseInt(value.slice(1));
+                    } else if (value.startsWith('/')) {
+                        playerNumber = Math.floor(playerNumber / parseInt(value.slice(1)));
+                    }
+                    break;
+            }
+            player.innerHTML = playerNumber;
+            if (playerNumber <= 0) {
+                alert('Game Over!');
+                window.location.reload();
+            }
+        }
+
+        function onTouchMove(event) {
+            playerX = event.touches[0].clientX - player.offsetWidth / 2;
+            playerX = Math.max(0, Math.min(window.innerWidth - player.offsetWidth, playerX));
+            player.style.left = playerX + 'px';
+        }
+
+        function onMouseMove(event) {
+            playerX = event.clientX - player.offsetWidth / 2;
+            playerX = Math.max(0, Math.min(window.innerWidth - player.offsetWidth, playerX));
+            player.style.left = playerX + 'px';
+        }
+
+        gameArea.addEventListener('touchmove', onTouchMove);
+        gameArea.addEventListener('mousemove', onMouseMove);
+
+        startGame();
+    </script>
+</body>
+</html>
