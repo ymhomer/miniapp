@@ -81,8 +81,18 @@
         let playerX = window.innerWidth / 2 - 25;
         let gates = [];
         let gateCount = 0;
-let monsterPenalty = 5;
-let monsterMultiplier = 2;
+        let monsterPenalty = 5;
+        let monsterMultiplier = 2;
+
+        function sendHeightToParent() {
+            parent.postMessage({
+                type: 'resize',
+                height: document.documentElement.scrollHeight
+            }, '*');
+        }
+
+        window.addEventListener('load', sendHeightToParent);
+        window.addEventListener('resize', sendHeightToParent);
         
         function startGame() {
             generateGates();
