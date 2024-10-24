@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Metronome</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            max-height: 500px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .settings-group .buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            width: 100%;
+        }
+        button {
+            padding: 10px;
+            font-size: 1.2em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            min-width: 70px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:active {
+            background-color: #003f7f;
+        }
+        .visualizer {
+            display: grid;
+            grid-template-columns: repeat(4, 50px);
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center; /* Centering the beats */
+        }
+        .beat {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: lightgray;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .active {
+            background-color: #28a745;
+            transform: scale(1.2);
+        }
+        .first-beat {
+            background-color: #dc3545;
+            transform: scale(1.2);
+        }
+        #start-stop-btn {
+            background-color: #28a745;
+            font-size: 1.4em;
+            padding: 15px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        @media (max-width: 400px) {
+            button {
+                min-width: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Metronome</h1>
+    
+    <div class="controls">
+        <div class="settings-group">
+            <label>BPM: <span id="bpm-display">120</span></label>
+            <div class="buttons">
+                <button onclick="adjustBPM(-10)">-10</button>
+                <button onclick="adjustBPM(-1)">-1</button>
+                <button onclick="adjustBPM(1)">+1</button>
+                <button onclick="adjustBPM(10)">+10</button>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <label>Beats: <span id="beat-count-display">4</span></label>
+            <div class="buttons">
+                <button onclick="adjustBeats(-1)">-1</button>
+                <button onclick="adjustBeats(1)">+1</button>
+            </div>
+        </div>
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" id="prevent-sleep"> Prevent screen sleep
+            </label>
+        </div>
+    </div>
+
+    <div class="visualizer" id="visualizer">
+        <!-- Visualized beats will be rendered here -->
+    </div>
+
+    <button id="start-stop-btn" onclick="toggleMetronome()">Start</button>
+</div>
+
+<script>
+    let bpm = 120;
+    let beatCount = 4;
+    let isPlaying = false;
+    let interval;
+    let currentBeat = 0;
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const visualizer = document.getElementById('visualizer');
+
+    function adjustBPM(amount) {
+        bpm = Math.max(40, Math.min(240, bpm + amount));
+        document.getElementById('bpm-display').textContent = bpm;
+        if (isPlaying) restartMetronome();
+    }
+
+    function adjustBeats(amount) {
+        beatCount = Math.max(1, Math.min(12, beatCount + amount));
+        document.getElementById('beat-count-display').textContent = beatCount;
+        renderBeats();
+        if (isPlaying) restartMetronome();
+    }
+
+    function toggleMetronome() {
+        if (isPlaying) {
+            stopMetronome();
+        } else {
+            startMetronome();
+        }
+    }
+
+    function startMetronome() {
+        isPlaying = true;
+        document.getElementById('start-stop-btn').textContent = 'Stop';
+        playBeat();
+        interval = setInterval(playBeat, (60 / bpm) * 1000);
+    }
+
+    function stopMetronome() {
+        isPlaying = false;
+        document.getElementById('start-stop-btn').textContent = 'Start';
+        clearInterval(interval);
+        currentBeat = 0;
+        renderBeats();
+    }
+
+    function restartMetronome() {
+        stopMetronome();
+        startMetronome();
+    }
+
+    function playBeat() {
+        renderBeats();
+        const beatSound = (currentBeat === 0) ? 880 : 440; // Higher tone for first beat
+        const oscillator = audioContext.createOscillator();
+        oscillator.frequency.setValueAtTime(beatSound, audioContext.currentTime);
+        oscillator.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+
+        currentBeat = (currentBeat + 1) % beatCount;
+    }
+
+    function renderBeats() {
+        visualizer.innerHTML = '';
+        visualizer.style.gridTemplateColumns = `repeat(${Math.min(4, beatCount)}, 50px)`;
+
+        for (let i = 0; i < beatCount; i++) {
+            const beatDiv = document.createElement('div');
+            beatDiv.classList.add('beat');
+            if (i === currentBeat) {
+                beatDiv.classList.add(i === 0 ? 'first-beat' : 'active');
+            }
+            visualizer.appendChild(beatDiv);
+        }
+    }
+
+    renderBeats();
+</script>
+
+</body>
+</html>
