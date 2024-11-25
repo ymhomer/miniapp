@@ -73,6 +73,23 @@
             text-align: center;
             line-height: 80px;
             user-select: none;
+            overflow: hidden;
+            position: absolute;
+            transition: transform 0.1s;
+        }
+        #attackButton:active {
+            transform: scale(1.1);
+        }
+        #attackCooldownOverlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(128, 128, 128, 0.7);
+            transform-origin: bottom;
+            transform: scaleY(1);
+            pointer-events: none;
         }
         /* In-game HUD Styles */
         #gameHUD {
@@ -84,6 +101,34 @@
             background: rgba(255, 255, 255, 0.7);
             padding: 5px 10px;
             border-radius: 5px;
+        }
+        /* Keyboard Attack Indicator */
+        #keyboardAttackIndicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 0, 0, 0.6);
+            border-radius: 5px;
+            display: none; /* Hidden when not in game */
+            overflow: hidden;
+            position: absolute;
+            transition: transform 0.1s;
+        }
+        #keyboardAttackIndicator:active {
+            transform: scale(1.1);
+        }
+        #keyboardCooldownOverlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(128, 128, 128, 0.7);
+            transform-origin: bottom;
+            transform: scaleY(1);
+            pointer-events: none;
         }
     </style>
 </head>
@@ -134,13 +179,21 @@
     </div>
 
     <!-- Virtual Joystick -->
-    <div id="virtualJoystickContainer">
+    <div id="virtualJoystickContainer" style="display: none;">
         <div id="joystickBase"></div>
         <div id="joystickStick"></div>
     </div>
 
     <!-- Attack Button -->
-    <div id="attackButton">Attack</div>
+    <div id="attackButton" style="display: none;">
+        Attack
+        <div id="attackCooldownOverlay"></div>
+    </div>
+
+    <!-- Keyboard Attack Indicator -->
+    <div id="keyboardAttackIndicator" style="display: none;">
+        <div id="keyboardCooldownOverlay"></div>
+    </div>
 
     <script>
         // Game variables
@@ -246,12 +299,20 @@
             attackButton.addEventListener('touchstart', function(e) {
                 e.preventDefault();
                 performAttack();
+                attackButton.classList.add('active');
+                setTimeout(() => {
+                    attackButton.classList.remove('active');
+                }, 100);
             });
 
             // Mouse click for attack (optional)
             attackButton.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 performAttack();
+                attackButton.classList.add('active');
+                setTimeout(() => {
+                    attackButton.classList.remove('active');
+                }, 100);
             });
 
             // Start screen stats
@@ -287,12 +348,15 @@
             }
             let joystickContainer = document.getElementById('virtualJoystickContainer');
             let attackButton = document.getElementById('attackButton');
+            let keyboardAttackIndicator = document.getElementById('keyboardAttackIndicator');
             if (settings.showVirtualJoystick) {
                 joystickContainer.style.display = 'block';
                 attackButton.style.display = 'block';
+                keyboardAttackIndicator.style.display = 'none';
             } else {
                 joystickContainer.style.display = 'none';
                 attackButton.style.display = 'none';
+                keyboardAttackIndicator.style.display = 'none'; // Initially hidden
             }
         }
 
@@ -310,8 +374,17 @@
 
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('settingsScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'none';
             canvas.style.display = 'block';
             document.getElementById('gameHUD').style.display = 'block';
+
+            // Show appropriate attack indicator
+            if (settings.showVirtualJoystick) {
+                document.getElementById('attackButton').style.display = 'block';
+            } else {
+                document.getElementById('keyboardAttackIndicator').style.display = 'block';
+            }
 
             // Initialize game variables
             player = {
@@ -323,7 +396,9 @@
                 speed: 0.5,
                 inertia: { x: 0, y: 0 },
                 isAttacking: false,
-                attackEffectDuration: 0
+                attackEffectDuration: 0,
+                attackCooldown: 0, // Player's attack cooldown
+                attackCooldownTime: 2000 // 2 seconds cooldown
             };
             monsters = [];
             gameTime = 0;
@@ -336,7 +411,7 @@
         function gameLoop() {
             updateGame();
             renderGame();
-            gameTime += 0.016; // Approximately
+            gameTime += 16; // Milliseconds
             updateHUD();
         }
 
@@ -367,6 +442,11 @@
             // Keyboard attack
             if (keysPressed[' ']) { // Spacebar
                 performAttack();
+                let indicator = document.getElementById('keyboardAttackIndicator');
+                indicator.classList.add('active');
+                setTimeout(() => {
+                    indicator.classList.remove('active');
+                }, 100);
             }
 
             // Virtual Joystick controls
@@ -398,6 +478,12 @@
             if (player.y < 0) player.y = 0;
             if (player.y > canvas.height) player.y = canvas.height;
 
+            // Update attack cooldown
+            if (player.attackCooldown > 0) {
+                player.attackCooldown -= 16;
+                if (player.attackCooldown < 0) player.attackCooldown = 0;
+            }
+
             // Update attack effect duration
             if (player.isAttacking) {
                 player.attackEffectDuration -= 16;
@@ -405,6 +491,9 @@
                     player.isAttacking = false;
                 }
             }
+
+            // Update attack button cooldown overlay
+            updateAttackButtonCooldown();
 
             // Spawn monsters
             if (monsters.length < 10 && Math.random() < 0.02) {
@@ -555,16 +644,18 @@
             clearInterval(gameInterval);
             canvas.style.display = 'none';
             document.getElementById('gameHUD').style.display = 'none';
+            document.getElementById('attackButton').style.display = 'none';
+            document.getElementById('keyboardAttackIndicator').style.display = 'none';
             document.getElementById('endScreen').style.display = 'flex';
-            document.getElementById('gameDuration').innerText = Math.floor(gameTime);
+            document.getElementById('gameDuration').innerText = Math.floor(gameTime / 1000);
             document.getElementById('killCount').innerText = killCount;
 
             // Update and display highest scores
             let longestTime = localStorage.getItem('longestTime') || 0;
             let highestKills = localStorage.getItem('highestKills') || 0;
 
-            if (gameTime > longestTime) {
-                longestTime = Math.floor(gameTime);
+            if (gameTime / 1000 > longestTime) {
+                longestTime = Math.floor(gameTime / 1000);
                 localStorage.setItem('longestTime', longestTime);
             }
             if (killCount > highestKills) {
@@ -605,7 +696,9 @@
         }
 
         function performAttack() {
-            if (player.isAttacking) return; // Prevent spamming attack
+            if (player.attackCooldown > 0) {
+                return; // Attack is on cooldown
+            }
             // Implement attack logic
             // For simplicity, we'll damage any monster within the attack range
             monsters.forEach(function(monster) {
@@ -620,10 +713,53 @@
             // Set attack effect
             player.isAttacking = true;
             player.attackEffectDuration = 200; // Attack effect lasts 200ms
+            player.attackCooldown = player.attackCooldownTime; // Set attack cooldown
+
+            // Visual effect for attack button
+            if (settings.showVirtualJoystick) {
+                let attackButton = document.getElementById('attackButton');
+                attackButton.classList.add('active');
+                setTimeout(() => {
+                    attackButton.classList.remove('active');
+                }, 100);
+            } else {
+                let indicator = document.getElementById('keyboardAttackIndicator');
+                indicator.classList.add('active');
+                setTimeout(() => {
+                    indicator.classList.remove('active');
+                }, 100);
+            }
+        }
+
+        function updateAttackButtonCooldown() {
+            let cooldownRatio = player.attackCooldown / player.attackCooldownTime;
+            if (cooldownRatio < 0) cooldownRatio = 0;
+
+            if (settings.showVirtualJoystick) {
+                let attackButton = document.getElementById('attackButton');
+                let overlay = document.getElementById('attackCooldownOverlay');
+                overlay.style.transform = `scaleY(${cooldownRatio})`;
+
+                if (player.attackCooldown > 0) {
+                    attackButton.style.background = 'rgba(128, 128, 128, 0.7)';
+                } else {
+                    attackButton.style.background = 'rgba(255, 0, 0, 0.6)';
+                }
+            } else {
+                let indicator = document.getElementById('keyboardAttackIndicator');
+                let overlay = document.getElementById('keyboardCooldownOverlay');
+                overlay.style.transform = `scaleY(${cooldownRatio})`;
+
+                if (player.attackCooldown > 0) {
+                    indicator.style.background = 'rgba(128, 128, 128, 0.7)';
+                } else {
+                    indicator.style.background = 'rgba(255, 0, 0, 0.6)';
+                }
+            }
         }
 
         function updateHUD() {
-            document.getElementById('currentTime').innerText = Math.floor(gameTime);
+            document.getElementById('currentTime').innerText = Math.floor(gameTime / 1000);
             document.getElementById('currentKills').innerText = killCount;
         }
 
