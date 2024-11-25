@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monster Slayer Game</title>
+    <style>
+        /* Ensure the game adapts to various screen sizes */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            background-color: #e0e0e0;
+        }
+        /* Start Screen Styles */
+        #startScreen, #endScreen, #settingsScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        /* Virtual Joystick Styles */
+        #virtualJoystickContainer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            display: none; /* Hidden by default */
+        }
+        #joystickBase {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+        }
+        #joystickStick {
+            position: absolute;
+            left: 35px;
+            top: 35px;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 50%;
+        }
+        /* Attack Button Styles */
+        #attackButton {
+            position: absolute;
+            bottom: 40px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 0, 0, 0.6);
+            border-radius: 50%;
+            display: none; /* Hidden by default */
+            font-size: 18px;
+            color: #fff;
+            text-align: center;
+            line-height: 80px;
+            user-select: none;
+        }
+        /* In-game HUD Styles */
+        #gameHUD {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #000;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start Screen -->
+    <div id="startScreen">
+        <h1>Monster Slayer</h1>
+        <p>Longest Game Time: <span id="longestTime">0</span> seconds</p>
+        <p>Highest Kill Count: <span id="highestKills">0</span></p>
+        <button id="startButton">Start Game</button>
+        <button id="settingsButton">Settings</button>
+        <p>Use <strong>WASD</strong> or <strong>Arrow Keys</strong> to move. Press <strong>Spacebar</strong> to attack.</p>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settingsScreen" style="display:none;">
+        <h1>Settings</h1>
+        <label>
+            <input type="checkbox" id="fullscreenCheckbox"> Fullscreen Mode
+        </label>
+        <br>
+        <label>
+            <input type="checkbox" id="virtualJoystickCheckbox"> Show Virtual Joystick
+        </label>
+        <br>
+        <button id="backButton">Back</button>
+    </div>
+
+    <!-- End Screen -->
+    <div id="endScreen" style="display:none;">
+        <h1>Game Over</h1>
+        <p>Game Duration: <span id="gameDuration">0</span> seconds</p>
+        <p>Kill Count: <span id="killCount">0</span></p>
+        <p>Longest Game Time: <span id="finalLongestTime">0</span> seconds</p>
+        <p>Highest Kill Count: <span id="finalHighestKills">0</span></p>
+        <button id="restartButton">New Game</button>
+        <button id="returnButton">Return to Start</button>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" style="display:none;"></canvas>
+
+    <!-- In-game HUD -->
+    <div id="gameHUD" style="display:none;">
+        <p>Time: <span id="currentTime">0</span> s</p>
+        <p>Kills: <span id="currentKills">0</span></p>
+    </div>
+
+    <!-- Virtual Joystick -->
+    <div id="virtualJoystickContainer">
+        <div id="joystickBase"></div>
+        <div id="joystickStick"></div>
+    </div>
+
+    <!-- Attack Button -->
+    <div id="attackButton">Attack</div>
+
+    <script>
+        // Game variables
+        let canvas = document.getElementById('gameCanvas');
+        let ctx = canvas.getContext('2d');
+        let player = {};
+        let monsters = [];
+        let keysPressed = {};
+        let gameInterval;
+        let gameTime = 0;
+        let killCount = 0;
+
+        // Settings
+        let settings = {
+            fullscreen: false,
+            showVirtualJoystick: false
+        };
+
+        // Virtual Joystick variables
+        let joystick = {
+            active: false,
+            initialX: 0,
+            initialY: 0,
+            currentX: 0,
+            currentY: 0,
+            deltaX: 0,
+            deltaY: 0,
+            maxDistance: 40 // Max distance the stick can move
+        };
+
+        // Initialize game
+        function initGame() {
+            // Set canvas size
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Load settings from local storage
+            loadSettings();
+
+            // Event listeners
+            document.getElementById('startButton').addEventListener('click', startGame);
+            document.getElementById('restartButton').addEventListener('click', restartGame);
+            document.getElementById('returnButton').addEventListener('click', returnToStart);
+            document.getElementById('settingsButton').addEventListener('click', showSettings);
+            document.getElementById('backButton').addEventListener('click', hideSettings);
+            document.getElementById('fullscreenCheckbox').addEventListener('change', toggleFullscreen);
+            document.getElementById('virtualJoystickCheckbox').addEventListener('change', toggleVirtualJoystick);
+
+            // Keyboard controls
+            window.addEventListener('keydown', function(e) {
+                keysPressed[e.key] = true;
+                // Prevent default scrolling behavior
+                if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+            window.addEventListener('keyup', function(e) {
+                keysPressed[e.key] = false;
+            });
+
+            // Touch controls for virtual joystick
+            let joystickContainer = document.getElementById('virtualJoystickContainer');
+            let joystickStick = document.getElementById('joystickStick');
+
+            joystickContainer.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                joystick.active = true;
+                let touch = e.touches[0];
+                joystick.initialX = touch.clientX;
+                joystick.initialY = touch.clientY;
+            });
+
+            joystickContainer.addEventListener('touchmove', function(e) {
+                if (!joystick.active) return;
+                e.preventDefault();
+                let touch = e.touches[0];
+                joystick.currentX = touch.clientX;
+                joystick.currentY = touch.clientY;
+                joystick.deltaX = joystick.currentX - joystick.initialX;
+                joystick.deltaY = joystick.currentY - joystick.initialY;
+
+                // Limit the joystick movement
+                let distance = Math.hypot(joystick.deltaX, joystick.deltaY);
+                if (distance > joystick.maxDistance) {
+                    let ratio = joystick.maxDistance / distance;
+                    joystick.deltaX *= ratio;
+                    joystick.deltaY *= ratio;
+                }
+
+                // Move the joystick stick
+                joystickStick.style.transform = `translate(${joystick.deltaX}px, ${joystick.deltaY}px)`;
+            });
+
+            joystickContainer.addEventListener('touchend', function(e) {
+                joystick.active = false;
+                joystick.deltaX = 0;
+                joystick.deltaY = 0;
+                joystickStick.style.transform = `translate(0px, 0px)`;
+            });
+
+            // Touch controls for attack button
+            let attackButton = document.getElementById('attackButton');
+            attackButton.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                performAttack();
+            });
+
+            // Mouse click for attack (optional)
+            attackButton.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                performAttack();
+            });
+
+            // Start screen stats
+            updateStartScreenStats();
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function loadSettings() {
+            let savedSettings = JSON.parse(localStorage.getItem('gameSettings'));
+            if (savedSettings) {
+                settings = savedSettings;
+                document.getElementById('fullscreenCheckbox').checked = settings.fullscreen;
+                document.getElementById('virtualJoystickCheckbox').checked = settings.showVirtualJoystick;
+            }
+            applySettings();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('gameSettings', JSON.stringify(settings));
+        }
+
+        function applySettings() {
+            if (settings.fullscreen) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+            let joystickContainer = document.getElementById('virtualJoystickContainer');
+            let attackButton = document.getElementById('attackButton');
+            if (settings.showVirtualJoystick) {
+                joystickContainer.style.display = 'block';
+                attackButton.style.display = 'block';
+            } else {
+                joystickContainer.style.display = 'none';
+                attackButton.style.display = 'none';
+            }
+        }
+
+        function toggleFullscreen() {
+            settings.fullscreen = document.getElementById('fullscreenCheckbox').checked;
+            applySettings();
+            saveSettings();
+        }
+
+        function toggleVirtualJoystick() {
+            settings.showVirtualJoystick = document.getElementById('virtualJoystickCheckbox').checked;
+            applySettings();
+            saveSettings();
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            canvas.style.display = 'block';
+            document.getElementById('gameHUD').style.display = 'block';
+
+            // Initialize game variables
+            player = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                size: 30,
+                color: 'blue',
+                hp: 100,
+                speed: 0.5,
+                inertia: { x: 0, y: 0 },
+                isAttacking: false,
+                attackEffectDuration: 0
+            };
+            monsters = [];
+            gameTime = 0;
+            killCount = 0;
+
+            // Start game loop
+            gameInterval = setInterval(gameLoop, 16); // Approximately 60 FPS
+        }
+
+        function gameLoop() {
+            updateGame();
+            renderGame();
+            gameTime += 0.016; // Approximately
+            updateHUD();
+        }
+
+        function updateGame() {
+            // Update player position with inertia
+            let acceleration = { x: 0, y: 0 };
+
+            // Keyboard controls
+            if (!settings.showVirtualJoystick) {
+                let moveSpeed = player.speed;
+                if (keysPressed['Shift']) {
+                    moveSpeed *= 1.5; // Sprinting
+                }
+                if (keysPressed['ArrowUp'] || keysPressed['w']) {
+                    acceleration.y = -moveSpeed;
+                }
+                if (keysPressed['ArrowDown'] || keysPressed['s']) {
+                    acceleration.y = moveSpeed;
+                }
+                if (keysPressed['ArrowLeft'] || keysPressed['a']) {
+                    acceleration.x = -moveSpeed;
+                }
+                if (keysPressed['ArrowRight'] || keysPressed['d']) {
+                    acceleration.x = moveSpeed;
+                }
+            }
+
+            // Keyboard attack
+            if (keysPressed[' ']) { // Spacebar
+                performAttack();
+            }
+
+            // Virtual Joystick controls
+            if (settings.showVirtualJoystick && joystick.active) {
+                acceleration.x = (joystick.deltaX / joystick.maxDistance) * player.speed * 5;
+                acceleration.y = (joystick.deltaY / joystick.maxDistance) * player.speed * 5;
+            }
+
+            // Apply acceleration to inertia
+            player.inertia.x += acceleration.x;
+            player.inertia.y += acceleration.y;
+
+            // Limit the inertia to prevent excessive speed
+            let maxSpeed = 5;
+            player.inertia.x = Math.max(Math.min(player.inertia.x, maxSpeed), -maxSpeed);
+            player.inertia.y = Math.max(Math.min(player.inertia.y, maxSpeed), -maxSpeed);
+
+            // Apply inertia to position
+            player.x += player.inertia.x;
+            player.y += player.inertia.y;
+
+            // Apply friction to inertia
+            player.inertia.x *= 0.9;
+            player.inertia.y *= 0.9;
+
+            // Keep player within bounds
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width) player.x = canvas.width;
+            if (player.y < 0) player.y = 0;
+            if (player.y > canvas.height) player.y = canvas.height;
+
+            // Update attack effect duration
+            if (player.isAttacking) {
+                player.attackEffectDuration -= 16;
+                if (player.attackEffectDuration <= 0) {
+                    player.isAttacking = false;
+                }
+            }
+
+            // Spawn monsters
+            if (monsters.length < 10 && Math.random() < 0.02) {
+                spawnMonster();
+            }
+
+            // Update monsters
+            monsters.forEach(function(monster, index) {
+                // Monster movement towards player
+                let dx = player.x - monster.x;
+                let dy = player.y - monster.y;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist > 0) {
+                    monster.x += (dx / dist) * monster.speed;
+                    monster.y += (dy / dist) * monster.speed;
+                }
+
+                // Update attack effect duration
+                if (monster.isAttacking) {
+                    monster.attackEffectDuration -= 16;
+                    if (monster.attackEffectDuration <= 0) {
+                        monster.isAttacking = false;
+                    }
+                }
+
+                // Monster attack logic with reaction time
+                if (dist < monster.attackRange) {
+                    if (monster.reactionTime === undefined || monster.reactionTime <= 0) {
+                        // Set reaction time if not set
+                        if (monster.reactionTime === undefined) {
+                            monster.reactionTime = 500 + Math.random() * 500; // 500ms to 1000ms random reaction time
+                        } else {
+                            // Reduce reaction time
+                            monster.reactionTime -= 16;
+                        }
+                    } else {
+                        // Reduce reaction time
+                        monster.reactionTime -= 16;
+                    }
+
+                    // After reaction time, start attack cooldown
+                    if (monster.reactionTime <= 0) {
+                        if (monster.attackCooldown <= 0) {
+                            // Monster attacks player
+                            player.hp -= monster.damage;
+                            monster.attackCooldown = monster.attackSpeed;
+                            monster.isAttacking = true;
+                            monster.attackEffectDuration = 200; // Attack effect lasts 200ms
+                            if (player.hp <= 0) {
+                                endGame();
+                            }
+                        } else {
+                            monster.attackCooldown -= 16;
+                        }
+                    }
+                } else {
+                    // Reset reaction time if player is out of range
+                    monster.reactionTime = undefined;
+                }
+
+                // Remove monster if defeated
+                if (monster.hp <= 0) {
+                    monsters.splice(index, 1);
+                    killCount++;
+                }
+            });
+        }
+
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player attack effect if attacking
+            if (player.isAttacking) {
+                ctx.fillStyle = 'rgba(0, 0, 255, 0.3)'; // Semi-transparent blue
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, 50, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw player's attack range (dashed circle)
+            ctx.strokeStyle = 'blue';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, 50, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+
+            // Draw player HP
+            ctx.fillStyle = 'black';
+            ctx.fillText('HP: ' + player.hp, player.x - 20, player.y - 30);
+
+            // Draw monsters
+            monsters.forEach(function(monster) {
+                // Draw monster attack effect if attacking
+                if (monster.isAttacking) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; // Semi-transparent red
+                    ctx.beginPath();
+                    ctx.arc(monster.x, monster.y, monster.attackRange, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = monster.color;
+                ctx.beginPath();
+                ctx.arc(monster.x, monster.y, monster.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw monster's attack range (dashed circle)
+                ctx.strokeStyle = 'red';
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(monster.x, monster.y, monster.attackRange, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]); // Reset line dash
+
+                // Draw monster HP
+                ctx.fillStyle = 'black';
+                ctx.fillText('HP: ' + monster.hp, monster.x - 20, monster.y - 30);
+            });
+        }
+
+        function spawnMonster() {
+            let monster = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 20 + Math.random() * 10,
+                color: 'green',
+                hp: 50,
+                speed: 0.5 + Math.random(),
+                damage: 5,
+                attackRange: 30 + Math.random() * 20,
+                attackSpeed: 1000 + Math.random() * 1000, // in milliseconds
+                attackCooldown: 0,
+                isAttacking: false,
+                attackEffectDuration: 0,
+                reactionTime: undefined // Reaction time before attacking
+            };
+            monsters.push(monster);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            canvas.style.display = 'none';
+            document.getElementById('gameHUD').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'flex';
+            document.getElementById('gameDuration').innerText = Math.floor(gameTime);
+            document.getElementById('killCount').innerText = killCount;
+
+            // Update and display highest scores
+            let longestTime = localStorage.getItem('longestTime') || 0;
+            let highestKills = localStorage.getItem('highestKills') || 0;
+
+            if (gameTime > longestTime) {
+                longestTime = Math.floor(gameTime);
+                localStorage.setItem('longestTime', longestTime);
+            }
+            if (killCount > highestKills) {
+                highestKills = killCount;
+                localStorage.setItem('highestKills', highestKills);
+            }
+
+            document.getElementById('finalLongestTime').innerText = longestTime;
+            document.getElementById('finalHighestKills').innerText = highestKills;
+        }
+
+        function restartGame() {
+            document.getElementById('endScreen').style.display = 'none';
+            startGame();
+        }
+
+        function returnToStart() {
+            document.getElementById('endScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            updateStartScreenStats();
+        }
+
+        function updateStartScreenStats() {
+            let longestTime = localStorage.getItem('longestTime') || 0;
+            let highestKills = localStorage.getItem('highestKills') || 0;
+            document.getElementById('longestTime').innerText = longestTime;
+            document.getElementById('highestKills').innerText = highestKills;
+        }
+
+        function showSettings() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('settingsScreen').style.display = 'flex';
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+
+        function performAttack() {
+            if (player.isAttacking) return; // Prevent spamming attack
+            // Implement attack logic
+            // For simplicity, we'll damage any monster within the attack range
+            monsters.forEach(function(monster) {
+                let dx = monster.x - player.x;
+                let dy = monster.y - player.y;
+                let dist = Math.hypot(dx, dy);
+                if (dist < 50) { // Player's attack range
+                    monster.hp -= 20; // Damage dealt to monster
+                    // Add attack animation if desired
+                }
+            });
+            // Set attack effect
+            player.isAttacking = true;
+            player.attackEffectDuration = 200; // Attack effect lasts 200ms
+        }
+
+        function updateHUD() {
+            document.getElementById('currentTime').innerText = Math.floor(gameTime);
+            document.getElementById('currentKills').innerText = killCount;
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
