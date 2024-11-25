@@ -74,10 +74,9 @@
             line-height: 80px;
             user-select: none;
             overflow: hidden;
-            position: absolute;
             transition: transform 0.1s;
         }
-        #attackButton:active {
+        #attackButton.active {
             transform: scale(1.1);
         }
         #attackCooldownOverlay {
@@ -113,10 +112,9 @@
             border-radius: 5px;
             display: none; /* Hidden when not in game */
             overflow: hidden;
-            position: absolute;
             transition: transform 0.1s;
         }
-        #keyboardAttackIndicator:active {
+        #keyboardAttackIndicator.active {
             transform: scale(1.1);
         }
         #keyboardCooldownOverlay {
@@ -249,6 +247,16 @@
                 if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                     e.preventDefault();
                 }
+                // Keyboard attack
+                if (e.key === ' ') { // Spacebar
+                    performAttack();
+                    let indicator = document.getElementById('keyboardAttackIndicator');
+                    // Visual feedback
+                    indicator.classList.add('active');
+                    setTimeout(() => {
+                        indicator.classList.remove('active');
+                    }, 100);
+                }
             });
             window.addEventListener('keyup', function(e) {
                 keysPressed[e.key] = false;
@@ -299,6 +307,7 @@
             attackButton.addEventListener('touchstart', function(e) {
                 e.preventDefault();
                 performAttack();
+                // Visual feedback
                 attackButton.classList.add('active');
                 setTimeout(() => {
                     attackButton.classList.remove('active');
@@ -309,6 +318,7 @@
             attackButton.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 performAttack();
+                // Visual feedback
                 attackButton.classList.add('active');
                 setTimeout(() => {
                     attackButton.classList.remove('active');
@@ -439,16 +449,6 @@
                 }
             }
 
-            // Keyboard attack
-            if (keysPressed[' ']) { // Spacebar
-                performAttack();
-                let indicator = document.getElementById('keyboardAttackIndicator');
-                indicator.classList.add('active');
-                setTimeout(() => {
-                    indicator.classList.remove('active');
-                }, 100);
-            }
-
             // Virtual Joystick controls
             if (settings.showVirtualJoystick && joystick.active) {
                 acceleration.x = (joystick.deltaX / joystick.maxDistance) * player.speed * 5;
@@ -574,11 +574,44 @@
                 ctx.fill();
             }
 
-            // Draw player
-            ctx.fillStyle = player.color;
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
-            ctx.fill();
+            // 添加玩家攻击冷却的视觉效果
+            if (player.attackCooldown > 0) {
+                let cooldownRatio = player.attackCooldown / player.attackCooldownTime;
+
+                // 绘制灰色的玩家角色
+                ctx.fillStyle = 'rgba(128, 128, 128, 0.7)';
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 保存绘图状态
+                ctx.save();
+                // 创建一个从下往上逐渐增大的剪切区域
+                ctx.beginPath();
+                let clipHeight = player.size * (1 - cooldownRatio);
+                ctx.rect(
+                    player.x - player.size / 2,
+                    player.y + player.size / 2 - clipHeight,
+                    player.size,
+                    clipHeight
+                );
+                ctx.clip();
+
+                // 绘制原本颜色的玩家角色
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 恢复绘图状态
+                ctx.restore();
+            } else {
+                // 冷却结束，直接绘制原本颜色的玩家角色
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             // Draw player's attack range (dashed circle)
             ctx.strokeStyle = 'blue';
@@ -696,6 +729,21 @@
         }
 
         function performAttack() {
+            // Visual feedback for attack button or keyboard indicator
+            if (settings.showVirtualJoystick) {
+                let attackButton = document.getElementById('attackButton');
+                attackButton.classList.add('active');
+                setTimeout(() => {
+                    attackButton.classList.remove('active');
+                }, 100);
+            } else {
+                let indicator = document.getElementById('keyboardAttackIndicator');
+                indicator.classList.add('active');
+                setTimeout(() => {
+                    indicator.classList.remove('active');
+                }, 100);
+            }
+
             if (player.attackCooldown > 0) {
                 return; // Attack is on cooldown
             }
@@ -714,21 +762,6 @@
             player.isAttacking = true;
             player.attackEffectDuration = 200; // Attack effect lasts 200ms
             player.attackCooldown = player.attackCooldownTime; // Set attack cooldown
-
-            // Visual effect for attack button
-            if (settings.showVirtualJoystick) {
-                let attackButton = document.getElementById('attackButton');
-                attackButton.classList.add('active');
-                setTimeout(() => {
-                    attackButton.classList.remove('active');
-                }, 100);
-            } else {
-                let indicator = document.getElementById('keyboardAttackIndicator');
-                indicator.classList.add('active');
-                setTimeout(() => {
-                    indicator.classList.remove('active');
-                }, 100);
-            }
         }
 
         function updateAttackButtonCooldown() {
