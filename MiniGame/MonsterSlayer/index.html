@@ -3,44 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <title>Monster Slayer Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-        /* Ensure the game adapts to various screen sizes */
-        body, html {
+        html, body {
             margin: 0;
             padding: 0;
             overflow: hidden;
             touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            background: #f2f2f2;
+            font-family: sans-serif;
         }
         canvas {
             display: block;
-            background-color: #e0e0e0;
+            background-color: #f0f0f0;
         }
-        /* Start Screen Styles */
-        #startScreen, #endScreen, #settingsScreen {
+        /* Common Screen Styles */
+        .screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #fff;
+            top: 0; left:0;
+            width:100%; height:100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            background: #ffffffee;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+        .screen h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #333;
+        }
+        .info-box {
+            background: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin: 10px 0;
+        }
+        .small-info {
+            font-size: 0.8em;
+            color: #666;
         }
         button {
             padding: 10px 20px;
             margin: 5px;
             font-size: 16px;
+            background: #ddd;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+            cursor: pointer;
         }
-        /* Virtual Joystick Styles */
+        button:hover {
+            background: #ccc;
+        }
+
+        /* HUD */
+        #gameHUD {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #000;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #gameHUD p {
+            margin:5px 0;
+        }
+
+        /* Version info in small text */
+        .version-info {
+            font-size: 0.8em;
+            color:#333;
+            margin-top:10px;
+        }
+
+        /* Show all-version record in small text at corner */
+        .all-version-record {
+            font-size: 0.7em;
+            color:#999;
+            text-align:right;
+            margin-top:5px;
+        }
+
+        /* Virtual Joystick */
         #virtualJoystickContainer {
             position: absolute;
             bottom: 20px;
             left: 20px;
             width: 120px;
             height: 120px;
-            display: none; /* Hidden by default */
+            display: none;
         }
         #joystickBase {
             position: absolute;
@@ -58,7 +119,8 @@
             background: rgba(0, 0, 0, 0.4);
             border-radius: 50%;
         }
-        /* Attack Button Styles */
+
+        /* Attack Button */
         #attackButton {
             position: absolute;
             bottom: 40px;
@@ -67,7 +129,7 @@
             height: 80px;
             background: rgba(255, 0, 0, 0.6);
             border-radius: 50%;
-            display: none; /* Hidden by default */
+            display: none;
             font-size: 18px;
             color: #fff;
             text-align: center;
@@ -75,32 +137,21 @@
             user-select: none;
             overflow: hidden;
             transition: transform 0.1s;
+            border: 2px solid #fff;
         }
         #attackButton.active {
             transform: scale(1.1);
         }
         #attackCooldownOverlay {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(128, 128, 128, 0.7);
+            bottom: 0;left:0;
+            width:100%;height:100%;
+            background: rgba(128,128,128,0.7);
             transform-origin: bottom;
             transform: scaleY(1);
-            pointer-events: none;
+            pointer-events:none;
         }
-        /* In-game HUD Styles */
-        #gameHUD {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #000;
-            font-size: 18px;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
+
         /* Keyboard Attack Indicator */
         #keyboardAttackIndicator {
             position: absolute;
@@ -108,93 +159,139 @@
             right: 10px;
             width: 60px;
             height: 60px;
-            background: rgba(255, 0, 0, 0.6);
-            border-radius: 5px;
-            display: none; /* Hidden when not in game */
-            overflow: hidden;
-            transition: transform 0.1s;
+            background: rgba(255,0,0,0.6);
+            border-radius:5px;
+            display:none;
+            overflow:hidden;
+            transition:transform 0.1s;
+            border:1px solid #aaa;
         }
         #keyboardAttackIndicator.active {
             transform: scale(1.1);
         }
         #keyboardCooldownOverlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(128, 128, 128, 0.7);
-            transform-origin: bottom;
-            transform: scaleY(1);
-            pointer-events: none;
+            position:absolute;bottom:0;left:0;width:100%;height:100%;
+            background:rgba(128,128,128,0.7);
+            transform-origin:bottom;
+            transform:scaleY(1);
+            pointer-events:none;
         }
+
+        /* Pause Button */
+        #pauseButton {
+            position: absolute;
+            top: 10px;
+            left: 150px;
+            padding:5px 10px;
+            font-size:14px;
+            display:none;
+            background:#eee;
+            border:1px solid #aaa;
+            border-radius:3px;
+            cursor:pointer;
+        }
+        #pauseButton:hover {
+            background:#ddd;
+        }
+
+        /* Pause Screen */
+        #pauseScreen {
+            position:absolute;
+            top:0;left:0;
+            width:100%;height:100%;
+            background:rgba(255,255,255,0.8);
+            display:none;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+        }
+        #pauseScreen h1 {
+            font-size:2em;
+            color:#333;
+            margin-bottom:20px;
+        }
+
     </style>
 </head>
 <body>
-
-    <!-- Start Screen -->
-    <div id="startScreen">
+    <div id="startScreen" class="screen">
         <h1>Monster Slayer</h1>
-        <p>Longest Game Time: <span id="longestTime">0</span> seconds</p>
-        <p>Highest Kill Count: <span id="highestKills">0</span></p>
+        <div class="info-box">
+            <p>Longest Game Time: <span id="longestTime">0</span> s</p>
+            <p>Highest Kill Count: <span id="highestKills">0</span></p>
+            <p>Highest Kills/Min: <span id="highestKPM">0</span></p>
+        </div>
+        <div class="all-version-record">
+            <p>All Versions Record: T:<span id="allLongestTime">0</span>s, K:<span id="allHighestKills">0</span>, KPM:<span id="allHighestKPM">0</span></p>
+            <p>Version: <span id="allVersionString">0.1.0 (beta)</span></p>
+        </div>
         <button id="startButton">Start Game</button>
         <button id="settingsButton">Settings</button>
-        <p>Use <strong>WASD</strong> or <strong>Arrow Keys</strong> to move. Press <strong>Spacebar</strong> to attack.</p>
+        <p class="small-info">Use WASD or Arrow Keys to move. Press Spacebar to attack.</p>
+        <div class="version-info">Current Version: 0.2.0 (beta)</div>
     </div>
 
-    <!-- Settings Screen -->
-    <div id="settingsScreen" style="display:none;">
+    <div id="settingsScreen" class="screen" style="display:none;">
         <h1>Settings</h1>
-        <label>
-            <input type="checkbox" id="fullscreenCheckbox"> Fullscreen Mode
-        </label>
-        <br>
-        <label>
-            <input type="checkbox" id="virtualJoystickCheckbox"> Show Virtual Joystick
-        </label>
-        <br>
+        <div class="info-box">
+            <label><input type="checkbox" id="fullscreenCheckbox"> Fullscreen Mode</label><br>
+            <label><input type="checkbox" id="virtualJoystickCheckbox"> Show Virtual Joystick</label>
+        </div>
         <button id="backButton">Back</button>
     </div>
 
-    <!-- End Screen -->
-    <div id="endScreen" style="display:none;">
+    <div id="endScreen" class="screen" style="display:none;">
         <h1>Game Over</h1>
-        <p>Game Duration: <span id="gameDuration">0</span> seconds</p>
-        <p>Kill Count: <span id="killCount">0</span></p>
-        <p>Longest Game Time: <span id="finalLongestTime">0</span> seconds</p>
-        <p>Highest Kill Count: <span id="finalHighestKills">0</span></p>
+        <div class="info-box">
+            <p>Game Duration: <span id="gameDuration">0</span> s</p>
+            <p>Kill Count: <span id="killCount">0</span></p>
+            <p>Kills/Min: <span id="endKillsPerMin">0</span></p>
+            <p>Longest Game Time (Cur Ver): <span id="curLongestTime">0</span> s</p>
+            <p>Highest Kill Count (Cur Ver): <span id="curHighestKills">0</span></p>
+            <p>Highest Kills/Min (Cur Ver): <span id="curHighestKPM">0</span></p>
+        </div>
+        <div class="all-version-record">
+            <p>All Versions Record: T:<span id="allLongestTime2">0</span>s, K:<span id="allHighestKills2">0</span>, KPM:<span id="allHighestKPM2">0</span></p>
+            <p>Version: <span id="allVersionString2">0.1.0 (beta)</span></p>
+        </div>
         <button id="restartButton">New Game</button>
         <button id="returnButton">Return to Start</button>
+        <div class="version-info">Current Version: 0.2.0 (beta)</div>
     </div>
 
-    <!-- Game Canvas -->
     <canvas id="gameCanvas" style="display:none;"></canvas>
 
-    <!-- In-game HUD -->
     <div id="gameHUD" style="display:none;">
         <p>Time: <span id="currentTime">0</span> s</p>
         <p>Kills: <span id="currentKills">0</span></p>
+        <p>Kills/Min: <span id="killsPerMin">0</span></p>
     </div>
 
-    <!-- Virtual Joystick -->
-    <div id="virtualJoystickContainer" style="display: none;">
+    <div id="virtualJoystickContainer">
         <div id="joystickBase"></div>
         <div id="joystickStick"></div>
     </div>
 
-    <!-- Attack Button -->
-    <div id="attackButton" style="display: none;">
+    <div id="attackButton">
         Attack
         <div id="attackCooldownOverlay"></div>
     </div>
 
-    <!-- Keyboard Attack Indicator -->
-    <div id="keyboardAttackIndicator" style="display: none;">
+    <div id="keyboardAttackIndicator">
         <div id="keyboardCooldownOverlay"></div>
     </div>
 
+    <button id="pauseButton">Pause [P]</button>
+
+    <div id="pauseScreen">
+        <h1>Paused</h1>
+        <button id="resumeButton">Resume</button>
+    </div>
+
     <script>
-        // Game variables
+        const currentVersion = "0.2.0 (beta)";
+        const defaultAllVersion = "0.1.0 (beta)";
+
         let canvas = document.getElementById('gameCanvas');
         let ctx = canvas.getContext('2d');
         let player = {};
@@ -203,35 +300,43 @@
         let gameInterval;
         let gameTime = 0;
         let killCount = 0;
+        let paused = false;
 
-        // Settings
+        // Records
+        // All version records
+        let allLongestTime = 0;
+        let allHighestKills = 0;
+        let allHighestKPM = 0;
+        let allVersionString = defaultAllVersion;
+
+        // Current version records
+        let curLongestTime = 0;
+        let curHighestKills = 0;
+        let curHighestKPM = 0;
+
         let settings = {
             fullscreen: false,
             showVirtualJoystick: false
         };
 
-        // Virtual Joystick variables
         let joystick = {
-            active: false,
-            initialX: 0,
-            initialY: 0,
-            currentX: 0,
-            currentY: 0,
-            deltaX: 0,
-            deltaY: 0,
-            maxDistance: 40 // Max distance the stick can move
+            active:false,
+            initialX:0,
+            initialY:0,
+            currentX:0,
+            currentY:0,
+            deltaX:0,
+            deltaY:0,
+            maxDistance:40
         };
 
-        // Initialize game
         function initGame() {
-            // Set canvas size
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            // Load settings from local storage
             loadSettings();
+            loadRecords();
 
-            // Event listeners
             document.getElementById('startButton').addEventListener('click', startGame);
             document.getElementById('restartButton').addEventListener('click', restartGame);
             document.getElementById('returnButton').addEventListener('click', returnToStart);
@@ -240,106 +345,94 @@
             document.getElementById('fullscreenCheckbox').addEventListener('change', toggleFullscreen);
             document.getElementById('virtualJoystickCheckbox').addEventListener('change', toggleVirtualJoystick);
 
-            // Keyboard controls
             window.addEventListener('keydown', function(e) {
-                keysPressed[e.key] = true;
-                // Prevent default scrolling behavior
-                if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                keysPressed[e.key]=true;
+                if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','p','P'].includes(e.key)) {
                     e.preventDefault();
                 }
-                // Keyboard attack
-                if (e.key === ' ') { // Spacebar
+                if(e.key===' ') {
                     performAttack();
                     let indicator = document.getElementById('keyboardAttackIndicator');
-                    // Visual feedback
                     indicator.classList.add('active');
                     setTimeout(() => {
                         indicator.classList.remove('active');
-                    }, 100);
+                    },100);
+                }
+                if(e.key==='p' || e.key==='P') {
+                    togglePause();
                 }
             });
             window.addEventListener('keyup', function(e) {
-                keysPressed[e.key] = false;
+                keysPressed[e.key]=false;
             });
 
-            // Touch controls for virtual joystick
             let joystickContainer = document.getElementById('virtualJoystickContainer');
             let joystickStick = document.getElementById('joystickStick');
 
             joystickContainer.addEventListener('touchstart', function(e) {
                 e.preventDefault();
-                joystick.active = true;
-                let touch = e.touches[0];
-                joystick.initialX = touch.clientX;
-                joystick.initialY = touch.clientY;
-            });
+                joystick.active=true;
+                let touch=e.touches[0];
+                joystick.initialX=touch.clientX;
+                joystick.initialY=touch.clientY;
+            },{passive:false});
 
             joystickContainer.addEventListener('touchmove', function(e) {
-                if (!joystick.active) return;
+                if(!joystick.active) return;
                 e.preventDefault();
                 let touch = e.touches[0];
-                joystick.currentX = touch.clientX;
-                joystick.currentY = touch.clientY;
-                joystick.deltaX = joystick.currentX - joystick.initialX;
-                joystick.deltaY = joystick.currentY - joystick.initialY;
+                joystick.currentX=touch.clientX;
+                joystick.currentY=touch.clientY;
+                joystick.deltaX=joystick.currentX - joystick.initialX;
+                joystick.deltaY=joystick.currentY - joystick.initialY;
 
-                // Limit the joystick movement
-                let distance = Math.hypot(joystick.deltaX, joystick.deltaY);
-                if (distance > joystick.maxDistance) {
-                    let ratio = joystick.maxDistance / distance;
-                    joystick.deltaX *= ratio;
-                    joystick.deltaY *= ratio;
+                let distance=Math.hypot(joystick.deltaX,joystick.deltaY);
+                if(distance>joystick.maxDistance) {
+                    let ratio=joystick.maxDistance/distance;
+                    joystick.deltaX*=ratio;
+                    joystick.deltaY*=ratio;
                 }
-
-                // Move the joystick stick
-                joystickStick.style.transform = `translate(${joystick.deltaX}px, ${joystick.deltaY}px)`;
-            });
+                joystickStick.style.transform=`translate(${joystick.deltaX}px,${joystick.deltaY}px)`;
+            },{passive:false});
 
             joystickContainer.addEventListener('touchend', function(e) {
-                joystick.active = false;
-                joystick.deltaX = 0;
-                joystick.deltaY = 0;
-                joystickStick.style.transform = `translate(0px, 0px)`;
-            });
+                joystick.active=false;
+                joystick.deltaX=0;joystick.deltaY=0;
+                joystickStick.style.transform='translate(0px,0px)';
+            },{passive:false});
 
-            // Touch controls for attack button
             let attackButton = document.getElementById('attackButton');
             attackButton.addEventListener('touchstart', function(e) {
                 e.preventDefault();
                 performAttack();
-                // Visual feedback
                 attackButton.classList.add('active');
-                setTimeout(() => {
-                    attackButton.classList.remove('active');
-                }, 100);
-            });
-
-            // Mouse click for attack (optional)
+                setTimeout(()=>attackButton.classList.remove('active'),100);
+            },{passive:false});
             attackButton.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 performAttack();
-                // Visual feedback
                 attackButton.classList.add('active');
-                setTimeout(() => {
-                    attackButton.classList.remove('active');
-                }, 100);
+                setTimeout(()=>attackButton.classList.remove('active'),100);
             });
 
-            // Start screen stats
+            // Pause button
+            document.getElementById('pauseButton').addEventListener('click', togglePause);
+            document.getElementById('resumeButton').addEventListener('click', togglePause);
+
             updateStartScreenStats();
         }
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.width=window.innerWidth;
+            canvas.height=window.innerHeight;
         }
 
         function loadSettings() {
             let savedSettings = JSON.parse(localStorage.getItem('gameSettings'));
-            if (savedSettings) {
-                settings = savedSettings;
-                document.getElementById('fullscreenCheckbox').checked = settings.fullscreen;
-                document.getElementById('virtualJoystickCheckbox').checked = settings.showVirtualJoystick;
+            if(savedSettings) {
+                settings=savedSettings;
+                document.getElementById('fullscreenCheckbox').checked=settings.fullscreen;
+                document.getElementById('virtualJoystickCheckbox').checked=settings.showVirtualJoystick;
             }
             applySettings();
         }
@@ -349,454 +442,475 @@
         }
 
         function applySettings() {
-            if (settings.fullscreen) {
+            if(settings.fullscreen) {
                 document.documentElement.requestFullscreen();
             } else {
-                if (document.fullscreenElement) {
+                if(document.fullscreenElement) {
                     document.exitFullscreen();
                 }
             }
             let joystickContainer = document.getElementById('virtualJoystickContainer');
             let attackButton = document.getElementById('attackButton');
             let keyboardAttackIndicator = document.getElementById('keyboardAttackIndicator');
-            if (settings.showVirtualJoystick) {
-                joystickContainer.style.display = 'block';
-                attackButton.style.display = 'block';
-                keyboardAttackIndicator.style.display = 'none';
+            if(settings.showVirtualJoystick) {
+                joystickContainer.style.display='block';
+                attackButton.style.display='block';
+                keyboardAttackIndicator.style.display='none';
             } else {
-                joystickContainer.style.display = 'none';
-                attackButton.style.display = 'none';
-                keyboardAttackIndicator.style.display = 'none'; // Initially hidden
+                joystickContainer.style.display='none';
+                attackButton.style.display='none';
+                keyboardAttackIndicator.style.display='none';
             }
         }
 
         function toggleFullscreen() {
-            settings.fullscreen = document.getElementById('fullscreenCheckbox').checked;
+            settings.fullscreen=document.getElementById('fullscreenCheckbox').checked;
             applySettings();
             saveSettings();
         }
 
         function toggleVirtualJoystick() {
-            settings.showVirtualJoystick = document.getElementById('virtualJoystickCheckbox').checked;
+            settings.showVirtualJoystick=document.getElementById('virtualJoystickCheckbox').checked;
             applySettings();
             saveSettings();
         }
 
-        function startGame() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('settingsScreen').style.display = 'none';
-            document.getElementById('endScreen').style.display = 'none';
-            canvas.style.display = 'block';
-            document.getElementById('gameHUD').style.display = 'block';
+        function loadRecords() {
+            let avLong = localStorage.getItem('allLongestTime'); if(avLong) allLongestTime=parseInt(avLong);
+            let avKill = localStorage.getItem('allHighestKills'); if(avKill) allHighestKills=parseInt(avKill);
+            let avKPM = localStorage.getItem('allHighestKPM'); if(avKPM) allHighestKPM=parseFloat(avKPM);
+            let avVer = localStorage.getItem('allVersionString'); if(avVer) allVersionString=avVer;
 
-            // Show appropriate attack indicator
-            if (settings.showVirtualJoystick) {
-                document.getElementById('attackButton').style.display = 'block';
+            let cvLong = localStorage.getItem('cur_'+currentVersion+'_longestTime'); if(cvLong) curLongestTime=parseInt(cvLong);
+            let cvKill = localStorage.getItem('cur_'+currentVersion+'_highestKills'); if(cvKill) curHighestKills=parseInt(cvKill);
+            let cvKPM = localStorage.getItem('cur_'+currentVersion+'_highestKPM'); if(cvKPM) curHighestKPM=parseFloat(cvKPM);
+        }
+
+        function saveAllVersionRecords() {
+            localStorage.setItem('allLongestTime',allLongestTime);
+            localStorage.setItem('allHighestKills',allHighestKills);
+            localStorage.setItem('allHighestKPM',allHighestKPM);
+            localStorage.setItem('allVersionString',allVersionString);
+        }
+
+        function saveCurrentVersionRecords() {
+            localStorage.setItem('cur_'+currentVersion+'_longestTime',curLongestTime);
+            localStorage.setItem('cur_'+currentVersion+'_highestKills',curHighestKills);
+            localStorage.setItem('cur_'+currentVersion+'_highestKPM',curHighestKPM);
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display='none';
+            document.getElementById('settingsScreen').style.display='none';
+            document.getElementById('endScreen').style.display='none';
+            document.getElementById('pauseScreen').style.display='none';
+            canvas.style.display='block';
+            document.getElementById('gameHUD').style.display='block';
+
+            if(settings.showVirtualJoystick) {
+                document.getElementById('attackButton').style.display='block';
             } else {
-                document.getElementById('keyboardAttackIndicator').style.display = 'block';
+                document.getElementById('keyboardAttackIndicator').style.display='block';
             }
 
-            // Initialize game variables
-            player = {
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                size: 30,
-                color: 'blue',
-                hp: 100,
-                speed: 0.5,
-                inertia: { x: 0, y: 0 },
-                isAttacking: false,
-                attackEffectDuration: 0,
-                attackCooldown: 0, // Player's attack cooldown
-                attackCooldownTime: 2000 // 2 seconds cooldown
-            };
-            monsters = [];
-            gameTime = 0;
-            killCount = 0;
+            document.getElementById('pauseButton').style.display='inline-block';
 
-            // Start game loop
-            gameInterval = setInterval(gameLoop, 16); // Approximately 60 FPS
+            player = {
+                x: canvas.width/2,
+                y: canvas.height/2,
+                size:30,
+                color:'blue',
+                hp:100,
+                speed:1.0,
+                inertia:{x:0,y:0},
+                isAttacking:false,
+                attackEffectDuration:0,
+                attackCooldown:0,
+                attackCooldownTime:2000
+            };
+            monsters=[];
+            gameTime=0;
+            killCount=0;
+            paused=false;
+
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval=setInterval(gameLoop,16);
         }
 
         function gameLoop() {
+            if(paused) return;
             updateGame();
             renderGame();
-            gameTime += 16; // Milliseconds
+            gameTime+=16;
             updateHUD();
         }
 
         function updateGame() {
-            // Update player position with inertia
-            let acceleration = { x: 0, y: 0 };
+            let acceleration={x:0,y:0};
 
-            // Keyboard controls
-            if (!settings.showVirtualJoystick) {
-                let moveSpeed = player.speed;
-                if (keysPressed['Shift']) {
-                    moveSpeed *= 1.5; // Sprinting
-                }
-                if (keysPressed['ArrowUp'] || keysPressed['w']) {
-                    acceleration.y = -moveSpeed;
-                }
-                if (keysPressed['ArrowDown'] || keysPressed['s']) {
-                    acceleration.y = moveSpeed;
-                }
-                if (keysPressed['ArrowLeft'] || keysPressed['a']) {
-                    acceleration.x = -moveSpeed;
-                }
-                if (keysPressed['ArrowRight'] || keysPressed['d']) {
-                    acceleration.x = moveSpeed;
+            if(!settings.showVirtualJoystick) {
+                let moveSpeed=player.speed;
+                if(keysPressed['Shift']) moveSpeed*=1.5;
+                if(keysPressed['ArrowUp']||keysPressed['w']) acceleration.y=-moveSpeed;
+                if(keysPressed['ArrowDown']||keysPressed['s']) acceleration.y=moveSpeed;
+                if(keysPressed['ArrowLeft']||keysPressed['a']) acceleration.x=-moveSpeed;
+                if(keysPressed['ArrowRight']||keysPressed['d']) acceleration.x=moveSpeed;
+            }
+
+            if(settings.showVirtualJoystick && joystick.active) {
+                acceleration.x=(joystick.deltaX/joystick.maxDistance)*player.speed*5;
+                acceleration.y=(joystick.deltaY/joystick.maxDistance)*player.speed*5;
+            }
+
+            player.inertia.x+=acceleration.x;
+            player.inertia.y+=acceleration.y;
+
+            let maxSpeed=7;
+            player.inertia.x=Math.max(Math.min(player.inertia.x,maxSpeed),-maxSpeed);
+            player.inertia.y=Math.max(Math.min(player.inertia.y,maxSpeed),-maxSpeed);
+
+            player.x+=player.inertia.x;
+            player.y+=player.inertia.y;
+
+            player.inertia.x*=0.9;
+            player.inertia.y*=0.9;
+
+            if(player.x<0) player.x=0;
+            if(player.x>canvas.width) player.x=canvas.width;
+            if(player.y<0) player.y=0;
+            if(player.y>canvas.height) player.y=canvas.height;
+
+            if(player.attackCooldown>0) {
+                player.attackCooldown-=16;
+                if(player.attackCooldown<0) player.attackCooldown=0;
+            }
+
+            if(player.isAttacking) {
+                player.attackEffectDuration-=16;
+                if(player.attackEffectDuration<=0) {
+                    player.isAttacking=false;
                 }
             }
 
-            // Virtual Joystick controls
-            if (settings.showVirtualJoystick && joystick.active) {
-                acceleration.x = (joystick.deltaX / joystick.maxDistance) * player.speed * 5;
-                acceleration.y = (joystick.deltaY / joystick.maxDistance) * player.speed * 5;
-            }
-
-            // Apply acceleration to inertia
-            player.inertia.x += acceleration.x;
-            player.inertia.y += acceleration.y;
-
-            // Limit the inertia to prevent excessive speed
-            let maxSpeed = 5;
-            player.inertia.x = Math.max(Math.min(player.inertia.x, maxSpeed), -maxSpeed);
-            player.inertia.y = Math.max(Math.min(player.inertia.y, maxSpeed), -maxSpeed);
-
-            // Apply inertia to position
-            player.x += player.inertia.x;
-            player.y += player.inertia.y;
-
-            // Apply friction to inertia
-            player.inertia.x *= 0.9;
-            player.inertia.y *= 0.9;
-
-            // Keep player within bounds
-            if (player.x < 0) player.x = 0;
-            if (player.x > canvas.width) player.x = canvas.width;
-            if (player.y < 0) player.y = 0;
-            if (player.y > canvas.height) player.y = canvas.height;
-
-            // Update attack cooldown
-            if (player.attackCooldown > 0) {
-                player.attackCooldown -= 16;
-                if (player.attackCooldown < 0) player.attackCooldown = 0;
-            }
-
-            // Update attack effect duration
-            if (player.isAttacking) {
-                player.attackEffectDuration -= 16;
-                if (player.attackEffectDuration <= 0) {
-                    player.isAttacking = false;
-                }
-            }
-
-            // Update attack button cooldown overlay
             updateAttackButtonCooldown();
 
-            // Spawn monsters
-            if (monsters.length < 10 && Math.random() < 0.02) {
+            if(monsters.length<10 && Math.random()<0.02) {
                 spawnMonster();
             }
 
-            // Update monsters
-            monsters.forEach(function(monster, index) {
-                // Monster movement towards player
-                let dx = player.x - monster.x;
-                let dy = player.y - monster.y;
-                let dist = Math.hypot(dx, dy);
+            monsters.forEach(function(monster,index){
+                let dx=player.x - monster.x;
+                let dy=player.y - monster.y;
+                let dist=Math.hypot(dx,dy);
 
-                if (dist > 0) {
-                    monster.x += (dx / dist) * monster.speed;
-                    monster.y += (dy / dist) * monster.speed;
+                if(dist>0) {
+                    monster.x+=(dx/dist)*monster.speed;
+                    monster.y+=(dy/dist)*monster.speed;
                 }
 
-                // Update attack effect duration
-                if (monster.isAttacking) {
-                    monster.attackEffectDuration -= 16;
-                    if (monster.attackEffectDuration <= 0) {
-                        monster.isAttacking = false;
-                    }
+                if(monster.isAttacking) {
+                    monster.attackEffectDuration-=16;
+                    if(monster.attackEffectDuration<=0) monster.isAttacking=false;
                 }
 
-                // Monster attack logic with reaction time
-                if (dist < monster.attackRange) {
-                    if (monster.reactionTime === undefined || monster.reactionTime <= 0) {
-                        // Set reaction time if not set
-                        if (monster.reactionTime === undefined) {
-                            monster.reactionTime = 500 + Math.random() * 500; // 500ms to 1000ms random reaction time
-                        } else {
-                            // Reduce reaction time
-                            monster.reactionTime -= 16;
+                if(dist<monster.attackRange) {
+                    if(monster.reactionTime===undefined || monster.reactionTime<=0) {
+                        if(monster.reactionTime===undefined) {
+                            monster.reactionTime=500+Math.random()*500;
+                        }else{
+                            monster.reactionTime-=16;
                         }
-                    } else {
-                        // Reduce reaction time
-                        monster.reactionTime -= 16;
+                    }else {
+                        monster.reactionTime-=16;
                     }
 
-                    // After reaction time, start attack cooldown
-                    if (monster.reactionTime <= 0) {
-                        if (monster.attackCooldown <= 0) {
-                            // Monster attacks player
-                            player.hp -= monster.damage;
-                            monster.attackCooldown = monster.attackSpeed;
-                            monster.isAttacking = true;
-                            monster.attackEffectDuration = 200; // Attack effect lasts 200ms
-                            if (player.hp <= 0) {
+                    if(monster.reactionTime<=0) {
+                        if(monster.attackCooldown<=0) {
+                            player.hp-=monster.damage;
+                            monster.attackCooldown=monster.attackSpeed;
+                            monster.isAttacking=true;
+                            monster.attackEffectDuration=200;
+                            if(player.hp<=0) {
                                 endGame();
                             }
                         } else {
-                            monster.attackCooldown -= 16;
+                            monster.attackCooldown-=16;
                         }
                     }
                 } else {
-                    // Reset reaction time if player is out of range
-                    monster.reactionTime = undefined;
+                    monster.reactionTime=undefined;
                 }
 
-                // Remove monster if defeated
-                if (monster.hp <= 0) {
-                    monsters.splice(index, 1);
+                if(monster.hp<=0) {
+                    monsters.splice(index,1);
                     killCount++;
+                }
+            });
+
+            // 实体碰撞
+            let playerRadius=player.size/2;
+            monsters.forEach(function(monster){
+                let dx=player.x - monster.x;
+                let dy=player.y - monster.y;
+                let dist=Math.hypot(dx,dy);
+                let mr=monster.size/2;
+                let minDist=playerRadius+mr;
+                if(dist<minDist && dist>0) {
+                    let overlap=minDist-dist;
+                    player.x+=(dx/dist)*overlap;
+                    player.y+=(dy/dist)*overlap;
                 }
             });
         }
 
         function renderGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0,0,canvas.width,canvas.height);
 
-            // Draw player attack effect if attacking
-            if (player.isAttacking) {
-                ctx.fillStyle = 'rgba(0, 0, 255, 0.3)'; // Semi-transparent blue
+            if(player.isAttacking) {
+                ctx.fillStyle='rgba(0,0,255,0.3)';
                 ctx.beginPath();
-                ctx.arc(player.x, player.y, 50, 0, Math.PI * 2);
+                ctx.arc(player.x,player.y,50,0,Math.PI*2);
                 ctx.fill();
             }
 
-            // 添加玩家攻击冷却的视觉效果
-            if (player.attackCooldown > 0) {
-                let cooldownRatio = player.attackCooldown / player.attackCooldownTime;
-
-                // 绘制灰色的玩家角色
-                ctx.fillStyle = 'rgba(128, 128, 128, 0.7)';
+            // Player cooldown effect
+            if(player.attackCooldown>0) {
+                let cooldownRatio=player.attackCooldown/player.attackCooldownTime;
+                ctx.fillStyle='rgba(128,128,128,0.7)';
                 ctx.beginPath();
-                ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+                ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
                 ctx.fill();
 
-                // 保存绘图状态
                 ctx.save();
-                // 创建一个从下往上逐渐增大的剪切区域
+                let clipHeight=player.size*(1-cooldownRatio);
                 ctx.beginPath();
-                let clipHeight = player.size * (1 - cooldownRatio);
-                ctx.rect(
-                    player.x - player.size / 2,
-                    player.y + player.size / 2 - clipHeight,
-                    player.size,
-                    clipHeight
-                );
+                ctx.rect(player.x - player.size/2, player.y+player.size/2 - clipHeight, player.size,clipHeight);
                 ctx.clip();
 
-                // 绘制原本颜色的玩家角色
-                ctx.fillStyle = player.color;
+                ctx.fillStyle=player.color;
                 ctx.beginPath();
-                ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+                ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
                 ctx.fill();
-
-                // 恢复绘图状态
                 ctx.restore();
             } else {
-                // 冷却结束，直接绘制原本颜色的玩家角色
-                ctx.fillStyle = player.color;
+                ctx.fillStyle=player.color;
                 ctx.beginPath();
-                ctx.arc(player.x, player.y, player.size / 2, 0, Math.PI * 2);
+                ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
                 ctx.fill();
             }
 
-            // Draw player's attack range (dashed circle)
-            ctx.strokeStyle = 'blue';
-            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle='blue';
+            ctx.setLineDash([5,5]);
             ctx.beginPath();
-            ctx.arc(player.x, player.y, 50, 0, Math.PI * 2);
+            ctx.arc(player.x,player.y,50,0,Math.PI*2);
             ctx.stroke();
-            ctx.setLineDash([]); // Reset line dash
+            ctx.setLineDash([]);
 
-            // Draw player HP
-            ctx.fillStyle = 'black';
-            ctx.fillText('HP: ' + player.hp, player.x - 20, player.y - 30);
+            ctx.fillStyle='black';
+            ctx.fillText('HP: '+player.hp, player.x-20, player.y-30);
 
-            // Draw monsters
-            monsters.forEach(function(monster) {
-                // Draw monster attack effect if attacking
-                if (monster.isAttacking) {
-                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; // Semi-transparent red
+            monsters.forEach(function(monster){
+                if(monster.isAttacking) {
+                    ctx.fillStyle='rgba(255,0,0,0.3)';
                     ctx.beginPath();
-                    ctx.arc(monster.x, monster.y, monster.attackRange, 0, Math.PI * 2);
+                    ctx.arc(monster.x,monster.y,monster.attackRange,0,Math.PI*2);
                     ctx.fill();
                 }
 
-                ctx.fillStyle = monster.color;
+                ctx.fillStyle=monster.color;
                 ctx.beginPath();
-                ctx.arc(monster.x, monster.y, monster.size / 2, 0, Math.PI * 2);
+                ctx.arc(monster.x,monster.y,monster.size/2,0,Math.PI*2);
                 ctx.fill();
 
-                // Draw monster's attack range (dashed circle)
-                ctx.strokeStyle = 'red';
-                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle='red';
+                ctx.setLineDash([5,5]);
                 ctx.beginPath();
-                ctx.arc(monster.x, monster.y, monster.attackRange, 0, Math.PI * 2);
+                ctx.arc(monster.x,monster.y,monster.attackRange,0,Math.PI*2);
                 ctx.stroke();
-                ctx.setLineDash([]); // Reset line dash
-
-                // Draw monster HP
-                ctx.fillStyle = 'black';
-                ctx.fillText('HP: ' + monster.hp, monster.x - 20, monster.y - 30);
+                ctx.setLineDash([]);
+                ctx.fillStyle='black';
+                ctx.fillText('HP: '+monster.hp, monster.x-20, monster.y-30);
             });
         }
 
         function spawnMonster() {
-            let monster = {
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: 20 + Math.random() * 10,
-                color: 'green',
-                hp: 50,
-                speed: 0.5 + Math.random(),
-                damage: 5,
-                attackRange: 30 + Math.random() * 20,
-                attackSpeed: 1000 + Math.random() * 1000, // in milliseconds
-                attackCooldown: 0,
-                isAttacking: false,
-                attackEffectDuration: 0,
-                reactionTime: undefined // Reaction time before attacking
+            let monster={
+                x:Math.random()*canvas.width,
+                y:Math.random()*canvas.height,
+                size:20+Math.random()*10,
+                color:'green',
+                hp:50,
+                speed:2.5+Math.random(),
+                damage:5,
+                attackRange:30+Math.random()*20,
+                attackSpeed:200+Math.random()*20,
+                attackCooldown:0,
+                isAttacking:false,
+                attackEffectDuration:0,
+                reactionTime:undefined
             };
             monsters.push(monster);
         }
 
         function endGame() {
             clearInterval(gameInterval);
-            canvas.style.display = 'none';
-            document.getElementById('gameHUD').style.display = 'none';
-            document.getElementById('attackButton').style.display = 'none';
-            document.getElementById('keyboardAttackIndicator').style.display = 'none';
-            document.getElementById('endScreen').style.display = 'flex';
-            document.getElementById('gameDuration').innerText = Math.floor(gameTime / 1000);
-            document.getElementById('killCount').innerText = killCount;
+            canvas.style.display='none';
+            document.getElementById('gameHUD').style.display='none';
+            document.getElementById('attackButton').style.display='none';
+            document.getElementById('keyboardAttackIndicator').style.display='none';
+            document.getElementById('pauseButton').style.display='none';
+            document.getElementById('pauseScreen').style.display='none';
+            document.getElementById('endScreen').style.display='flex';
 
-            // Update and display highest scores
-            let longestTime = localStorage.getItem('longestTime') || 0;
-            let highestKills = localStorage.getItem('highestKills') || 0;
+            let finalTime=gameTime/1000;
+            let finalKPM=0;
+            if(gameTime>0) finalKPM=(killCount*60000/gameTime).toFixed(2);
 
-            if (gameTime / 1000 > longestTime) {
-                longestTime = Math.floor(gameTime / 1000);
-                localStorage.setItem('longestTime', longestTime);
+            document.getElementById('gameDuration').innerText=Math.floor(finalTime);
+            document.getElementById('killCount').innerText=killCount;
+            document.getElementById('endKillsPerMin').innerText=finalKPM;
+
+            // Update records
+            // Current version records
+            if(finalTime>curLongestTime) curLongestTime=Math.floor(finalTime);
+            if(killCount>curHighestKills) curHighestKills=killCount;
+            if(finalKPM>curHighestKPM) curHighestKPM=parseFloat(finalKPM);
+
+            saveCurrentVersionRecords();
+
+            document.getElementById('curLongestTime').innerText=curLongestTime;
+            document.getElementById('curHighestKills').innerText=curHighestKills;
+            document.getElementById('curHighestKPM').innerText=curHighestKPM.toFixed(2);
+
+            // All version records
+            let improved=false;
+            if(finalTime>allLongestTime) {
+                allLongestTime=Math.floor(finalTime);
+                allVersionString=currentVersion;
+                improved=true;
             }
-            if (killCount > highestKills) {
-                highestKills = killCount;
-                localStorage.setItem('highestKills', highestKills);
+            if(killCount>allHighestKills) {
+                allHighestKills=killCount;
+                allVersionString=currentVersion;
+                improved=true;
+            }
+            if(finalKPM>allHighestKPM) {
+                allHighestKPM=parseFloat(finalKPM);
+                allVersionString=currentVersion;
+                improved=true;
             }
 
-            document.getElementById('finalLongestTime').innerText = longestTime;
-            document.getElementById('finalHighestKills').innerText = highestKills;
+            if(improved) {
+                saveAllVersionRecords();
+            }
+
+            document.getElementById('allLongestTime2').innerText=allLongestTime;
+            document.getElementById('allHighestKills2').innerText=allHighestKills;
+            document.getElementById('allHighestKPM2').innerText=allHighestKPM.toFixed(2);
+            document.getElementById('allVersionString2').innerText=allVersionString;
+
         }
 
         function restartGame() {
-            document.getElementById('endScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display='none';
             startGame();
         }
 
         function returnToStart() {
-            document.getElementById('endScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('endScreen').style.display='none';
+            document.getElementById('startScreen').style.display='flex';
             updateStartScreenStats();
         }
 
         function updateStartScreenStats() {
-            let longestTime = localStorage.getItem('longestTime') || 0;
-            let highestKills = localStorage.getItem('highestKills') || 0;
-            document.getElementById('longestTime').innerText = longestTime;
-            document.getElementById('highestKills').innerText = highestKills;
+            // Load again to ensure latest
+            loadRecords();
+            document.getElementById('longestTime').innerText=curLongestTime;
+            document.getElementById('highestKills').innerText=curHighestKills;
+            document.getElementById('highestKPM').innerText=curHighestKPM.toFixed(2);
+
+            document.getElementById('allLongestTime').innerText=allLongestTime;
+            document.getElementById('allHighestKills').innerText=allHighestKills;
+            document.getElementById('allHighestKPM').innerText=allHighestKPM.toFixed(2);
+            document.getElementById('allVersionString').innerText=allVersionString;
         }
 
         function showSettings() {
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('settingsScreen').style.display = 'flex';
+            document.getElementById('startScreen').style.display='none';
+            document.getElementById('settingsScreen').style.display='flex';
         }
 
         function hideSettings() {
-            document.getElementById('settingsScreen').style.display = 'none';
-            document.getElementById('startScreen').style.display = 'flex';
+            document.getElementById('settingsScreen').style.display='none';
+            document.getElementById('startScreen').style.display='flex';
         }
 
         function performAttack() {
-            // Visual feedback for attack button or keyboard indicator
-            if (settings.showVirtualJoystick) {
-                let attackButton = document.getElementById('attackButton');
-                attackButton.classList.add('active');
-                setTimeout(() => {
-                    attackButton.classList.remove('active');
-                }, 100);
-            } else {
-                let indicator = document.getElementById('keyboardAttackIndicator');
-                indicator.classList.add('active');
-                setTimeout(() => {
-                    indicator.classList.remove('active');
-                }, 100);
-            }
+            if(player.attackCooldown>0) return;
 
-            if (player.attackCooldown > 0) {
-                return; // Attack is on cooldown
-            }
-            // Implement attack logic
-            // For simplicity, we'll damage any monster within the attack range
-            monsters.forEach(function(monster) {
-                let dx = monster.x - player.x;
-                let dy = monster.y - player.y;
-                let dist = Math.hypot(dx, dy);
-                if (dist < 50) { // Player's attack range
-                    monster.hp -= 20; // Damage dealt to monster
-                    // Add attack animation if desired
+            monsters.forEach(function(monster){
+                let dx=monster.x - player.x;
+                let dy=monster.y - player.y;
+                let dist=Math.hypot(dx,dy);
+                if(dist<50) {
+                    monster.hp-=30;
                 }
             });
-            // Set attack effect
-            player.isAttacking = true;
-            player.attackEffectDuration = 200; // Attack effect lasts 200ms
-            player.attackCooldown = player.attackCooldownTime; // Set attack cooldown
+            player.isAttacking=true;
+            player.attackEffectDuration=200;
+            player.attackCooldown=player.attackCooldownTime;
         }
 
         function updateAttackButtonCooldown() {
-            let cooldownRatio = player.attackCooldown / player.attackCooldownTime;
-            if (cooldownRatio < 0) cooldownRatio = 0;
-
-            if (settings.showVirtualJoystick) {
-                let attackButton = document.getElementById('attackButton');
-                let overlay = document.getElementById('attackCooldownOverlay');
-                overlay.style.transform = `scaleY(${cooldownRatio})`;
-
-                if (player.attackCooldown > 0) {
-                    attackButton.style.background = 'rgba(128, 128, 128, 0.7)';
+            let cooldownRatio=player.attackCooldown/player.attackCooldownTime;
+            if(cooldownRatio<0) cooldownRatio=0;
+            if(settings.showVirtualJoystick) {
+                let attackButton=document.getElementById('attackButton');
+                let overlay=document.getElementById('attackCooldownOverlay');
+                overlay.style.transform=`scaleY(${cooldownRatio})`;
+                if(player.attackCooldown>0) {
+                    attackButton.style.background='rgba(128,128,128,0.7)';
                 } else {
-                    attackButton.style.background = 'rgba(255, 0, 0, 0.6)';
+                    attackButton.style.background='rgba(255,0,0,0.6)';
                 }
             } else {
-                let indicator = document.getElementById('keyboardAttackIndicator');
-                let overlay = document.getElementById('keyboardCooldownOverlay');
-                overlay.style.transform = `scaleY(${cooldownRatio})`;
-
-                if (player.attackCooldown > 0) {
-                    indicator.style.background = 'rgba(128, 128, 128, 0.7)';
+                let indicator=document.getElementById('keyboardAttackIndicator');
+                let overlay=document.getElementById('keyboardCooldownOverlay');
+                overlay.style.transform=`scaleY(${cooldownRatio})`;
+                if(player.attackCooldown>0) {
+                    indicator.style.background='rgba(128,128,128,0.7)';
                 } else {
-                    indicator.style.background = 'rgba(255, 0, 0, 0.6)';
+                    indicator.style.background='rgba(255,0,0,0.6)';
                 }
             }
         }
 
         function updateHUD() {
-            document.getElementById('currentTime').innerText = Math.floor(gameTime / 1000);
-            document.getElementById('currentKills').innerText = killCount;
+            document.getElementById('currentTime').innerText=Math.floor(gameTime/1000);
+            document.getElementById('currentKills').innerText=killCount;
+            let kpm=0;
+            if(gameTime>0) kpm=(killCount*60000/gameTime).toFixed(2);
+            document.getElementById('killsPerMin').innerText=kpm;
+        }
+
+        // Pause functionality
+        function togglePause() {
+            if(paused) {
+                paused=false;
+                document.getElementById('pauseScreen').style.display='none';
+            } else {
+                paused=true;
+                document.getElementById('pauseScreen').style.display='flex';
+            }
         }
 
         window.onload = initGame;
     </script>
+
+    <!-- Pause Screen -->
+    <div id="pauseScreen" class="screen" style="display:none; background:rgba(255,255,255,0.9);">
+        <h1>Paused</h1>
+        <button id="resumeButton">Resume</button>
+    </div>
 </body>
 </html>
