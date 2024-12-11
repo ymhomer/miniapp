@@ -112,15 +112,44 @@
             font-size:2em;color:#333;margin-bottom:20px;
         }
 
-        #chooseClassScreen {
-            position:absolute;top:0;left:0;width:100%;height:100%;background:#ffffffee;
-            display:none;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;padding:20px;
+        /* Card Style for Classes */
+        .class-card-container {
+            display:flex;flex-direction:row;gap:20px;
         }
-        #chooseClassScreen h1 {margin-bottom:20px;font-size:2em;color:#333;}
+        .class-card {
+            background:#fff;
+            border:2px solid #ccc;
+            border-radius:10px;
+            padding:20px;
+            width:150px;
+            text-align:center;
+            transition:transform 0.2s, box-shadow 0.2s;
+            cursor:pointer;
+            position:relative;
+        }
+        .class-card:hover {
+            transform:scale(1.05);
+            box-shadow:0 0 10px rgba(0,0,0,0.3);
+        }
+        .class-card.selected {
+            transform:scale(1.1);
+            box-shadow:0 0 15px rgba(255,215,0,0.7);
+            border-color:gold;
+        }
+        .class-card h2 {
+            margin:10px 0;font-size:1.2em;color:#333;
+        }
+        .class-card p {
+            margin:5px 0;font-size:0.9em;color:#555;
+        }
+
+        #confirmClassButton {
+            margin-top:20px;
+        }
+
     </style>
 </head>
 <body>
-    <!-- Start Screen -->
     <div id="startScreen" class="screen">
         <h1>Monster Slayer</h1>
         <div class="info-box">
@@ -138,14 +167,12 @@
         <div class="version-info">Current Version: <span id="currentVersionSpan"></span></div>
     </div>
 
-    <!-- Choose Class Screen -->
-    <div id="chooseClassScreen" class="screen">
-        <h1>Choose Your Role</h1>
-        <button id="chooseWarrior">Warrior</button>
-        <button id="chooseRanger">Ranger</button>
+    <div id="chooseClassScreen" class="screen" style="display:none;">
+        <h1>Choose Your Class</h1>
+        <div class="class-card-container" id="classCardContainer"></div>
+        <button id="confirmClassButton">Confirm</button>
     </div>
 
-    <!-- Settings Screen -->
     <div id="settingsScreen" class="screen" style="display:none;">
         <h1>Settings</h1>
         <div class="info-box">
@@ -155,7 +182,6 @@
         <button id="backButton">Back</button>
     </div>
 
-    <!-- End Screen -->
     <div id="endScreen" class="screen" style="display:none;">
         <h1>Game Over</h1>
         <div class="info-box">
@@ -177,7 +203,6 @@
 
     <canvas id="gameCanvas" style="display:none;"></canvas>
 
-    <!-- In-game HUD -->
     <div id="gameHUD" style="display:none;">
         <p>Time: <span id="currentTime">0</span> s</p>
         <p>Kills: <span id="currentKills">0</span></p>
@@ -206,46 +231,105 @@
     </div>
 
     <script>
-        const GAME_VERSION = "0.2.1 (beta)";
+        const GAME_VERSION = "0.2.2 (beta)";
+        document.getElementById('currentVersionSpan').innerText = GAME_VERSION;
+        document.getElementById('currentVersionSpan2').innerText = GAME_VERSION;
+
         const defaultAllVersion = "0.1.0 (beta)";
+
+        const CLASSES = [
+            {
+                name: "Warrior",
+                color: "blue",
+                hp: 120,
+                speed: 0.4,
+                minAttack: 20,
+                maxAttack: 30,
+                attackCooldownTime: 2000,
+                attackRange: 50,
+                defense:10,
+                criticalChance:5,
+                criticalMultiplier:1.5,
+                dodgeChance:5,
+                attackSpeed:1
+            },
+            {
+                name: "Ranger",
+                color:"brown",
+                hp:70,
+                speed:0.8,
+                minAttack:8,
+                maxAttack:35,
+                attackCooldownTime:500,
+                attackRange:80,
+                defense:0,
+                criticalChance:15,
+                criticalMultiplier:2.0,
+                dodgeChance:15,
+                attackSpeed:1.3
+            }
+        ];
 
         let canvas = document.getElementById('gameCanvas');
         let ctx = canvas.getContext('2d');
 
-        document.getElementById('currentVersionSpan').innerText = GAME_VERSION;
-        document.getElementById('currentVersionSpan2').innerText = GAME_VERSION;
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
 
         class Player {
-            constructor(x,y,size,color,hp,speed,minAttack,maxAttack,attackCooldownTime) {
+            constructor(x,y,size,color,hp,speed,minAttack,maxAttack,attackCooldownTime, attackRange=50, defense=0,criticalChance=0,criticalMultiplier=1.5,dodgeChance=0,attackSpeed=1) {
                 this.x=x;this.y=y;this.size=size;this.color=color;
                 this.hp=hp;this.speed=speed;
                 this.minAttack=minAttack;
                 this.maxAttack=maxAttack;
                 this.attackCooldownTime=attackCooldownTime;
+                this.attackRange=attackRange; 
+                this.defense=defense;
+                this.criticalChance=criticalChance;
+                this.criticalMultiplier=criticalMultiplier;
+                this.dodgeChance=dodgeChance;
+                this.attackSpeed=attackSpeed;
                 this.inertia={x:0,y:0};
                 this.isAttacking=false;
                 this.attackEffectDuration=0;
                 this.attackCooldown=0;
+                this.className="";
             }
             getRandomDamage() {
-                return Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
+                let baseDamage = Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
+                if(Math.random()*100<this.criticalChance){
+                    baseDamage = Math.floor(baseDamage*this.criticalMultiplier);
+                }
+                return baseDamage;
+            }
+            takeDamage(dmg) {
+                if(Math.random()*100<this.dodgeChance) {
+                    return;
+                }
+                dmg = Math.max(dmg - this.defense,0);
+                this.hp-=dmg;
             }
         }
 
         class Warrior extends Player {
-            constructor(x,y) {
-                super(x,y,30,'blue',100,1.0,20,30,2000); 
+            constructor(x,y,data) {
+                super(x,y,30,data.color,data.hp,data.speed,data.minAttack,data.maxAttack,data.attackCooldownTime,
+                      data.attackRange,data.defense,data.criticalChance,data.criticalMultiplier,data.dodgeChance,data.attackSpeed);
+                this.className="Warrior";
             }
         }
 
         class Ranger extends Player {
-            constructor(x,y) {
-                super(x,y,30,'brown',80,1.2,10,18,1000); 
+            constructor(x,y,data) {
+                super(x,y,30,data.color,data.hp,data.speed,data.minAttack,data.maxAttack,data.attackCooldownTime,
+                      data.attackRange,data.defense,data.criticalChance,data.criticalMultiplier,data.dodgeChance,data.attackSpeed);
+                this.className="Ranger";
             }
         }
 
         class Monster {
-            constructor(x,y,size,color,hp,speed,minAttack,maxAttack,attackRange,attackSpeed) {
+            constructor(x,y,size,color,hp,speed,minAttack,maxAttack,attackRange,attackSpeed, defense=0,criticalChance=0,criticalMultiplier=1.5,dodgeChance=0) {
                 this.x=x;this.y=y;
                 this.size=size;this.color=color;
                 this.hp=hp;this.speed=speed;
@@ -257,27 +341,48 @@
                 this.isAttacking=false;
                 this.attackEffectDuration=0;
                 this.reactionTime=undefined;
+                this.defense=defense;
+                this.criticalChance=criticalChance;
+                this.criticalMultiplier=criticalMultiplier;
+                this.dodgeChance=dodgeChance;
             }
             getRandomDamage() {
-                return Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
+                let baseDamage = Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
+                if(Math.random()*100<this.criticalChance){
+                    baseDamage=Math.floor(baseDamage*this.criticalMultiplier);
+                }
+                return baseDamage;
+            }
+            takeDamage(dmg) {
+                if(Math.random()*100<this.dodgeChance) {
+                    return;
+                }
+                dmg = Math.max(dmg - this.defense,0);
+                this.hp-=dmg;
             }
         }
 
         class Goblin extends Monster {
             constructor(x,y) {
-                super(x,y,20+Math.random()*10,'green',50,1.5+Math.random(),5,10,50,1000+Math.random()*1000);
+                super(x,y,20+Math.random()*10,'green',50,0.5+Math.random(),20,25,50,1000+Math.random()*1000,
+                      0,0,1.5,0);
+                this.monsterType="Goblin";
             }
         }
 
         class Orc extends Monster {
             constructor(x,y) {
-                super(x,y,30,'darkgreen',80,0.4+Math.random()*0.5,10,20,60,1500+Math.random()*1000);
+                super(x,y,30,'darkgreen',80,0.4+Math.random()*0.5,25,35,60,1500+Math.random()*1000,
+                      2,5,1.5,0);
+                this.monsterType="Orc";
             }
         }
 
         class Slime extends Monster {
             constructor(x,y) {
-                super(x,y,20,'lime',40,1.0+Math.random(),5,8,40,1200+Math.random()*800);
+                super(x,y,20,'lime',40,0.5+Math.random(),18,22,40,1200+Math.random()*800,
+                      0,0,1.5,10);
+                this.monsterType="Slime";
             }
         }
 
@@ -302,9 +407,16 @@
 
         let joystick={active:false,initialX:0,initialY:0,currentX:0,currentY:0,deltaX:0,deltaY:0,maxDistance:40};
 
+        let selectedClassName=null; 
+        let chosenClassData=null;
+
         function initGame() {
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
+
+            if(isIOS()) {
+                console.info("Running on iOS device. Some features might not be fully supported.");
+            }
 
             loadSettings();
             loadRecords();
@@ -317,11 +429,24 @@
             document.getElementById('fullscreenCheckbox').addEventListener('change', toggleFullscreen);
             document.getElementById('virtualJoystickCheckbox').addEventListener('change', toggleVirtualJoystick);
 
-            document.getElementById('chooseWarrior').addEventListener('click', function() {
-                startGame(new Warrior(canvas.width/2, canvas.height/2));
-            });
-            document.getElementById('chooseRanger').addEventListener('click', function() {
-                startGame(new Ranger(canvas.width/2, canvas.height/2));
+            generateClassCards();
+
+            document.getElementById('confirmClassButton').addEventListener('click',()=>{
+                if(!selectedClassName || !chosenClassData) {
+                    alert("Please select a class before confirming.");
+                    return;
+                }
+
+                let chosenPlayer;
+                if(selectedClassName==="Warrior") {
+                    chosenPlayer=new Warrior(canvas.width/2,canvas.height/2,chosenClassData);
+                } else if(selectedClassName==="Ranger") {
+                    chosenPlayer=new Ranger(canvas.width/2,canvas.height/2,chosenClassData);
+                } else {
+                    alert("Invalid class selected.");
+                    return;
+                }
+                startGame(chosenPlayer);
             });
 
             window.addEventListener('keydown',function(e){
@@ -398,6 +523,34 @@
             updateStartScreenStats();
         }
 
+        function generateClassCards() {
+            const container = document.getElementById('classCardContainer');
+            container.innerHTML="";
+            CLASSES.forEach(cls=>{
+                let card=document.createElement('div');
+                card.classList.add('class-card');
+                card.setAttribute('data-class', cls.name);
+
+                let html=`<h2>${cls.name}</h2>
+                          <p>HP:${cls.hp}</p>
+                          <p>Speed:${cls.speed}</p>
+                          <p>Attack:${cls.minAttack}~${cls.maxAttack}</p>
+                          <p>Defense:${cls.defense}</p>
+                          <p>Crit:${cls.criticalChance}%</p>
+                          <p>Dodge:${cls.dodgeChance}%</p>
+                          <p>AttackRange:${cls.attackRange}</p>`;
+
+                card.innerHTML=html;
+                card.addEventListener('click',()=>{
+                    container.querySelectorAll('.class-card').forEach(c=>c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedClassName=cls.name;
+                    chosenClassData=cls;
+                });
+                container.appendChild(card);
+            });
+        }
+
         function resizeCanvas() {
             canvas.width=window.innerWidth;
             canvas.height=window.innerHeight;
@@ -417,14 +570,41 @@
             localStorage.setItem('gameSettings', JSON.stringify(settings));
         }
 
+        function requestFullscreenSafe() {
+            if(document.documentElement.requestFullscreen) {
+                try {
+                    document.documentElement.requestFullscreen().catch(err=>{
+                        console.error("Fullscreen request failed:", err);
+                        alert("Error: "+err.message);
+                        settings.fullscreen=false;
+                        document.getElementById('fullscreenCheckbox').checked=false;
+                    });
+                } catch(e) {
+                    console.error("Fullscreen request error:", e);
+                    alert("Error: "+e.message);
+                    settings.fullscreen=false;
+                    document.getElementById('fullscreenCheckbox').checked=false;
+                }
+            } else {
+                console.error("Fullscreen API not supported.");
+                alert("Error: Fullscreen not supported on this device/browser.");
+                settings.fullscreen=false;
+                document.getElementById('fullscreenCheckbox').checked=false;
+            }
+        }
+
         function applySettings() {
             if(settings.fullscreen) {
-                document.documentElement.requestFullscreen();
+                requestFullscreenSafe();
             } else {
                 if(document.fullscreenElement) {
-                    document.exitFullscreen();
+                    document.exitFullscreen().catch(err=>{
+                        console.error("Exit fullscreen failed:", err);
+                        alert("Error: "+err.message);
+                    });
                 }
             }
+
             let joystickContainer=document.getElementById('virtualJoystickContainer');
             let attackButton=document.getElementById('attackButton');
             let keyboardAttackIndicator=document.getElementById('keyboardAttackIndicator');
@@ -544,9 +724,9 @@
                 let dx=monster.x - player.x;
                 let dy=monster.y - player.y;
                 let dist=Math.hypot(dx,dy);
-                if(dist<50) {
+                if(dist<player.attackRange) {
                     let dmg=player.getRandomDamage();
-                    monster.hp-=dmg;
+                    monster.takeDamage(dmg);
                 }
             });
             player.isAttacking=true;
@@ -734,12 +914,8 @@
                 }
 
                 if(dist<monster.attackRange) {
-                    if(monster.reactionTime===undefined || monster.reactionTime<=0) {
-                        if(monster.reactionTime===undefined) {
-                            monster.reactionTime=500+Math.random()*500;
-                        } else {
-                            monster.reactionTime-=16;
-                        }
+                    if(monster.reactionTime===undefined) {
+                        monster.reactionTime=300+Math.random()*300; // 300~600ms
                     } else {
                         monster.reactionTime-=16;
                     }
@@ -747,7 +923,7 @@
                     if(monster.reactionTime<=0) {
                         if(monster.attackCooldown<=0) {
                             let dmg=monster.getRandomDamage();
-                            player.hp-=dmg;
+                            player.takeDamage(dmg);
                             monster.attackCooldown=monster.attackSpeed;
                             monster.isAttacking=true;
                             monster.attackEffectDuration=200;
@@ -789,7 +965,7 @@
             if(player.isAttacking) {
                 ctx.fillStyle='rgba(0,0,255,0.3)';
                 ctx.beginPath();
-                ctx.arc(player.x,player.y,50,0,Math.PI*2);
+                ctx.arc(player.x,player.y,player.attackRange,0,Math.PI*2);
                 ctx.fill();
             }
 
@@ -821,7 +997,7 @@
             ctx.strokeStyle='blue';
             ctx.setLineDash([5,5]);
             ctx.beginPath();
-            ctx.arc(player.x,player.y,50,0,Math.PI*2);
+            ctx.arc(player.x,player.y,player.attackRange,0,Math.PI*2);
             ctx.stroke();
             ctx.setLineDash([]);
 
@@ -858,6 +1034,61 @@
             renderGame();
             gameTime+=16;
             updateHUD();
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            canvas.style.display='none';
+            document.getElementById('gameHUD').style.display='none';
+            document.getElementById('attackButton').style.display='none';
+            document.getElementById('keyboardAttackIndicator').style.display='none';
+            document.getElementById('pauseButton').style.display='none';
+            document.getElementById('pauseScreen').style.display='none';
+            document.getElementById('endScreen').style.display='flex';
+
+            let finalTime=gameTime/1000;
+            let finalKPM=0;
+            if(gameTime>0) finalKPM=(killCount*60000/gameTime).toFixed(2);
+
+            document.getElementById('gameDuration').innerText=Math.floor(finalTime);
+            document.getElementById('killCount').innerText=killCount;
+            document.getElementById('endKillsPerMin').innerText=finalKPM;
+
+            if(finalTime>curLongestTime) curLongestTime=Math.floor(finalTime);
+            if(killCount>curHighestKills) curHighestKills=killCount;
+            if(finalKPM>curHighestKPM) curHighestKPM=parseFloat(finalKPM);
+
+            saveCurrentVersionRecords();
+
+            document.getElementById('curLongestTime').innerText=curLongestTime;
+            document.getElementById('curHighestKills').innerText=curHighestKills;
+            document.getElementById('curHighestKPM').innerText=curHighestKPM.toFixed(2);
+
+            let improved=false;
+            if(finalTime>allLongestTime) {
+                allLongestTime=Math.floor(finalTime);
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(killCount>allHighestKills) {
+                allHighestKills=killCount;
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(finalKPM>allHighestKPM) {
+                allHighestKPM=parseFloat(finalKPM);
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+
+            if(improved) {
+                saveAllVersionRecords();
+            }
+
+            document.getElementById('allLongestTime2').innerText=allLongestTime;
+            document.getElementById('allHighestKills2').innerText=allHighestKills;
+            document.getElementById('allHighestKPM2').innerText=allHighestKPM.toFixed(2);
+            document.getElementById('allVersionString2').innerText=allVersionString;
         }
 
         window.onload=initGame;
