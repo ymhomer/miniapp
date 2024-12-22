@@ -2,3 +2,9 @@
     color: gray;
     font-size: 12px;
 }
+
+#headerToast {
+    color: red;
+    font-weight: bold;
+    font-size: 14px;
+}

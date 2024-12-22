@@ -17,6 +17,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('seqToolsButton').addEventListener('click', processSeqTools);
 
+    document.getElementById('copyButton').addEventListener('click', async () => {
+        const textArea = document.getElementById('ta_text');
+        const contentToCopy = textArea.value.trim();
+    
+        if (!contentToCopy) {
+            showToast('The textarea is empty. Nothing to copy.');
+            return;
+        }
+    
+        try {
+            await navigator.clipboard.writeText(contentToCopy);
+            showToast('Content copied to clipboard!');
+        } catch (err) {
+            showToast('An error occurred while copying the text.');
+        }
+    });      
+/*
     document.getElementById("copyText").addEventListener('click', async () => {
         let textareaContent = document.getElementById("ta_text").value;
         let tableContent = document.getElementById("txtTable").value;
@@ -52,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             //console.error('Failed to copy text: ', err);
             alert('An error occurred while copying the text. Please try again. ' + err);
         }
-    });
+    });*/
 
     document.getElementById('simplified-concat-tab').addEventListener('click', function() {
         if (status === 'converted') {
@@ -281,25 +298,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let result = textLines.map(line => formula.replace('%', line)).join('\n');
         document.getElementById('simplifiedConcatResult').value = result;
         document.getElementById('simplifiedConcatResult').style.display = 'block';
-        document.getElementById('copySimplifiedResult').style.display = 'block';
     
         addHistory(before, result, 'Simplified Concatenation');
-    }    
-
-    document.getElementById('copySimplifiedResult').addEventListener('click', async function() {
-        let resultContent = document.getElementById('simplifiedConcatResult').value;
-        if (!resultContent) {
-            alert('The result area is empty. There is nothing to copy.');
-            return;
-        }
-        try {
-            await navigator.clipboard.writeText(resultContent);
-            
-            showToast('Content copied to clipboard!');
-        } catch (err) {
-            alert('An error occurred while copying the text. Please try again. ' + err);
-        }
-    });
+    }
 
     document.getElementById('includeNumbersCheck').checked = true;
     /*
@@ -437,20 +438,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return characters.join('');
       }
 
-    document.getElementById('copySeqToolsResult').addEventListener('click', async function() {
-        let resultContent = inputElement.value;
-        if (!resultContent) {
-            alert('The result area is empty. There is nothing to copy.');
-            return;
-        }
-        try {
-            await navigator.clipboard.writeText(resultContent);
-            showToast('Content copied to clipboard!');
-        } catch (err) {
-            alert('An error occurred while copying the text. Please try again. ' + err);
-        }
-    });
-
+    function showToast(message) {
+        const headerToast = document.getElementById('headerToast');
+        headerToast.textContent = message;
+        headerToast.style.display = 'block';
+    
+        setTimeout(() => {
+            headerToast.style.display = 'none';
+        }, 3000);
+    }    
+    
+/*
     function showToast(message) {
         let toastBody = document.querySelector('.toast .toast-body');
         if (toastBody) {
@@ -458,16 +456,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let toastEl = new bootstrap.Toast(document.querySelector('.toast'));
             toastEl.show();
         }
-    }
-
-    function showToast(message) {
-        let toastBody = document.querySelector('.toast .toast-body');
-        if (toastBody) {
-            toastBody.textContent = message;
-            let toastEl = new bootstrap.Toast(document.querySelector('.toast'));
-            toastEl.show();
-        }
-    }
+    }*/
 
     function addHistory(before, after, action) {
         history.unshift({ before, after, action });
@@ -504,15 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
             buttons[0].addEventListener('click', () => copyText(record.before));
             buttons[1].addEventListener('click', () => copyText(record.after));
         });
-    }    
-
-    function copyText(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert('Copied!');
-        }).catch(err => {
-            alert('Copy failed: ' + err);
-        });
-    }    
+    }  
 
     function handleWithHistory(actionName, processFunction) {
         const textArea = document.getElementById('ta_text');
