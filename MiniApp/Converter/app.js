@@ -1,4 +1,5 @@
 let currentStatus = 'N/A';
+let history = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -6,8 +7,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let formulaInput = document.getElementById('simplifiedConcatFomular');
     //let status = checkTextareaStatus();
 
-    document.getElementById("addQuote").addEventListener('click', convert);
-    document.getElementById("removeQuote").addEventListener('click', revert);
+    document.getElementById('addQuote').addEventListener('click', () => {
+        handleWithHistory('Add Quote', convert);
+    });
+
+    document.getElementById('removeQuote').addEventListener('click', () => {
+        handleWithHistory('Remove Quote', revert);
+    });
 
     document.getElementById('seqToolsButton').addEventListener('click', processSeqTools);
 
@@ -118,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let sortType = document.getElementById("sortType").value;
             items.sort();
             if (sortType === "descending") {
-                items.reverse();
+                items.revert();
             }
         }
 
@@ -186,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.getElementById('statusText').innerText = 'Status: ' + currentStatus;
 
-        // 根据当前状态更新按钮状态
         let convertButton = document.getElementById("addQuote");
         let revertButton = document.getElementById("removeQuote");
 
@@ -264,20 +269,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('toSimplifiedConcat').addEventListener('click', simplifiedConcat);
 
     function simplifiedConcat() {
-        let textLines = inputElement.value.split('\n');
+        const before = inputElement.value;
+        let textLines = before.split('\n');
         let formula = formulaInput.value;
-        let result = textLines.map(line => formula.replace('%', line)).join('\n');
-
+    
         if (!formula.includes('%')) {
             alert('The formula must contain a "%" character to indicate where to insert text.');
             return;
         }
-
+    
+        let result = textLines.map(line => formula.replace('%', line)).join('\n');
         document.getElementById('simplifiedConcatResult').value = result;
-
         document.getElementById('simplifiedConcatResult').style.display = 'block';
         document.getElementById('copySimplifiedResult').style.display = 'block';
-    }
+    
+        addHistory(before, result, 'Simplified Concatenation');
+    }    
 
     document.getElementById('copySimplifiedResult').addEventListener('click', async function() {
         let resultContent = document.getElementById('simplifiedConcatResult').value;
@@ -330,64 +337,56 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function processSeqTools() {
-        let input = document.getElementById('ta_text').value.trim();
+        const before = document.getElementById('ta_text').value.trim();
+        let input = before;
         let lines = input.split('\n').filter(line => line);
-        if (lines.length > 1) {
-          input = lines[0];
-        }
     
-        console.log('Input:', input);
+        if (lines.length > 1) {
+            input = lines[0];
+        }
     
         let mode = document.getElementById('seqToolsMode').value;
         let generateCount = parseInt(document.getElementById('generateCount').value);
         let results = [];
         let totalGenerated = 0;
     
-        console.log('Mode:', mode);
-        console.log('Generate Count:', generateCount);
-    
         if (mode === 'mode1') {
-          let prefixMatch = input.match(/^(.*?)(\d+)$/);
-    
-          if (!prefixMatch) {
-            alert('Error: Input must end with a number for Mode 1.');
-            return;
-          }
-    
-          let prefix = prefixMatch[1];
-          let suffix = prefixMatch[2];
-          console.log('Prefix:', prefix);
-          console.log('Suffix:', suffix);
-    
-          for (let i = 0; i < generateCount; i++) {
-            let newSuffix = (parseInt(suffix) + i).toString();
-            if (newSuffix.length > suffix.length) {
-              alert(`Generated ${totalGenerated} items. Sequence limit reached.`);
-              break;
+            let prefixMatch = input.match(/^(.*?)(\d+)$/);
+            if (!prefixMatch) {
+                alert('Error: Input must end with a number for Mode 1.');
+                return;
             }
-            let newItem = prefix + newSuffix.padStart(suffix.length, '0');
-            results.push(newItem);
-            totalGenerated++;
-          }
+    
+            let prefix = prefixMatch[1];
+            let suffix = prefixMatch[2];
+    
+            for (let i = 0; i < generateCount; i++) {
+                let newSuffix = (parseInt(suffix) + i).toString();
+                if (newSuffix.length > suffix.length) {
+                    alert(`Generated ${totalGenerated} items. Sequence limit reached.`);
+                    break;
+                }
+                let newItem = prefix + newSuffix.padStart(suffix.length, '0');
+                results.push(newItem);
+                totalGenerated++;
+            }
         } else if (mode === 'mode2') {
-          let hexMode = document.getElementById('hexModeCheck').checked;
-          let includeNumbers = document.getElementById('includeNumbersCheck').checked;
-          let alphaPosition = document.getElementById('alphaPosition').value;
+            let hexMode = document.getElementById('hexModeCheck').checked;
+            let includeNumbers = document.getElementById('includeNumbersCheck').checked;
+            let alphaPosition = document.getElementById('alphaPosition').value;
     
-          console.log('Hex Mode:', hexMode);
-          console.log('Include Numbers:', includeNumbers);
-          console.log('Alpha Position:', alphaPosition);
-    
-          for (let i = 0; i < generateCount; i++) {
-            let newItem = incrementValue(input, i, hexMode, includeNumbers, alphaPosition);
-            results.push(newItem);
-          }
+            for (let i = 0; i < generateCount; i++) {
+                let newItem = incrementValue(input, i, hexMode, includeNumbers, alphaPosition);
+                results.push(newItem);
+            }
         }
     
-        console.log('Results:', results);
-        document.getElementById('ta_text').value = results.join('\n');
-      }
+        const after = results.join('\n');
+        document.getElementById('ta_text').value = after;
     
+        addHistory(before, after, 'Seq Tools');
+    }
+        
       function incrementValue(value, increment, hexMode, includeNumbers, alphaPosition) {
         let characters = value.split('');
         let carry = increment;
@@ -468,5 +467,60 @@ document.addEventListener('DOMContentLoaded', function() {
             let toastEl = new bootstrap.Toast(document.querySelector('.toast'));
             toastEl.show();
         }
+    }
+
+    function addHistory(before, after, action) {
+        history.unshift({ before, after, action });
+        updateHistoryTable();
+    }
+
+    function processConversion(actionName, transformFunction) {
+        const textArea = document.getElementById('ta_text');
+        const before = textArea.value;
+        const after = transformFunction(before);
+        textArea.value = after;
+        addHistory(before, after, actionName);
+    }
+
+    function updateHistoryTable() {
+        const historyTable = document.getElementById('historyTable');
+        historyTable.innerHTML = '';
+        history.forEach((record, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <textarea class="form-control" rows="2" readonly>${record.before}</textarea>
+                    <button class="btn btn-outline-secondary mt-1 btn-sm copy-btn">Copy</button>
+                </td>
+                <td>
+                    <textarea class="form-control" rows="2" readonly>${record.after}</textarea>
+                    <button class="btn btn-outline-secondary mt-1 btn-sm copy-btn">Copy</button>
+                </td>
+                <td>${record.action}</td>
+            `;
+            historyTable.appendChild(row);
+    
+            const buttons = row.querySelectorAll('.copy-btn');
+            buttons[0].addEventListener('click', () => copyText(record.before));
+            buttons[1].addEventListener('click', () => copyText(record.after));
+        });
+    }    
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied!');
+        }).catch(err => {
+            alert('Copy failed: ' + err);
+        });
+    }    
+
+    function handleWithHistory(actionName, processFunction) {
+        const textArea = document.getElementById('ta_text');
+        const before = textArea.value;
+        
+        processFunction();
+
+        const after = textArea.value;
+        addHistory(before, after, actionName);
     }
 });

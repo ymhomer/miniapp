@@ -23,8 +23,9 @@
   <div class="container">
     <!-- SQL Content within Bootstrap Card -->
     <div class="card">
-      <div class="card-header">
+      <div class="card-header d-flex justify-content-between align-items-center">
         SQL Tools
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#historyModal">History</button>
       </div>
       <div class="card-body">
         <label for="ta_text" class="form-label">Enter Text</label>
@@ -122,6 +123,32 @@
             <button type="button" class="btn btn-primary mt-2" id="seqToolsButton">Process</button>
             <button type="button" class="btn btn-outline-primary mt-2" id="copySeqToolsResult">Copy Result</button>
           </div>                            
+        </div>
+      </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="historyModalLabel">History</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Before</th>
+                  <th scope="col">After</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="historyTable">
+                <!-- History -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
