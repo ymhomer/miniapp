@@ -8,10 +8,11 @@ html, body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 .tab-content {
     flex-grow: 1;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
@@ -47,4 +48,12 @@ iframe {
 }
 .position-relative .btn {
     z-index: 1;
+}
+
+ul.nav.nav-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #fff;
+    border-bottom: 1px solid #ced4da;
 }
