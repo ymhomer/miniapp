@@ -14,10 +14,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let currentIframeSrc = defaultUrl;
 
-    // Adjust iframe height function
+    /* Adjust iframe height function
     function adjustIframeHeight() {
         const iframe = myIframe;
         iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+    }*/
+
+    //Adjust iframe height function v2
+    function adjustIframeHeight() {
+        const iframe = document.getElementById('app-iframe');
+        const iframeDocument = iframe.contentWindow.document;
+    
+        if (iframeDocument) {
+            iframe.style.height = iframeDocument.documentElement.scrollHeight + 'px';
+        }
     }
 
     // Adjust iframe size function
@@ -42,13 +52,17 @@ document.addEventListener("DOMContentLoaded", function() {
         iframe.style.height = contentHeight + 'px';
         iframe.style.width = contentWidth + 'px';
     }
-    //extra event to receveive resize event from iframe
+    /*extra event to receveive resize event from iframe
     window.addEventListener('message', function(event) {
         if (event.data.type === 'resize') {
             const iframe = document.getElementById('myIframe');
             iframe.style.height = event.data.height + 'px';
         }
-    });
+    });*/
+
+    window.addEventListener('resize', adjustIframeHeight);
+
+    
 
     // Event listeners for fullscreen and new tab buttons
     /*
