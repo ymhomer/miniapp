@@ -43,19 +43,49 @@
         <div class="tab-content">
             <div class="tab-pane fade show active" id="html" role="tabpanel" aria-labelledby="html-tab">
                 <div class="h-100 d-flex flex-column">
-                    <textarea id="html-code" class="form-control flex-grow-1" placeholder="Enter HTML code here..."></textarea>
+                    <div class="textarea-container position-relative h-100">
+                        <textarea id="html-code" class="form-control flex-grow-1" placeholder="Enter HTML code here..."></textarea>
+                        <div class="btn-group-top">
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="clearText('html-code')">Clear</button>
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="pasteText('html-code')">Paste</button>
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="copyText('html-code')">Copy</button>
+                        </div>
+                        <div class="btn-move-top">
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="moveToTop('html-code')">↑</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="css" role="tabpanel" aria-labelledby="css-tab">
                 <div class="h-100 d-flex flex-column">
-                    <textarea id="css-code" class="form-control flex-grow-1" placeholder="Enter CSS code here..."></textarea>
+                    <div class="textarea-container position-relative h-100">
+                        <textarea id="css-code" class="form-control flex-grow-1" placeholder="Enter CSS code here..."></textarea>
+                        <div class="btn-group-top">
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="clearText('css-code')">Clear</button>
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="pasteText('css-code')">Paste</button>
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="copyText('css-code')">Copy</button>
+                        </div>
+                        <div class="btn-move-top">
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="moveToTop('css-code')">↑</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="tab-pane fade" id="js" role="tabpanel" aria-labelledby="js-tab">
                 <div class="h-100 d-flex flex-column">
-                    <textarea id="js-code" class="form-control flex-grow-1" placeholder="Enter JavaScript code here..."></textarea>
+                    <div class="textarea-container position-relative h-100">
+                        <textarea id="js-code" class="form-control flex-grow-1" placeholder="Enter JavaScript code here..."></textarea>
+                        <div class="btn-group-top">
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="clearText('js-code')">Clear</button>
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="pasteText('js-code')">Paste</button>
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="copyText('js-code')">Copy</button>
+                        </div>
+                        <div class="btn-move-top">
+                            <button class="btn btn-sm btn-light shadow-sm" onclick="moveToTop('js-code')">↑</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </div>            
             <div class="tab-pane fade" id="result" role="tabpanel" aria-labelledby="result-tab">
                 <iframe id="preview"></iframe>
             </div>

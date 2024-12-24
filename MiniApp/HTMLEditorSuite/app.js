@@ -33,6 +33,30 @@ ${jsContent}
         document.getElementById('card-textarea').value = processedText;
     });
 
+    window.clearText = function(textareaId) {
+        document.getElementById(textareaId).value = '';
+    };
+    
+    window.pasteText = function(textareaId) {
+        navigator.clipboard.readText().then(text => {
+            document.getElementById(textareaId).value = text;
+        }).catch(err => {
+            alert('Failed to paste text: ' + err);
+        });
+    };
+    
+    window.copyText = function(textareaId) {
+        const textarea = document.getElementById(textareaId);
+        textarea.select();
+        document.execCommand('copy');
+        alert('Text copied to clipboard!');
+    };
+    
+    window.moveToTop = function(textareaId) {
+        const textarea = document.getElementById(textareaId);
+        textarea.scrollTop = 0;
+    };    
+
     function toggleExtractCssJs(event) {
         extractCssJs = event.target.checked;
     }
