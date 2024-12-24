@@ -40,8 +40,10 @@
                     <button id="printBtn" class="btn btn-primary" onclick="printResult()">Print</button>
                 </div>
                 <div class="col-md-8" id="resultPanel">
-                    <div id="results"></div>
-                </div>
+                    <div id="results" class="d-flex flex-wrap justify-content-start align-items-start gap-3 p-3 overflow-auto" style="max-height: 400px; border: 1px solid #ccc; background-color: #f9f9f9;">
+                        <!-- Results will be dynamically inserted here -->
+                    </div>
+                </div>                
             </div>
         </div>
     </div>

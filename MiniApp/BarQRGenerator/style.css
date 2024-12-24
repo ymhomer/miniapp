@@ -1,0 +1,21 @@
+#results > div {
+    flex: 0 1 calc(33.333% - 1rem);
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    #results > div {
+        flex: 0 1 calc(50% - 1rem);
+    }
+}
+
+@media (max-width: 576px) {
+    #results > div {
+        flex: 0 1 calc(100% - 1rem);
+    }
+}

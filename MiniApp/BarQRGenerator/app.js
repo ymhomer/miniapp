@@ -40,7 +40,6 @@ function generateCode() {
     }
 }
 
-
 function generateBarcodes() {
     var input = document.getElementById("inputText").value;
     var lines = input.split('\n');
@@ -55,8 +54,8 @@ function generateBarcodes() {
             JsBarcode(svg, line, {
                 format: "CODE128",
                 lineColor: "#000",
-                width: 2,
-                height: 40,
+                width: 1,
+                height: 25,
                 displayValue: true
             });
 
@@ -70,13 +69,13 @@ function generateBarcodes() {
         document.getElementById("printBtn").style.display = "block";
     }
 }
-
+/*
 function generateQRCode() {
     var input = document.getElementById("inputText").value;
     var lines = input.split('\n');
     var container = document.getElementById("results");
 
-    container.innerHTML = ''; // Clear previous results
+    container.innerHTML = '';
 
     lines.forEach(function(line, index) {
         if (line.trim() !== '') {
@@ -96,7 +95,7 @@ function generateQRCode() {
 
             var textElement = document.createElement('p');
             textElement.textContent = line;
-            //textElement.style.textAlign = 'center'; // 文本居中显示
+            //textElement.style.textAlign = 'center';
             container.appendChild(textElement);
         }
     });
@@ -105,12 +104,53 @@ function generateQRCode() {
         document.getElementById("resultPanel").style.display = "block";
         document.getElementById("printBtn").style.display = "block";
     }
+}*/
+function generateQRCode() {
+    var input = document.getElementById("inputText").value;
+    var lines = input.split('\n');
+    var container = document.getElementById("results");
+
+    container.innerHTML = '';
+
+    lines.forEach(function(line, index) {
+        if (line.trim() !== '') {
+            var itemContainer = document.createElement('div');
+            itemContainer.style.display = 'inline-block';
+            itemContainer.style.textAlign = 'center';
+            itemContainer.style.margin = '10px';
+
+            var qrDiv = document.createElement('div');
+
+            new QRCode(qrDiv, {
+                text: line,
+                width: 64,
+                height: 64,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            var textElement = document.createElement('p');
+            textElement.textContent = line;
+            textElement.style.marginTop = '5px';
+            textElement.style.fontSize = '12px';
+
+            itemContainer.appendChild(qrDiv);
+            itemContainer.appendChild(textElement);
+
+            container.appendChild(itemContainer);
+        }
+    });
+
+    if (container.innerHTML !== '') {
+        document.getElementById("resultPanel").style.display = "block";
+        document.getElementById("printBtn").style.display = "block";
+    }
 }
 
 function addPrintStyles() {
-    var style = document.createElement('style');
+    const style = document.createElement('style');
     style.type = 'text/css';
-    style.media = 'print';
     style.innerHTML = `
         @media print {
             body * {
@@ -121,9 +161,19 @@ function addPrintStyles() {
             }
             #resultPanel {
                 position: absolute;
-                left: 0;
                 top: 0;
+                left: 0;
                 width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #results {
+                max-height: unset !important;
+                overflow: visible !important;
+            }
+            html, body {
+                height: auto;
+                overflow: visible;
             }
         }
     `;
@@ -132,4 +182,11 @@ function addPrintStyles() {
 
 function printResult() {
     window.print();
+}
+
+function addResult(content) {
+    const resultContainer = document.getElementById('results');
+    const resultItem = document.createElement('div');
+    resultItem.innerHTML = content;
+    resultContainer.appendChild(resultItem);
 }
