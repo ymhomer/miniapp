@@ -1,0 +1,191 @@
+{
+    "version": "0.2.3 (beta)",
+    "classes": [
+      {
+        "id": "Warrior",
+        "name": "Warrior",
+        "color": "blue",
+        "hp": 120,
+        "speed": 0.4,
+        "minAttack": 20,
+        "maxAttack": 30,
+        "attackCooldownTime": 2000,
+        "attackRange": 50,
+        "defense": 10,
+        "criticalChance": 5,
+        "criticalMultiplier": 1.5,
+        "dodgeChance": 5,
+        "attackSpeed": 1,
+        "skills": [
+          {
+            "skillId": "Skill_SwordSlash",
+            "name": "Sword Slash",
+            "cooldown": 3000,
+            "range": 70,
+            "maxCharges": 1,
+            "chargeRecoverTime": 3000,
+            "effectDesc": "Slash forward to deal moderate damage."
+          },
+          {
+            "skillId": "Skill_Blink",
+            "name": "Blink",
+            "cooldown": 3000,
+            "range": 0,
+            "maxCharges": 2,
+            "chargeRecoverTime": 5000,
+            "effectDesc": "Teleport in facing direction."
+          },
+          {
+            "skillId": "Skill_ShieldBash",
+            "name": "Shield Bash",
+            "cooldown": 5000,
+            "range": 30,
+            "maxCharges": 1,
+            "chargeRecoverTime": 5000,
+            "effectDesc": "Stun nearby enemies for 1.5s."
+          }
+        ]
+      },
+      {
+        "id": "Ranger",
+        "name": "Ranger",
+        "color": "brown",
+        "hp": 70,
+        "speed": 0.8,
+        "minAttack": 8,
+        "maxAttack": 35,
+        "attackCooldownTime": 500,
+        "attackRange": 80,
+        "defense": 0,
+        "criticalChance": 15,
+        "criticalMultiplier": 2.0,
+        "dodgeChance": 15,
+        "attackSpeed": 1.3,
+        "skills": [
+          {
+            "skillId": "Skill_ArrowShot",
+            "name": "Arrow Shot",
+            "cooldown": 200,
+            "range": 9999999,
+            "maxCharges": 5,
+            "chargeRecoverTime": 3000,
+            "effectDesc": "Shoot arrow in facing direction (store 5 charges)."
+          },
+          {
+            "skillId": "Skill_PowerShot",
+            "name": "Power Shot",
+            "cooldown": 5000,
+            "range": 200,
+            "maxCharges": 1,
+            "chargeRecoverTime": 5000,
+            "effectDesc": "Charged arrow dealing higher damage."
+          },
+          {
+            "skillId": "Skill_DodgeRoll",
+            "name": "Dodge Roll",
+            "cooldown": 6000,
+            "range": 0,
+            "maxCharges": 2,
+            "chargeRecoverTime": 4000,
+            "effectDesc": "Quick roll, short invulnerability."
+          }
+        ]
+      }
+    ],
+  
+    "monsters": [
+      {
+        "type": "Goblin",
+        "color": "green",
+        "baseHp": 50,
+        "speed": 0.5,
+        "minAttack": 20,
+        "maxAttack": 25,
+        "attackRange": 50,
+        "attackSpeed": 1000,
+        "defense": 0,
+        "criticalChance": 0,
+        "criticalMultiplier": 1.5,
+        "dodgeChance": 0,
+        "itemDropChance": 0.2
+      },
+      {
+        "type": "Orc",
+        "color": "darkgreen",
+        "baseHp": 80,
+        "speed": 0.4,
+        "minAttack": 25,
+        "maxAttack": 35,
+        "attackRange": 60,
+        "attackSpeed": 1500,
+        "defense": 2,
+        "criticalChance": 5,
+        "criticalMultiplier": 1.5,
+        "dodgeChance": 0,
+        "itemDropChance": 0.1
+      },
+      {
+        "type": "Slime",
+        "color": "lime",
+        "baseHp": 40,
+        "speed": 0.7,
+        "minAttack": 18,
+        "maxAttack": 22,
+        "attackRange": 40,
+        "attackSpeed": 1200,
+        "defense": 0,
+        "criticalChance": 0,
+        "criticalMultiplier": 1.5,
+        "dodgeChance": 10,
+        "itemDropChance": 0.25
+      }
+    ],
+  
+    "levels": [
+      {
+        "stage": 1,
+        "difficultyMultiplier": 1.0,
+        "monsters": [
+          { "type": "Goblin", "quantity": 3 },
+          { "type": "Slime",  "quantity": 2 }
+        ],
+        "boss": "Orc"
+      },
+      {
+        "stage": 2,
+        "difficultyMultiplier": 1.1,
+        "monsters": [
+          { "type": "Goblin", "quantity": 4 },
+          { "type": "Slime", "quantity": 3 }
+        ],
+        "boss": "Orc"
+      },
+      {
+        "stage": 3,
+        "difficultyMultiplier": 1.2,
+        "monsters": [
+          { "type": "Slime", "quantity": 5 },
+          { "type": "Goblin", "quantity": 5 }
+        ],
+        "boss": "Orc"
+      },
+      {
+        "stage": 4,
+        "difficultyMultiplier": 1.3,
+        "monsters": [
+          { "type": "Slime", "quantity": 6 },
+          { "type": "Goblin", "quantity": 6 }
+        ],
+        "boss": "Orc"
+      },
+      {
+        "stage": 5,
+        "difficultyMultiplier": 1.4,
+        "monsters": [
+          { "type": "Slime", "quantity": 8 },
+          { "type": "Goblin", "quantity": 8 }
+        ],
+        "boss": "Orc"
+      }
+    ]
+  }  

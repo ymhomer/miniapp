@@ -5,6 +5,7 @@
     <title>Monster Slayer Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
+        /* --- 全局基础样式 --- */
         html, body {
             margin: 0;
             padding: 0;
@@ -13,143 +14,373 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
-            background: #f2f2f2;
-            font-family: sans-serif;
+            background: #fafafa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            background: #ddd;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #ccc;
+        }
+
+        /* --- 公用全屏界面(弹窗)样式 --- */
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.94);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+        .screen h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #333;
+        }
+        .info-box {
+            background: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .small-info {
+            font-size: 0.85em;
+            color: #666;
+        }
+        .all-version-record {
+            font-size: 0.85em;
+            color: #999;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        /* --- Canvas --- */
         canvas {
             display: block;
             background-color: #f0f0f0;
         }
 
-        .screen {
-            position: absolute;
-            top:0;left:0;
-            width:100%;height:100%;
-            background:#ffffffee;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            justify-content:center;
-            box-sizing:border-box;
-            padding:20px;
-        }
-        .screen h1 {
-            margin-bottom:20px;
-            font-size:2em;
-            color:#333;
-        }
-        .info-box {
-            background:#fff;
-            border:2px solid #ccc;
-            border-radius:10px;
-            padding:10px 20px;
-            margin:10px 0;
-        }
-        .small-info {
-            font-size:0.8em;color:#666;
-        }
-        .all-version-record {
-            font-size:0.7em;color:#999;text-align:right;margin-top:5px;
-        }
-        button {
-            padding:10px 20px;margin:5px;font-size:16px;background:#ddd;border:1px solid #aaa;border-radius:5px;cursor:pointer;
-        }
-        button:hover { background:#ccc; }
-
+        /* 
+         * --- HUD ---
+         */
         #gameHUD {
-            position:absolute;top:10px;left:10px;color:#000;font-size:18px;background:rgba(255,255,255,0.9);
-            padding:5px 10px;border-radius:5px;border:1px solid #ccc;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            color: #fff;
+            font-size: 15px; /* 整体字体稍微调大一点 */
+            background: rgba(0,0,0,0.4);
+            padding: 10px 20px;
+            box-sizing: border-box;
+            display: none; /* 初始隐藏，游戏开始时显示 */
+            justify-content: space-between; 
+            align-items: center;
         }
-        #gameHUD p { margin:5px 0; }
-
-        .version-info {
-            font-size:0.8em;color:#333;margin-top:10px;
+        .hud-section {
+            display: flex;
+            gap: 20px;
+            align-items: center;
         }
-
-        #virtualJoystickContainer {
-            position:absolute;bottom:20px;left:20px;width:120px;height:120px;display:none;
+        .hud-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
         }
-        #joystickBase {
-            position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.2);border-radius:50%;
+        .hud-info p {
+            margin: 0;
+            line-height: 1.4em;
         }
-        #joystickStick {
-            position:absolute;left:35px;top:35px;width:50px;height:50px;background:rgba(0,0,0,0.4);border-radius:50%;
-        }
-
-        #attackButton {
-            position:absolute;bottom:40px;right:20px;width:80px;height:80px;background:rgba(255,0,0,0.6);
-            border-radius:50%;display:none;font-size:18px;color:#fff;text-align:center;line-height:80px;user-select:none;overflow:hidden;
-            transition:transform 0.1s;border:2px solid #fff;
-        }
-        #attackButton.active { transform:scale(1.1); }
-        #attackCooldownOverlay {
-            position:absolute;bottom:0;left:0;width:100%;height:100%;background:rgba(128,128,128,0.7);
-            transform-origin:bottom;transform:scaleY(1);pointer-events:none;
-        }
-
-        #keyboardAttackIndicator {
-            position:absolute;top:10px;right:10px;width:60px;height:60px;background:rgba(255,0,0,0.6);
-            border-radius:5px;display:none;overflow:hidden;transition:transform 0.1s;border:1px solid #aaa;
-        }
-        #keyboardAttackIndicator.active { transform:scale(1.1); }
-        #keyboardCooldownOverlay {
-            position:absolute;bottom:0;left:0;width:100%;height:100%;background:rgba(128,128,128,0.7);
-            transform-origin:bottom;transform:scaleY(1);pointer-events:none;
+        /* 加粗或变大 Stage 相关信息 */
+        .hud-info p.stage-info {
+            font-weight: bold;
+            font-size: 18px;
         }
 
+        /* --- Pause & other overlay screens --- */
         #pauseButton {
-            position:absolute;top:10px;left:150px;padding:5px 10px;font-size:14px;display:none;
-            background:#eee;border:1px solid #aaa;border-radius:3px;cursor:pointer;
+            position: absolute;
+            top: 10px; left: 150px;
+            padding: 5px 10px;
+            font-size: 14px;
+            display: none;
+            background: #eee;
+            border: 1px solid #aaa;
+            border-radius: 3px;
+            cursor: pointer;
         }
-        #pauseButton:hover { background:#ddd; }
-
+        #pauseButton:hover {
+            background: #ddd;
+        }
         #pauseScreen {
-            position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.9);
-            display:none;flex-direction:column;align-items:center;justify-content:center;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         #pauseScreen h1 {
-            font-size:2em;color:#333;margin-bottom:20px;
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
         }
 
-        /* Card Style for Classes */
+        /* --- 虚拟摇杆 & Attack Button --- */
+        #virtualJoystickContainer {
+            position: absolute;
+            bottom: 20px; left: 20px;
+            width: 120px; height: 120px;
+            display: none;
+        }
+        #joystickBase {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+        }
+        #joystickStick {
+            position: absolute;
+            left: 35px; top: 35px;
+            width: 50px; height: 50px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+        }
+        #attackButton {
+            position: absolute;
+            bottom: 40px; right: 20px;
+            width: 80px; height: 80px;
+            background: rgba(255,0,0,0.6);
+            border-radius: 50%;
+            display: none;
+            font-size: 18px;
+            color: #fff;
+            text-align: center;
+            line-height: 80px;
+            user-select: none;
+            overflow: hidden;
+            transition: transform 0.1s;
+            border: 2px solid #fff;
+        }
+        #attackButton.active {
+            transform: scale(1.1);
+        }
+        #attackCooldownOverlay {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(128,128,128,0.7);
+            transform-origin: bottom;
+            transform: scaleY(0); /* 改为初始 0 */
+            pointer-events: none;
+        }
+
+        /* --- Keyboard Attack Indicator --- */
+        #keyboardAttackIndicator {
+            position: absolute;
+            top: 10px; right: 10px;
+            width: 60px; height: 60px;
+            background: rgba(255,0,0,0.6);
+            border-radius: 5px;
+            display: none;
+            overflow: hidden;
+            transition: transform 0.1s;
+            border: 1px solid #aaa;
+        }
+        #keyboardAttackIndicator.active {
+            transform: scale(1.1);
+        }
+        #keyboardCooldownOverlay {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(128,128,128,0.7);
+            transform-origin: bottom;
+            transform: scaleY(0); /* 改为初始 0 */
+            pointer-events: none;
+        }
+
+        /* --- 职业卡片 --- */
         .class-card-container {
-            display:flex;flex-direction:row;gap:20px;
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
         }
         .class-card {
-            background:#fff;
-            border:2px solid #ccc;
-            border-radius:10px;
-            padding:20px;
-            width:150px;
-            text-align:center;
-            transition:transform 0.2s, box-shadow 0.2s;
-            cursor:pointer;
-            position:relative;
+            background: #fff;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            width: 180px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
         }
         .class-card:hover {
-            transform:scale(1.05);
-            box-shadow:0 0 10px rgba(0,0,0,0.3);
+            transform: scale(1.03);
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
         }
         .class-card.selected {
-            transform:scale(1.1);
-            box-shadow:0 0 15px rgba(255,215,0,0.7);
-            border-color:gold;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,215,0,0.7);
+            border-color: gold;
         }
         .class-card h2 {
-            margin:10px 0;font-size:1.2em;color:#333;
+            margin: 10px 0;
+            font-size: 1.2em;
+            color: #333;
         }
         .class-card p {
-            margin:5px 0;font-size:0.9em;color:#555;
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #555;
+            line-height: 1.3em;
         }
-
         #confirmClassButton {
-            margin-top:20px;
+            margin-top: 20px;
         }
 
+        /* 
+         * --- 技能按钮(触屏) ---
+         */
+        #skillButtonContainer {
+            position: absolute;
+            bottom: 130px;
+            right: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .skill-button {
+            width: 60px;
+            height: 60px;
+            background: rgba(0,128,255,0.6);
+            border-radius: 10px;
+            position: relative;
+            color: #fff;
+            font-size: 12px;
+            text-align: center;
+            line-height: 60px;
+            user-select: none;
+            overflow: hidden;
+            border: 2px solid #fff;
+            transition: background 0.2s;
+        }
+        .skill-button:hover {
+            background: rgba(0,128,255,0.5);
+        }
+        .skill-cooldown-overlay {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(128,128,128,0.7);
+            transform-origin: bottom;
+            transform: scaleY(0);
+            pointer-events: none;
+        }
+        .skill-charge-text {
+            position: absolute;
+            top: 0; 
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            border-radius: 0 0 0 5px;
+            font-size: 12px;
+            padding: 2px 5px;
+        }
+
+        /* 
+         * --- 技能指示器(键盘模式) ---
+         */
+        #skillIndicatorContainer {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            display: none;
+            width: 180px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .skill-indicator {
+            position: relative;
+            margin: 5px 0;
+            width: 100%;
+            height: 30px;
+            background: rgba(0,128,255,0.6);
+            border-radius: 5px;
+            overflow: hidden;
+            color: #fff;
+            font-size: 14px;
+            line-height: 30px;
+            text-align: center;
+        }
+        .skill-indicator-label {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            text-shadow: 0 0 2px #000;
+        }
+        .skill-indicator .skill-cooldown-overlay {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(128,128,128,0.7);
+            transform-origin: bottom;
+            transform: scaleY(0);
+            pointer-events: none;
+        }
+        .skill-indicator-charges {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            border-radius: 0 0 0 5px;
+            font-size: 12px;
+            padding: 2px 5px;
+        }
+
+        /* --- 结束画面 & 胜利画面等 --- */
+        #endScreen, #victoryScreen {
+            background: rgba(255,255,255,0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #endScreen .info-box, #victoryScreen .info-box {
+            text-align: left; 
+        }
+        #endScreen h1, #victoryScreen h1 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
+    <!-- Start Screen -->
     <div id="startScreen" class="screen">
         <h1>Monster Slayer</h1>
         <div class="info-box">
@@ -163,16 +394,21 @@
         </div>
         <button id="startButton">Start Game</button>
         <button id="settingsButton">Settings</button>
-        <p class="small-info">Use WASD or Arrow Keys to move. Press Spacebar to attack. Press P to pause.</p>
+        <p class="small-info">
+            Use WASD or Arrow Keys to move. Press SPACE to attack. Press P to pause.<br>
+            Skills: [1][2][3] and [J][K][L].
+        </p>
         <div class="version-info">Current Version: <span id="currentVersionSpan"></span></div>
     </div>
 
+    <!-- Choose Class -->
     <div id="chooseClassScreen" class="screen" style="display:none;">
         <h1>Choose Your Class</h1>
         <div class="class-card-container" id="classCardContainer"></div>
         <button id="confirmClassButton">Confirm</button>
     </div>
 
+    <!-- Settings -->
     <div id="settingsScreen" class="screen" style="display:none;">
         <h1>Settings</h1>
         <div class="info-box">
@@ -182,6 +418,7 @@
         <button id="backButton">Back</button>
     </div>
 
+    <!-- End Screen -->
     <div id="endScreen" class="screen" style="display:none;">
         <h1>Game Over</h1>
         <div class="info-box">
@@ -197,33 +434,72 @@
             <p>Version: <span id="allVersionString2">0.1.0 (beta)</span></p>
         </div>
         <button id="restartButton">New Game</button>
-        <button id="returnButton">Return to Start</button>
+        <button id="returnButton">Return to Main</button>
         <div class="version-info">Current Version: <span id="currentVersionSpan2"></span></div>
     </div>
 
-    <canvas id="gameCanvas" style="display:none;"></canvas>
-
-    <div id="gameHUD" style="display:none;">
-        <p>Time: <span id="currentTime">0</span> s</p>
-        <p>Kills: <span id="currentKills">0</span></p>
-        <p>Kills/Min: <span id="killsPerMin">0</span></p>
+    <!-- Victory Screen (with Stats) -->
+    <div id="victoryScreen" class="screen" style="display:none;">
+        <h1>Victory!</h1>
+        <div class="info-box">
+            <p>Game Duration: <span id="victoryDuration">0</span> s</p>
+            <p>Kill Count: <span id="victoryKills">0</span></p>
+            <p>Kills/Min: <span id="victoryKPM">0</span></p>
+            <p>Longest Game Time (Cur Ver): <span id="victoryCurLongest">0</span> s</p>
+            <p>Highest Kill Count (Cur Ver): <span id="victoryCurKills">0</span></p>
+            <p>Highest Kills/Min (Cur Ver): <span id="victoryCurKPM">0</span></p>
+        </div>
+        <div class="all-version-record">
+            <p>All Versions Record: T:<span id="victoryAllLongest">0</span>s, K:<span id="victoryAllKills">0</span>, KPM:<span id="victoryAllKPM">0</span></p>
+            <p>Version: <span id="victoryAllVersionString">0.1.0 (beta)</span></p>
+        </div>
+        <button id="victoryRestartButton">New Game</button>
+        <button id="victoryReturnButton">Return to Main</button>
+        <div class="version-info">Current Version: <span id="victoryVersionSpan"></span></div>
     </div>
 
+    <!-- Canvas Game -->
+    <canvas id="gameCanvas" style="display:none;"></canvas>
+
+    <!-- 顶部 HUD -->
+    <div id="gameHUD">
+        <div class="hud-section">
+            <div class="hud-info">
+                <p>Time: <span id="currentTime">0</span> s</p>
+                <p>Kills: <span id="currentKills">0</span></p>
+                <p>Kills/Min: <span id="killsPerMin">0</span></p>
+                <p class="stage-info">Stage: <span id="currentStageDisplay">1</span></p>
+                <p class="stage-info">Time Left: <span id="stageTimeLeft">30</span> s</p>
+            </div>
+        </div>
+        <div class="hud-section">
+        </div>
+    </div>
+
+    <!-- 虚拟摇杆 (Touch) -->
     <div id="virtualJoystickContainer">
         <div id="joystickBase"></div>
         <div id="joystickStick"></div>
     </div>
 
+    <!-- Attack Button (Touch) -->
     <div id="attackButton">
         Attack
         <div id="attackCooldownOverlay"></div>
     </div>
 
+    <!-- Keyboard Attack Indicator (Keyboard) -->
     <div id="keyboardAttackIndicator">
         <div id="keyboardCooldownOverlay"></div>
     </div>
 
     <button id="pauseButton">Pause [P]</button>
+
+    <!-- Skill Buttons (Touch) -->
+    <div id="skillButtonContainer"></div>
+
+    <!-- Skill Indicators (Keyboard) -->
+    <div id="skillIndicatorContainer"></div>
 
     <div id="pauseScreen">
         <h1>Paused</h1>
@@ -231,111 +507,188 @@
     </div>
 
     <script>
-        const GAME_VERSION = "0.2.2 (beta)";
-        document.getElementById('currentVersionSpan').innerText = GAME_VERSION;
-        document.getElementById('currentVersionSpan2').innerText = GAME_VERSION;
+        let GAME_VERSION = "0.3.0 (beta)"; 
+        document.addEventListener('DOMContentLoaded', () => {
+            let jvSpan = document.getElementById('jsonVersion');
+            if(jvSpan) jvSpan.innerText = "Loading...";
+
+            let cvs = document.getElementById('currentVersionSpan');
+            if(cvs) cvs.innerText = "Loading...";
+            let cvs2 = document.getElementById('currentVersionSpan2');
+            if(cvs2) cvs2.innerText = "Loading...";
+            let vvs = document.getElementById('victoryVersionSpan');
+            if(vvs) vvs.innerText = "Loading...";
+        });
 
         const defaultAllVersion = "0.1.0 (beta)";
 
-        const CLASSES = [
-            {
-                name: "Warrior",
-                color: "blue",
-                hp: 120,
-                speed: 0.4,
-                minAttack: 20,
-                maxAttack: 30,
-                attackCooldownTime: 2000,
-                attackRange: 50,
-                defense:10,
-                criticalChance:5,
-                criticalMultiplier:1.5,
-                dodgeChance:5,
-                attackSpeed:1
-            },
-            {
-                name: "Ranger",
-                color:"brown",
-                hp:70,
-                speed:0.8,
-                minAttack:8,
-                maxAttack:35,
-                attackCooldownTime:500,
-                attackRange:80,
-                defense:0,
-                criticalChance:15,
-                criticalMultiplier:2.0,
-                dodgeChance:15,
-                attackSpeed:1.3
-            }
-        ];
+        let gameData = null;
+        let classDataList = [];
+        let monsterDataList = [];
+        let levelDataList = [];
 
-        let canvas = document.getElementById('gameCanvas');
-        let ctx = canvas.getContext('2d');
+        let canvas = null;
+        let ctx = null;
 
-        function isIOS() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
+        let player;
+        let monsters = [];
+        let items = [];
+        let projectiles = [];
+
+        let keysPressed = {};
+        let gameInterval;
+        let gameTime = 0;
+        let killCount = 0;
+        let paused = false;
+
+        // Records
+        let allLongestTime = 0;
+        let allHighestKills = 0;
+        let allHighestKPM = 0;
+        let allVersionString = defaultAllVersion;
+
+        let curLongestTime = 0;
+        let curHighestKills = 0;
+        let curHighestKPM = 0;
+
+        // Settings
+        let settings = {fullscreen:false, showVirtualJoystick:false};
+        let joystick = {active:false, initialX:0, initialY:0, currentX:0, currentY:0, deltaX:0, deltaY:0, maxDistance:40};
+
+        let selectedClassName=null;
+        let chosenClassData=null;
+
+        // Stage system
+        let currentStage=1;
+        let maxStage=5;
+        let stageDuration=30*1000; // 30秒
+        let stageTimeLeft=stageDuration;
 
         class Player {
-            constructor(x,y,size,color,hp,speed,minAttack,maxAttack,attackCooldownTime, attackRange=50, defense=0,criticalChance=0,criticalMultiplier=1.5,dodgeChance=0,attackSpeed=1) {
-                this.x=x;this.y=y;this.size=size;this.color=color;
-                this.hp=hp;this.speed=speed;
-                this.minAttack=minAttack;
+            constructor(x, y, size, color, hp, speed, minAttack, maxAttack,
+                        attackCooldownTime, attackRange, defense,
+                        criticalChance, criticalMultiplier, dodgeChance, attackSpeed, skillList=[]) {
+                this.x=x; 
+                this.y=y; 
+                this.size=size; 
+                this.color=color;
+                this.hp=hp; 
+                this.speed=speed;
+                this.minAttack=minAttack; 
                 this.maxAttack=maxAttack;
                 this.attackCooldownTime=attackCooldownTime;
-                this.attackRange=attackRange; 
+                this.attackRange=attackRange;
                 this.defense=defense;
                 this.criticalChance=criticalChance;
                 this.criticalMultiplier=criticalMultiplier;
                 this.dodgeChance=dodgeChance;
                 this.attackSpeed=attackSpeed;
+
                 this.inertia={x:0,y:0};
                 this.isAttacking=false;
                 this.attackEffectDuration=0;
                 this.attackCooldown=0;
                 this.className="";
+                this.facing={x:0,y:-1}; // face up
+
+                this.skills=skillList;
+                this.skillChargeCount={};
+                this.skillChargeTimers={};
+
+                skillList.forEach(skill=>{
+                    this.skillChargeCount[skill.skillId] = skill.maxCharges || 1;
+                    this.skillChargeTimers[skill.skillId] = 0; 
+                });
             }
+
             getRandomDamage() {
-                let baseDamage = Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
-                if(Math.random()*100<this.criticalChance){
-                    baseDamage = Math.floor(baseDamage*this.criticalMultiplier);
+                let base = Math.floor(Math.random()*(this.maxAttack - this.minAttack +1))+this.minAttack;
+                if(Math.random()*100 < this.criticalChance) {
+                    base=Math.floor(base*this.criticalMultiplier);
                 }
-                return baseDamage;
+                return base;
             }
+
             takeDamage(dmg) {
-                if(Math.random()*100<this.dodgeChance) {
-                    return;
-                }
+                if(Math.random()*100 < this.dodgeChance) return;
                 dmg = Math.max(dmg - this.defense,0);
                 this.hp-=dmg;
             }
-        }
 
-        class Warrior extends Player {
-            constructor(x,y,data) {
-                super(x,y,30,data.color,data.hp,data.speed,data.minAttack,data.maxAttack,data.attackCooldownTime,
-                      data.attackRange,data.defense,data.criticalChance,data.criticalMultiplier,data.dodgeChance,data.attackSpeed);
-                this.className="Warrior";
+            basicAttack(targets) {
+                if(this.attackCooldown>0) return;
+                targets.forEach(m=>{
+                    let dist=Math.hypot(m.x-this.x,m.y-this.y);
+                    if(dist<this.attackRange){
+                        let dmg=this.getRandomDamage();
+                        m.takeDamage(dmg);
+                    }
+                });
+                this.isAttacking=true;
+                this.attackEffectDuration=200;
+                this.attackCooldown=this.attackCooldownTime;
             }
-        }
 
-        class Ranger extends Player {
-            constructor(x,y,data) {
-                super(x,y,30,data.color,data.hp,data.speed,data.minAttack,data.maxAttack,data.attackCooldownTime,
-                      data.attackRange,data.defense,data.criticalChance,data.criticalMultiplier,data.dodgeChance,data.attackSpeed);
-                this.className="Ranger";
+            useSkill(skillId, targets) {
+                let skillObj=this.skills.find(s=>s.skillId===skillId);
+                if(!skillObj) return;
+                if(this.skillChargeCount[skillId]<=0) {
+                    console.log("No more charges for skill:", skillObj.name);
+                    return;
+                }
+
+                // 示例：根据 skillId 做不同事
+                if(skillId==="Skill_ArrowShot") {
+                    let arrowSpeed=8;
+                    projectiles.push(new ArrowProjectile(
+                        this.x,this.y,10,"brown",
+                        this.facing.x*arrowSpeed,this.facing.y*arrowSpeed
+                    ));
+                } else if(skillId==="Skill_Blink") {
+                    let blinkDist=80;
+                    this.x+=this.facing.x*blinkDist;
+                    this.y+=this.facing.y*blinkDist;
+                }
+                // ... 其他技能自行扩展
+
+                // 用掉一发
+                this.skillChargeCount[skillId]--;
+                this.skillChargeTimers[skillId] = skillObj.chargeRecoverTime;
+            }
+
+            updateSkillCooldown(delta) {
+                this.skills.forEach(skill=>{
+                    let sid=skill.skillId;
+                    // 如果尚未满 charges，则继续倒计时
+                    if(this.skillChargeCount[sid] < skill.maxCharges) {
+                        this.skillChargeTimers[sid] -= delta;
+                        if(this.skillChargeTimers[sid] <= 0) {
+                            this.skillChargeCount[sid]++;
+                            // 如果还没到上限，就继续下一段恢复
+                            if(this.skillChargeCount[sid] < skill.maxCharges){
+                                this.skillChargeTimers[sid] = skill.chargeRecoverTime;
+                            } else {
+                                this.skillChargeTimers[sid] = 0;
+                            }
+                        }
+                    }
+                });
             }
         }
 
         class Monster {
-            constructor(x,y,size,color,hp,speed,minAttack,maxAttack,attackRange,attackSpeed, defense=0,criticalChance=0,criticalMultiplier=1.5,dodgeChance=0) {
-                this.x=x;this.y=y;
-                this.size=size;this.color=color;
-                this.hp=hp;this.speed=speed;
-                this.minAttack=minAttack;
+            constructor(x, y, size, color, hp, speed, minAttack, maxAttack,
+                        attackRange, attackSpeed, defense=0, criticalChance=0, criticalMultiplier=1.5,
+                        dodgeChance=0, itemDropChance=0.0){
+                this.x=x; 
+                this.y=y; 
+                this.size=size; 
+                this.color=color;
+                this.hp=hp; 
+                this.speed=speed;
+                this.minAttack=minAttack; 
                 this.maxAttack=maxAttack;
-                this.attackRange=attackRange;
+                this.attackRange=attackRange; 
                 this.attackSpeed=attackSpeed;
                 this.attackCooldown=0;
                 this.isAttacking=false;
@@ -345,293 +698,924 @@
                 this.criticalChance=criticalChance;
                 this.criticalMultiplier=criticalMultiplier;
                 this.dodgeChance=dodgeChance;
+                this.itemDropChance=itemDropChance;
             }
-            getRandomDamage() {
-                let baseDamage = Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
+            getRandomDamage(){
+                let base = Math.floor(Math.random()*(this.maxAttack-this.minAttack+1))+this.minAttack;
                 if(Math.random()*100<this.criticalChance){
-                    baseDamage=Math.floor(baseDamage*this.criticalMultiplier);
+                    base=Math.floor(base*this.criticalMultiplier);
                 }
-                return baseDamage;
+                return base;
             }
-            takeDamage(dmg) {
-                if(Math.random()*100<this.dodgeChance) {
-                    return;
-                }
-                dmg = Math.max(dmg - this.defense,0);
+            takeDamage(dmg){
+                if(Math.random()*100<this.dodgeChance)return;
+                dmg=Math.max(dmg-this.defense,0);
                 this.hp-=dmg;
             }
         }
 
-        class Goblin extends Monster {
-            constructor(x,y) {
-                super(x,y,20+Math.random()*10,'green',50,0.5+Math.random(),20,25,50,1000+Math.random()*1000,
-                      0,0,1.5,0);
-                this.monsterType="Goblin";
+        class ArrowProjectile {
+            constructor(x, y, size, color, vx, vy){
+                this.x=x; 
+                this.y=y;
+                this.size=size; 
+                this.color=color;
+                this.vx=vx; 
+                this.vy=vy;
+            }
+            update(){
+                this.x+=this.vx; 
+                this.y+=this.vy;
             }
         }
 
-        class Orc extends Monster {
-            constructor(x,y) {
-                super(x,y,30,'darkgreen',80,0.4+Math.random()*0.5,25,35,60,1500+Math.random()*1000,
-                      2,5,1.5,0);
-                this.monsterType="Orc";
-            }
-        }
+        window.onload = function(){
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
 
-        class Slime extends Monster {
-            constructor(x,y) {
-                super(x,y,20,'lime',40,0.5+Math.random(),18,22,40,1200+Math.random()*800,
-                      0,0,1.5,10);
-                this.monsterType="Slime";
-            }
-        }
-
-        let player;
-        let monsters=[];
-        let keysPressed={};
-        let gameInterval;
-        let gameTime=0;
-        let killCount=0;
-        let paused=false;
-
-        let allLongestTime=0;
-        let allHighestKills=0;
-        let allHighestKPM=0;
-        let allVersionString=defaultAllVersion;
-
-        let curLongestTime=0;
-        let curHighestKills=0;
-        let curHighestKPM=0;
-
-        let settings={fullscreen:false,showVirtualJoystick:false};
-
-        let joystick={active:false,initialX:0,initialY:0,currentX:0,currentY:0,deltaX:0,deltaY:0,maxDistance:40};
-
-        let selectedClassName=null; 
-        let chosenClassData=null;
-
-        function initGame() {
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
 
-            if(isIOS()) {
-                console.info("Running on iOS device. Some features might not be fully supported.");
-            }
-
             loadSettings();
             loadRecords();
+            updateStartScreenStats();
 
             document.getElementById('startButton').addEventListener('click', showChooseClassScreen);
             document.getElementById('restartButton').addEventListener('click', restartGame);
             document.getElementById('returnButton').addEventListener('click', returnToStart);
+            document.getElementById('victoryRestartButton').addEventListener('click', restartGame);
+            document.getElementById('victoryReturnButton').addEventListener('click', returnToStart);
+
             document.getElementById('settingsButton').addEventListener('click', showSettings);
             document.getElementById('backButton').addEventListener('click', hideSettings);
             document.getElementById('fullscreenCheckbox').addEventListener('change', toggleFullscreen);
             document.getElementById('virtualJoystickCheckbox').addEventListener('change', toggleVirtualJoystick);
 
-            generateClassCards();
+            document.getElementById('pauseButton').addEventListener('click', togglePause);
+            document.getElementById('resumeButton').addEventListener('click', togglePause);
 
-            document.getElementById('confirmClassButton').addEventListener('click',()=>{
-                if(!selectedClassName || !chosenClassData) {
-                    alert("Please select a class before confirming.");
-                    return;
-                }
-
-                let chosenPlayer;
-                if(selectedClassName==="Warrior") {
-                    chosenPlayer=new Warrior(canvas.width/2,canvas.height/2,chosenClassData);
-                } else if(selectedClassName==="Ranger") {
-                    chosenPlayer=new Ranger(canvas.width/2,canvas.height/2,chosenClassData);
-                } else {
-                    alert("Invalid class selected.");
-                    return;
-                }
-                startGame(chosenPlayer);
-            });
-
-            window.addEventListener('keydown',function(e){
+            window.addEventListener('keydown',(e)=>{
                 keysPressed[e.key]=true;
-                if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','p','P'].includes(e.key)) {
+                if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','p','P'].includes(e.key)){
                     e.preventDefault();
                 }
-                if(e.key===' ') {
-                    performAttack();
-                    let indicator=document.getElementById('keyboardAttackIndicator');
-                    indicator.classList.add('active');
-                    setTimeout(()=>indicator.classList.remove('active'),100);
+                if(e.key===' '){
+                    if(player) player.basicAttack(monsters);
+                    let ind=document.getElementById('keyboardAttackIndicator');
+                    ind.classList.add('active');
+                    setTimeout(()=>ind.classList.remove('active'),100);
                 }
-                if(e.key==='p' || e.key==='P') {
-                    togglePause();
+                if(e.key==='p'|| e.key==='P') togglePause();
+
+                // Skills: 1,2,3 & j,k,l
+                let skillIndex=null;
+                if(e.key==='1') skillIndex=0;
+                else if(e.key==='2') skillIndex=1;
+                else if(e.key==='3') skillIndex=2;
+                else if(e.key==='j' || e.key==='J') skillIndex=0;
+                else if(e.key==='k' || e.key==='K') skillIndex=1;
+                else if(e.key==='l' || e.key==='L') skillIndex=2;
+
+                if(skillIndex!==null && player && player.skills[skillIndex]){
+                    let sid=player.skills[skillIndex].skillId;
+                    player.useSkill(sid, monsters);
                 }
             });
-            window.addEventListener('keyup',function(e){
+            window.addEventListener('keyup',(e)=>{
                 keysPressed[e.key]=false;
             });
 
+            // 虚拟摇杆
             let joystickContainer=document.getElementById('virtualJoystickContainer');
             let joystickStick=document.getElementById('joystickStick');
-
-            joystickContainer.addEventListener('touchstart', function(e){
+            joystickContainer.addEventListener('touchstart',(e)=>{
                 e.preventDefault();
                 joystick.active=true;
-                let touch=e.touches[0];
-                joystick.initialX=touch.clientX;
-                joystick.initialY=touch.clientY;
-            }, {passive:false});
-
-            joystickContainer.addEventListener('touchmove', function(e){
+                let t=e.touches[0];
+                joystick.initialX=t.clientX;
+                joystick.initialY=t.clientY;
+            },{passive:false});
+            joystickContainer.addEventListener('touchmove',(e)=>{
                 if(!joystick.active)return;
                 e.preventDefault();
-                let touch=e.touches[0];
-                joystick.currentX=touch.clientX;
-                joystick.currentY=touch.clientY;
+                let t=e.touches[0];
+                joystick.currentX=t.clientX;
+                joystick.currentY=t.clientY;
                 joystick.deltaX=joystick.currentX-joystick.initialX;
                 joystick.deltaY=joystick.currentY-joystick.initialY;
-
-                let distance=Math.hypot(joystick.deltaX,joystick.deltaY);
-                if(distance>joystick.maxDistance) {
-                    let ratio=joystick.maxDistance/distance;
+                let dist=Math.hypot(joystick.deltaX,joystick.deltaY);
+                if(dist>joystick.maxDistance){
+                    let ratio=joystick.maxDistance/dist;
                     joystick.deltaX*=ratio;
                     joystick.deltaY*=ratio;
                 }
                 joystickStick.style.transform=`translate(${joystick.deltaX}px,${joystick.deltaY}px)`;
-            }, {passive:false});
-
-            joystickContainer.addEventListener('touchend', function(e){
+            },{passive:false});
+            joystickContainer.addEventListener('touchend',(e)=>{
                 joystick.active=false;
-                joystick.deltaX=0;joystick.deltaY=0;
-                joystickStick.style.transform='translate(0px,0px)';
-            }, {passive:false});
+                joystick.deltaX=0; joystick.deltaY=0;
+                joystickStick.style.transform='translate(0,0)';
+            },{passive:false});
 
+            // Attack button
             let attackButton=document.getElementById('attackButton');
-            attackButton.addEventListener('touchstart',function(e){
+            attackButton.addEventListener('touchstart',(e)=>{
                 e.preventDefault();
-                performAttack();
+                if(player) player.basicAttack(monsters);
                 attackButton.classList.add('active');
                 setTimeout(()=>attackButton.classList.remove('active'),100);
             },{passive:false});
-            attackButton.addEventListener('mousedown',function(e){
+            attackButton.addEventListener('mousedown',(e)=>{
                 e.preventDefault();
-                performAttack();
+                if(player) player.basicAttack(monsters);
                 attackButton.classList.add('active');
                 setTimeout(()=>attackButton.classList.remove('active'),100);
             });
 
-            document.getElementById('pauseButton').addEventListener('click', togglePause);
-            document.getElementById('resumeButton').addEventListener('click', togglePause);
+            // 加载 JSON 并更新版本
+            fetch('gameData.json')
+            .then(res=>res.json())
+            .then(data=>{
+                gameData=data;
+                if(data.version){
+                    GAME_VERSION = data.version;
+                    document.title = "Monster Slayer Game - v" + GAME_VERSION;
 
-            updateStartScreenStats();
-        }
+                    let jvSpan = document.getElementById('jsonVersion');
+                    if(jvSpan) jvSpan.innerText = GAME_VERSION;
 
-        function generateClassCards() {
-            const container = document.getElementById('classCardContainer');
+                    let cvs = document.getElementById('currentVersionSpan');
+                    if(cvs) cvs.innerText = GAME_VERSION;
+
+                    let cvs2 = document.getElementById('currentVersionSpan2');
+                    if(cvs2) cvs2.innerText = GAME_VERSION;
+
+                    let vvs = document.getElementById('victoryVersionSpan');
+                    if(vvs) vvs.innerText = GAME_VERSION;
+                }
+
+                classDataList = data.classes;
+                monsterDataList = data.monsters;
+                levelDataList = data.levels;
+                generateClassCards();
+            })
+            .catch(err=>{
+                console.error("Failed to load gameData.json:",err);
+            });
+        };
+
+        function generateClassCards(){
+            const container=document.getElementById('classCardContainer');
             container.innerHTML="";
-            CLASSES.forEach(cls=>{
+            classDataList.forEach(cls=>{
                 let card=document.createElement('div');
                 card.classList.add('class-card');
-                card.setAttribute('data-class', cls.name);
+                card.setAttribute('data-class',cls.id);
 
                 let html=`<h2>${cls.name}</h2>
-                          <p>HP:${cls.hp}</p>
-                          <p>Speed:${cls.speed}</p>
-                          <p>Attack:${cls.minAttack}~${cls.maxAttack}</p>
-                          <p>Defense:${cls.defense}</p>
-                          <p>Crit:${cls.criticalChance}%</p>
-                          <p>Dodge:${cls.dodgeChance}%</p>
-                          <p>AttackRange:${cls.attackRange}</p>`;
-
+                          <p>HP: ${cls.hp}</p>
+                          <p>Speed: ${cls.speed}</p>
+                          <p>Attack: ${cls.minAttack}~${cls.maxAttack}</p>
+                          <p>Defense: ${cls.defense}</p>
+                          <p>Crit Chance: ${cls.criticalChance}%</p>
+                          <p>Dodge: ${cls.dodgeChance}%</p>
+                          <p>Attack Range: ${cls.attackRange}</p>
+                          <p>Skills (${cls.skills.length}):</p>`;
+                cls.skills.forEach(sk=>{
+                    html+=`<p>- ${sk.name} (MaxCharges:${sk.maxCharges}, CD:${(sk.chargeRecoverTime/1000)}s)</p>`;
+                });
                 card.innerHTML=html;
                 card.addEventListener('click',()=>{
                     container.querySelectorAll('.class-card').forEach(c=>c.classList.remove('selected'));
                     card.classList.add('selected');
-                    selectedClassName=cls.name;
+                    selectedClassName=cls.id;
                     chosenClassData=cls;
                 });
                 container.appendChild(card);
             });
+
+            document.getElementById('confirmClassButton').addEventListener('click',()=>{
+                if(!selectedClassName||!chosenClassData){
+                    alert("Please select a class first.");
+                    return;
+                }
+                startGameWithClass(chosenClassData);
+            });
         }
 
-        function resizeCanvas() {
+        function loadStage(stageIndex){
+            if(!levelDataList||stageIndex>levelDataList.length)return;
+            let data=levelDataList[stageIndex-1];
+            if(!data)return;
+            let multiplier=data.difficultyMultiplier||1;
+            data.monsters.forEach(mdata=>{
+                let mType=monsterDataList.find(mt=>mt.type===mdata.type);
+                if(mType){
+                    for(let i=0;i<mdata.quantity;i++){
+                        let m=createMonsterInstance(mType);
+                        m.hp=Math.floor(m.hp*multiplier);
+                        monsters.push(m);
+                    }
+                }
+            });
+            // Boss
+            if(data.boss){
+                let bossType=monsterDataList.find(mt=>mt.type===data.boss);
+                if(bossType){
+                    let boss=createMonsterInstance(bossType);
+                    boss.hp=Math.floor(boss.hp*multiplier*1.5);
+                    monsters.push(boss);
+                }
+            }
+        }
+
+        function startGameWithClass(clsData){
+            document.getElementById('chooseClassScreen').style.display='none';
+            document.getElementById('endScreen').style.display='none';
+            document.getElementById('victoryScreen').style.display='none';
+            document.getElementById('pauseScreen').style.display='none';
+            canvas.style.display='block';
+            document.getElementById('gameHUD').style.display='flex';
+            document.getElementById('pauseButton').style.display='inline-block';
+
+            if(settings.showVirtualJoystick){
+                document.getElementById('attackButton').style.display='block';
+            } else {
+                document.getElementById('keyboardAttackIndicator').style.display='block';
+            }
+
+            player=new Player(
+                canvas.width/2, canvas.height/2,
+                30, clsData.color, clsData.hp, clsData.speed,
+                clsData.minAttack, clsData.maxAttack,
+                clsData.attackCooldownTime, clsData.attackRange,
+                clsData.defense, clsData.criticalChance, clsData.criticalMultiplier,
+                clsData.dodgeChance, clsData.attackSpeed, clsData.skills
+            );
+
+            monsters=[];
+            items=[];
+            projectiles=[];
+
+            gameTime=0;
+            killCount=0;
+            paused=false;
+
+            currentStage=1;
+            stageTimeLeft=stageDuration;
+            loadStage(currentStage);
+
+            document.getElementById('skillButtonContainer').innerHTML="";
+            document.getElementById('skillIndicatorContainer').innerHTML="";
+
+            if(clsData.skills&&clsData.skills.length>0){
+                if(settings.showVirtualJoystick){
+                    document.getElementById('skillButtonContainer').style.display='flex';
+                    document.getElementById('skillIndicatorContainer').style.display='none';
+                    clsData.skills.forEach((sk, index)=>{
+                        let btn=document.createElement('div');
+                        btn.classList.add('skill-button');
+                        btn.innerText=sk.name;
+
+                        let overlay=document.createElement('div');
+                        overlay.classList.add('skill-cooldown-overlay');
+                        btn.appendChild(overlay);
+
+                        let chargeText=document.createElement('div');
+                        chargeText.classList.add('skill-charge-text');
+                        chargeText.innerText = `${sk.maxCharges}/${sk.maxCharges}`;
+                        btn.appendChild(chargeText);
+
+                        btn.addEventListener('touchstart',(e)=>{
+                            e.preventDefault();
+                            player.useSkill(sk.skillId, monsters);
+                        },{passive:false});
+                        btn.addEventListener('mousedown',(e)=>{
+                            e.preventDefault();
+                            player.useSkill(sk.skillId, monsters);
+                        });
+
+                        document.getElementById('skillButtonContainer').appendChild(btn);
+                    });
+                } else {
+                    document.getElementById('skillButtonContainer').style.display='none';
+                    document.getElementById('skillIndicatorContainer').style.display='block';
+
+                    clsData.skills.forEach((sk, index)=>{
+                        let c=document.createElement('div');
+                        c.classList.add('skill-indicator');
+
+                        let lbl=document.createElement('div');
+                        lbl.classList.add('skill-indicator-label');
+                        let keyText=(index===0?"1/J":(index===1?"2/K":"3/L"));
+                        lbl.innerText=`[${keyText}] ${sk.name}`;
+
+                        let ov=document.createElement('div');
+                        ov.classList.add('skill-cooldown-overlay');
+
+                        let ch = document.createElement('div');
+                        ch.classList.add('skill-indicator-charges');
+                        ch.innerText=`${sk.maxCharges}/${sk.maxCharges}`;
+
+                        c.appendChild(lbl);
+                        c.appendChild(ov);
+                        c.appendChild(ch);
+                        document.getElementById('skillIndicatorContainer').appendChild(c);
+                    });
+                }
+            } else {
+                document.getElementById('skillButtonContainer').style.display='none';
+                document.getElementById('skillIndicatorContainer').style.display='none';
+            }
+
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval=setInterval(gameLoop,16);
+        }
+
+        function createMonsterInstance(mType){
+            return new Monster(
+                Math.random()*canvas.width, Math.random()*canvas.height,
+                20+Math.random()*10, mType.color, mType.baseHp, mType.speed,
+                mType.minAttack, mType.maxAttack, mType.attackRange, mType.attackSpeed,
+                mType.defense, mType.criticalChance, mType.criticalMultiplier,
+                mType.dodgeChance, mType.itemDropChance
+            );
+        }
+
+        function gameLoop(){
+            if(paused)return;
+            updateGame();
+            renderGame();
+            gameTime+=16;
+            stageTimeLeft-=16;
+            if(stageTimeLeft<=0){
+                currentStage++;
+                if(currentStage>maxStage){
+                    showVictoryScreen();
+                    clearInterval(gameInterval);
+                    return;
+                } else {
+                    stageTimeLeft=stageDuration;
+                    loadStage(currentStage);
+                }
+            }
+            updateHUD();
+        }
+
+        function updateGame(){
+            if(!player)return;
+
+            let acc={x:0,y:0};
+            if(!settings.showVirtualJoystick){
+                let moveSpeed=player.speed;
+                if(keysPressed['Shift']) moveSpeed*=1.5;
+                if(keysPressed['ArrowUp']||keysPressed['w']) acc.y=-moveSpeed;
+                if(keysPressed['ArrowDown']||keysPressed['s']) acc.y=moveSpeed;
+                if(keysPressed['ArrowLeft']||keysPressed['a']) acc.x=-moveSpeed;
+                if(keysPressed['ArrowRight']||keysPressed['d']) acc.x=moveSpeed;
+            } else {
+                if(joystick.active){
+                    acc.x=(joystick.deltaX/joystick.maxDistance)*player.speed*5;
+                    acc.y=(joystick.deltaY/joystick.maxDistance)*player.speed*5;
+                }
+            }
+
+            if(acc.x!==0||acc.y!==0){
+                let len=Math.hypot(acc.x,acc.y);
+                player.facing.x=acc.x/len; 
+                player.facing.y=acc.y/len;
+            }
+            player.inertia = player.inertia || {x:0,y:0};
+            player.inertia.x+=acc.x; 
+            player.inertia.y+=acc.y;
+            let maxSp=5;
+            player.inertia.x=Math.max(Math.min(player.inertia.x,maxSp),-maxSp);
+            player.inertia.y=Math.max(Math.min(player.inertia.y,maxSp),-maxSp);
+
+            player.x+=player.inertia.x;
+            player.y+=player.inertia.y;
+            player.inertia.x*=0.9; 
+            player.inertia.y*=0.9;
+
+            if(player.x<0)player.x=0;
+            if(player.x>canvas.width)player.x=canvas.width;
+            if(player.y<0)player.y=0;
+            if(player.y>canvas.height)player.y=canvas.height;
+
+            // 攻击CD
+            if(player.attackCooldown>0){
+                player.attackCooldown-=16;
+                if(player.attackCooldown<0) player.attackCooldown=0;
+            }
+            // 技能充能
+            player.updateSkillCooldown(16);
+
+            if(player.isAttacking){
+                player.attackEffectDuration-=16;
+                if(player.attackEffectDuration<=0) player.isAttacking=false;
+            }
+
+            // 怪物AI
+            monsters.forEach((mon,idx)=>{
+                let dx=player.x-mon.x;
+                let dy=player.y-mon.y;
+                let dist=Math.hypot(dx,dy);
+
+                if(dist>0){
+                    mon.x+=(dx/dist)*mon.speed;
+                    mon.y+=(dy/dist)*mon.speed;
+                }
+                if(mon.isAttacking){
+                    mon.attackEffectDuration-=16;
+                    if(mon.attackEffectDuration<=0) mon.isAttacking=false;
+                }
+                if(dist<mon.attackRange){
+                    if(mon.reactionTime===undefined){
+                        mon.reactionTime=300+Math.random()*300;
+                    } else {
+                        mon.reactionTime-=16;
+                    }
+                    if(mon.reactionTime<=0){
+                        if(mon.attackCooldown<=0){
+                            let dmg=mon.getRandomDamage();
+                            player.takeDamage(dmg);
+                            mon.attackCooldown=mon.attackSpeed;
+                            mon.isAttacking=true;
+                            mon.attackEffectDuration=200;
+                            if(player.hp<=0){
+                                endGame();
+                            }
+                        } else {
+                            mon.attackCooldown-=16;
+                        }
+                    }
+                } else {
+                    mon.reactionTime=undefined;
+                }
+
+                if(mon.hp<=0){
+                    if(Math.random()<mon.itemDropChance){
+                        items.push({type:"HP", x:mon.x,y:mon.y,size:10,amount:20});
+                    }
+                    monsters.splice(idx,1);
+                    killCount++;
+                }
+            });
+
+            // Player <-> Monster 冲突 (防重叠)
+            let pr=player.size/2;
+            monsters.forEach(mon=>{
+                let dx=player.x-mon.x;
+                let dy=player.y-mon.y;
+                let dist=Math.hypot(dx,dy);
+                let mr=mon.size/2;
+                let minDist=pr+mr;
+                if(dist<minDist&&dist>0){
+                    let overlap=minDist-dist;
+                    player.x+=(dx/dist)*overlap;
+                    player.y+=(dy/dist)*overlap;
+                }
+            });
+
+            // 拾取物品
+            items.forEach((it,ii)=>{
+                let dist=Math.hypot(player.x-it.x,player.y-it.y);
+                if(dist<pr+it.size/2){
+                    if(it.type==="HP"){
+                        player.hp+=it.amount;
+                    }
+                    items.splice(ii,1);
+                }
+            });
+
+            // 投射物
+            projectiles.forEach((proj,pidx)=>{
+                proj.update();
+                monsters.forEach((mon,midx)=>{
+                    let dx=mon.x-proj.x;
+                    let dy=mon.y-proj.y;
+                    let dist=Math.hypot(dx,dy);
+                    if(dist<mon.size/2+proj.size/2){
+                        let arrowDamage=15;
+                        mon.takeDamage(arrowDamage);
+                        if(mon.hp<=0){
+                            if(Math.random()<mon.itemDropChance){
+                                items.push({type:"HP", x:mon.x,y:mon.y,size:10,amount:20});
+                            }
+                            monsters.splice(midx,1);
+                            killCount++;
+                        }
+                        projectiles.splice(pidx,1);
+                    }
+                });
+                if(proj.x<0||proj.x>canvas.width||proj.y<0||proj.y>canvas.height){
+                    projectiles.splice(pidx,1);
+                }
+            });
+        }
+
+        function renderGame(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+
+            // Player facing arrow
+            if(player){
+                ctx.save();
+                ctx.translate(player.x,player.y);
+                let angle=Math.atan2(player.facing.y,player.facing.x);
+                ctx.rotate(angle);
+                let arrowLen=20;
+                ctx.fillStyle='rgba(0,0,0,0.6)';
+                ctx.beginPath();
+                ctx.moveTo(player.size/2,-5);
+                ctx.lineTo(player.size/2+arrowLen,0);
+                ctx.lineTo(player.size/2,5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            if(player&&player.isAttacking){
+                ctx.fillStyle='rgba(0,0,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(player.x,player.y,player.attackRange,0,Math.PI*2);
+                ctx.fill();
+            }
+
+            // Player circle + 攻击冷却在圆里做一个小动画(示例)
+            if(player){
+                if(player.attackCooldown>0){
+                    let ratio=player.attackCooldown/player.attackCooldownTime;
+                    // 可在角色周围画一个灰圈来表示冷却
+                    ctx.fillStyle='rgba(128,128,128,0.7)';
+                    ctx.beginPath();
+                    ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
+                    ctx.fill();
+
+                    ctx.save();
+                    let ch=player.size*(1-ratio);
+                    ctx.beginPath();
+                    ctx.rect(player.x - player.size/2, player.y+player.size/2-ch, player.size,ch);
+                    ctx.clip();
+                    ctx.fillStyle=player.color;
+                    ctx.beginPath();
+                    ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
+                    ctx.fill();
+                    ctx.restore();
+                } else {
+                    ctx.fillStyle=player.color;
+                    ctx.beginPath();
+                    ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
+                    ctx.fill();
+                }
+
+                // 攻击范围(调试用，想隐藏可注释)
+                ctx.strokeStyle='blue';
+                ctx.setLineDash([5,5]);
+                ctx.beginPath();
+                ctx.arc(player.x,player.y,player.attackRange,0,Math.PI*2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 显示HP
+                ctx.fillStyle='black';
+                ctx.fillText('HP: '+player.hp, player.x-20, player.y-30);
+            }
+
+            // Monsters
+            monsters.forEach(mon=>{
+                if(mon.isAttacking){
+                    ctx.fillStyle='rgba(255,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.arc(mon.x,mon.y,mon.attackRange,0,Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.fillStyle=mon.color;
+                ctx.beginPath();
+                ctx.arc(mon.x,mon.y,mon.size/2,0,Math.PI*2);
+                ctx.fill();
+
+                // 攻击范围(调试用)
+                ctx.strokeStyle='red';
+                ctx.setLineDash([5,5]);
+                ctx.beginPath();
+                ctx.arc(mon.x,mon.y,mon.attackRange,0,Math.PI*2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle='black';
+                ctx.fillText('HP: '+mon.hp, mon.x-20, mon.y-30);
+            });
+
+            // Items
+            items.forEach(it=>{
+                ctx.fillStyle='rgba(255,0,0,0.5)';
+                ctx.beginPath();
+                ctx.arc(it.x,it.y,it.size/2,0,Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle='black';
+                ctx.fillText('+HP', it.x-10,it.y-10);
+            });
+
+            // Projectiles
+            projectiles.forEach(proj=>{
+                ctx.fillStyle=proj.color;
+                ctx.beginPath();
+                ctx.arc(proj.x,proj.y,proj.size/2,0,Math.PI*2);
+                ctx.fill();
+            });
+
+            // 更新(触屏)技能按钮冷却
+            if(settings.showVirtualJoystick && player){
+                let sbc=document.getElementById('skillButtonContainer');
+                let btns=sbc.querySelectorAll('.skill-button');
+                btns.forEach((btn,idx)=>{
+                    let sk=player.skills[idx];
+                    let sid=sk.skillId;
+                    let nowCharges=player.skillChargeCount[sid];
+                    let maxC=sk.maxCharges||1;
+                    let remain=player.skillChargeTimers[sid];
+                    let total=sk.chargeRecoverTime;
+                    let ratio=0;
+                    if(nowCharges<maxC){
+                        ratio = 1 - (remain/total);
+                    } else {
+                        ratio = 0; 
+                    }
+                    let ov=btn.querySelector('.skill-cooldown-overlay');
+                    ov.style.transform=`scaleY(${ratio})`;
+
+                    let chargeText = btn.querySelector('.skill-charge-text');
+                    chargeText.innerText = `${nowCharges}/${maxC}`;
+                });
+            }
+
+            // 更新(键盘)技能指示器冷却
+            if(!settings.showVirtualJoystick && player){
+                let sic=document.getElementById('skillIndicatorContainer');
+                let indicators=sic.querySelectorAll('.skill-indicator');
+                indicators.forEach((ind,idx)=>{
+                    let sk=player.skills[idx];
+                    let sid=sk.skillId;
+                    let nowCharges=player.skillChargeCount[sid];
+                    let maxC=sk.maxCharges||1;
+                    let remain=player.skillChargeTimers[sid];
+                    let total=sk.chargeRecoverTime;
+                    let ratio=0;
+                    if(nowCharges<maxC){
+                        ratio=1 - (remain/total);
+                    } else {
+                        ratio=0;
+                    }
+                    let ov=ind.querySelector('.skill-cooldown-overlay');
+                    ov.style.transform=`scaleY(${ratio})`;
+
+                    let ch = ind.querySelector('.skill-indicator-charges');
+                    ch.innerText = `${nowCharges}/${maxC}`;
+                });
+            }
+
+            // === 在此处更新普攻的冷却覆盖 ===
+            if(player){
+                let attackRatio = player.attackCooldownTime>0 ? 
+                                  (player.attackCooldown / player.attackCooldownTime) : 0;
+                // 让 0 = 无冷却, 1 = 冷却全满。
+                // 但 transform: scaleY(attackRatio) 是向上填充的，如果想反过来可再写(1 - attackRatio)。
+                // 这里就用和技能一样的逻辑：冷却时越大 => 灰掉越多
+                let attackOverlay = document.getElementById('attackCooldownOverlay');
+                if(attackOverlay) {
+                    attackOverlay.style.transform = `scaleY(${attackRatio})`;
+                }
+                let kbOverlay = document.getElementById('keyboardCooldownOverlay');
+                if(kbOverlay) {
+                    kbOverlay.style.transform = `scaleY(${attackRatio})`;
+                }
+            }
+        }
+
+        function updateHUD(){
+            let tSec=Math.floor(gameTime/1000);
+            document.getElementById('currentTime').innerText=tSec;
+            document.getElementById('currentKills').innerText=killCount;
+            let kpm=0;
+            if(gameTime>0){
+                kpm=(killCount*60000/gameTime).toFixed(2);
+            }
+            document.getElementById('killsPerMin').innerText=kpm;
+            document.getElementById('currentStageDisplay').innerText=currentStage;
+            document.getElementById('stageTimeLeft').innerText=Math.ceil(stageTimeLeft/1000);
+        }
+
+        function endGame(){
+            clearInterval(gameInterval);
+            canvas.style.display='none';
+            document.getElementById('gameHUD').style.display='none';
+            document.getElementById('attackButton').style.display='none';
+            document.getElementById('keyboardAttackIndicator').style.display='none';
+            document.getElementById('pauseButton').style.display='none';
+            document.getElementById('pauseScreen').style.display='none';
+            document.getElementById('victoryScreen').style.display='none';
+            document.getElementById('endScreen').style.display='flex';
+            document.getElementById('skillButtonContainer').style.display='none';
+            document.getElementById('skillIndicatorContainer').style.display='none';
+
+            let finalTime=gameTime/1000;
+            let finalKPM=0;
+            if(gameTime>0) finalKPM=(killCount*60000/gameTime).toFixed(2);
+
+            document.getElementById('gameDuration').innerText=Math.floor(finalTime);
+            document.getElementById('killCount').innerText=killCount;
+            document.getElementById('endKillsPerMin').innerText=finalKPM;
+
+            if(finalTime>curLongestTime) curLongestTime=Math.floor(finalTime);
+            if(killCount>curHighestKills) curHighestKills=killCount;
+            if(finalKPM>curHighestKPM) curHighestKPM=parseFloat(finalKPM);
+
+            saveCurrentVersionRecords();
+
+            document.getElementById('curLongestTime').innerText=curLongestTime;
+            document.getElementById('curHighestKills').innerText=curHighestKills;
+            document.getElementById('curHighestKPM').innerText=curHighestKPM.toFixed(2);
+
+            let improved=false;
+            if(finalTime>allLongestTime){
+                allLongestTime=Math.floor(finalTime);
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(killCount>allHighestKills){
+                allHighestKills=killCount;
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(finalKPM>allHighestKPM){
+                allHighestKPM=parseFloat(finalKPM);
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(improved){
+                saveAllVersionRecords();
+            }
+
+            document.getElementById('allLongestTime2').innerText=allLongestTime;
+            document.getElementById('allHighestKills2').innerText=allHighestKills;
+            document.getElementById('allHighestKPM2').innerText=allHighestKPM.toFixed(2);
+            document.getElementById('allVersionString2').innerText=allVersionString;
+        }
+
+        function showVictoryScreen(){
+            clearInterval(gameInterval);
+            canvas.style.display='none';
+            document.getElementById('gameHUD').style.display='none';
+            document.getElementById('attackButton').style.display='none';
+            document.getElementById('keyboardAttackIndicator').style.display='none';
+            document.getElementById('pauseButton').style.display='none';
+            document.getElementById('pauseScreen').style.display='none';
+            document.getElementById('endScreen').style.display='none';
+            document.getElementById('skillButtonContainer').style.display='none';
+            document.getElementById('skillIndicatorContainer').style.display='none';
+
+            document.getElementById('victoryScreen').style.display='flex';
+
+            let finalTime=gameTime/1000;
+            let finalKPM=0;
+            if(gameTime>0) finalKPM=(killCount*60000/gameTime).toFixed(2);
+
+            document.getElementById('victoryDuration').innerText=Math.floor(finalTime);
+            document.getElementById('victoryKills').innerText=killCount;
+            document.getElementById('victoryKPM').innerText=finalKPM;
+
+            if(finalTime>curLongestTime) curLongestTime=Math.floor(finalTime);
+            if(killCount>curHighestKills) curHighestKills=killCount;
+            if(finalKPM>curHighestKPM) curHighestKPM=parseFloat(finalKPM);
+
+            saveCurrentVersionRecords();
+
+            document.getElementById('victoryCurLongest').innerText=curLongestTime;
+            document.getElementById('victoryCurKills').innerText=curHighestKills;
+            document.getElementById('victoryCurKPM').innerText=curHighestKPM.toFixed(2);
+
+            let improved=false;
+            if(finalTime>allLongestTime){
+                allLongestTime=Math.floor(finalTime);
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(killCount>allHighestKills){
+                allHighestKills=killCount;
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(finalKPM>allHighestKPM){
+                allHighestKPM=parseFloat(finalKPM);
+                allVersionString=GAME_VERSION;
+                improved=true;
+            }
+            if(improved){
+                saveAllVersionRecords();
+            }
+
+            document.getElementById('victoryAllLongest').innerText=allLongestTime;
+            document.getElementById('victoryAllKills').innerText=allHighestKills;
+            document.getElementById('victoryAllKPM').innerText=allHighestKPM.toFixed(2);
+            document.getElementById('victoryAllVersionString').innerText=allVersionString;
+        }
+
+        function restartGame(){
+            document.getElementById('endScreen').style.display='none';
+            document.getElementById('victoryScreen').style.display='none';
+            showChooseClassScreen();
+        }
+
+        function returnToStart(){
+            document.getElementById('endScreen').style.display='none';
+            document.getElementById('victoryScreen').style.display='none';
+            document.getElementById('startScreen').style.display='flex';
+            updateStartScreenStats();
+        }
+
+        function togglePause(){
+            if(!gameInterval)return;
+            if(paused){
+                paused=false;
+                document.getElementById('pauseScreen').style.display='none';
+            } else {
+                paused=true;
+                document.getElementById('pauseScreen').style.display='flex';
+            }
+        }
+
+        function resizeCanvas(){
             canvas.width=window.innerWidth;
             canvas.height=window.innerHeight;
         }
 
-        function loadSettings() {
-            let savedSettings=JSON.parse(localStorage.getItem('gameSettings'));
-            if(savedSettings) {
-                settings=savedSettings;
+        function loadSettings(){
+            let saved=JSON.parse(localStorage.getItem('gameSettings'));
+            if(saved){
+                settings=saved;
                 document.getElementById('fullscreenCheckbox').checked=settings.fullscreen;
                 document.getElementById('virtualJoystickCheckbox').checked=settings.showVirtualJoystick;
             }
             applySettings();
         }
 
-        function saveSettings() {
+        function saveSettings(){
             localStorage.setItem('gameSettings', JSON.stringify(settings));
         }
 
-        function requestFullscreenSafe() {
-            if(document.documentElement.requestFullscreen) {
-                try {
-                    document.documentElement.requestFullscreen().catch(err=>{
-                        console.error("Fullscreen request failed:", err);
-                        alert("Error: "+err.message);
-                        settings.fullscreen=false;
-                        document.getElementById('fullscreenCheckbox').checked=false;
-                    });
-                } catch(e) {
-                    console.error("Fullscreen request error:", e);
-                    alert("Error: "+e.message);
+        function requestFullscreenSafe(){
+            if(document.documentElement.requestFullscreen){
+                document.documentElement.requestFullscreen().catch(err=>{
+                    console.error("Fullscreen failed:",err);
+                    alert("Error: "+err.message);
                     settings.fullscreen=false;
                     document.getElementById('fullscreenCheckbox').checked=false;
-                }
+                });
             } else {
-                console.error("Fullscreen API not supported.");
-                alert("Error: Fullscreen not supported on this device/browser.");
+                console.error("Fullscreen not supported.");
+                alert("Error: Fullscreen not supported.");
                 settings.fullscreen=false;
                 document.getElementById('fullscreenCheckbox').checked=false;
             }
         }
 
-        function applySettings() {
-            if(settings.fullscreen) {
+        function applySettings(){
+            if(settings.fullscreen){
                 requestFullscreenSafe();
             } else {
-                if(document.fullscreenElement) {
+                if(document.fullscreenElement){
                     document.exitFullscreen().catch(err=>{
-                        console.error("Exit fullscreen failed:", err);
-                        alert("Error: "+err.message);
+                        console.error("Exit fullscreen failed:",err);
                     });
                 }
             }
-
-            let joystickContainer=document.getElementById('virtualJoystickContainer');
-            let attackButton=document.getElementById('attackButton');
-            let keyboardAttackIndicator=document.getElementById('keyboardAttackIndicator');
-            if(settings.showVirtualJoystick) {
-                joystickContainer.style.display='block';
-                attackButton.style.display='block';
-                keyboardAttackIndicator.style.display='none';
+            let jc=document.getElementById('virtualJoystickContainer');
+            let ab=document.getElementById('attackButton');
+            let ka=document.getElementById('keyboardAttackIndicator');
+            if(settings.showVirtualJoystick){
+                jc.style.display='block';
+                ab.style.display='block';
+                ka.style.display='none';
             } else {
-                joystickContainer.style.display='none';
-                attackButton.style.display='none';
-                keyboardAttackIndicator.style.display='none';
+                jc.style.display='none';
+                ab.style.display='none';
+                ka.style.display='none';
             }
         }
 
-        function toggleFullscreen() {
+        function toggleFullscreen(){
             settings.fullscreen=document.getElementById('fullscreenCheckbox').checked;
             applySettings();
             saveSettings();
         }
 
-        function toggleVirtualJoystick() {
+        function toggleVirtualJoystick(){
             settings.showVirtualJoystick=document.getElementById('virtualJoystickCheckbox').checked;
             applySettings();
             saveSettings();
         }
 
-        function loadRecords() {
+        function loadRecords(){
             let avLong=localStorage.getItem('allLongestTime'); if(avLong) allLongestTime=parseInt(avLong);
             let avKill=localStorage.getItem('allHighestKills'); if(avKill) allHighestKills=parseInt(avKill);
             let avKPM=localStorage.getItem('allHighestKPM'); if(avKPM) allHighestKPM=parseFloat(avKPM);
@@ -642,20 +1626,20 @@
             let cvKPM=localStorage.getItem('cur_'+GAME_VERSION+'_highestKPM'); if(cvKPM) curHighestKPM=parseFloat(cvKPM);
         }
 
-        function saveAllVersionRecords() {
+        function saveAllVersionRecords(){
             localStorage.setItem('allLongestTime',allLongestTime);
             localStorage.setItem('allHighestKills',allHighestKills);
             localStorage.setItem('allHighestKPM',allHighestKPM);
             localStorage.setItem('allVersionString',allVersionString);
         }
 
-        function saveCurrentVersionRecords() {
+        function saveCurrentVersionRecords(){
             localStorage.setItem('cur_'+GAME_VERSION+'_longestTime',curLongestTime);
             localStorage.setItem('cur_'+GAME_VERSION+'_highestKills',curHighestKills);
             localStorage.setItem('cur_'+GAME_VERSION+'_highestKPM',curHighestKPM);
         }
 
-        function updateStartScreenStats() {
+        function updateStartScreenStats(){
             loadRecords();
             document.getElementById('longestTime').innerText=curLongestTime;
             document.getElementById('highestKills').innerText=curHighestKills;
@@ -667,431 +1651,20 @@
             document.getElementById('allVersionString').innerText=allVersionString;
         }
 
-        function showSettings() {
-            document.getElementById('startScreen').style.display='none';
-            document.getElementById('settingsScreen').style.display='flex';
-        }
-
-        function hideSettings() {
-            document.getElementById('settingsScreen').style.display='none';
-            document.getElementById('startScreen').style.display='flex';
-        }
-
-        function showChooseClassScreen() {
+        function showChooseClassScreen(){
             document.getElementById('startScreen').style.display='none';
             document.getElementById('chooseClassScreen').style.display='flex';
         }
 
-        function startGame(selectedPlayer) {
-            document.getElementById('chooseClassScreen').style.display='none';
-            document.getElementById('endScreen').style.display='none';
-            document.getElementById('pauseScreen').style.display='none';
-            canvas.style.display='block';
-            document.getElementById('gameHUD').style.display='block';
-
-            if(settings.showVirtualJoystick) {
-                document.getElementById('attackButton').style.display='block';
-            } else {
-                document.getElementById('keyboardAttackIndicator').style.display='block';
-            }
-            document.getElementById('pauseButton').style.display='inline-block';
-
-            player = selectedPlayer; 
-            monsters=[];
-            gameTime=0;
-            killCount=0;
-            paused=false;
-
-            if(gameInterval) clearInterval(gameInterval);
-            gameInterval=setInterval(gameLoop,16);
+        function showSettings(){
+            document.getElementById('startScreen').style.display='none';
+            document.getElementById('settingsScreen').style.display='flex';
         }
 
-        function restartGame() {
-            document.getElementById('endScreen').style.display='none';
-            showChooseClassScreen();
-        }
-
-        function returnToStart() {
-            document.getElementById('endScreen').style.display='none';
+        function hideSettings(){
+            document.getElementById('settingsScreen').style.display='none';
             document.getElementById('startScreen').style.display='flex';
-            updateStartScreenStats();
         }
-
-        function performAttack() {
-            if(player.attackCooldown>0) return;
-
-            monsters.forEach(function(monster){
-                let dx=monster.x - player.x;
-                let dy=monster.y - player.y;
-                let dist=Math.hypot(dx,dy);
-                if(dist<player.attackRange) {
-                    let dmg=player.getRandomDamage();
-                    monster.takeDamage(dmg);
-                }
-            });
-            player.isAttacking=true;
-            player.attackEffectDuration=200;
-            player.attackCooldown=player.attackCooldownTime;
-        }
-
-        function updateAttackButtonCooldown() {
-            let cooldownRatio=player.attackCooldown/player.attackCooldownTime;
-            if(cooldownRatio<0) cooldownRatio=0;
-
-            if(settings.showVirtualJoystick) {
-                let attackButton=document.getElementById('attackButton');
-                let overlay=document.getElementById('attackCooldownOverlay');
-                overlay.style.transform=`scaleY(${cooldownRatio})`;
-                if(player.attackCooldown>0) {
-                    attackButton.style.background='rgba(128,128,128,0.7)';
-                } else {
-                    attackButton.style.background='rgba(255,0,0,0.6)';
-                }
-            } else {
-                let indicator=document.getElementById('keyboardAttackIndicator');
-                let overlay=document.getElementById('keyboardCooldownOverlay');
-                overlay.style.transform=`scaleY(${cooldownRatio})`;
-                if(player.attackCooldown>0) {
-                    indicator.style.background='rgba(128,128,128,0.7)';
-                } else {
-                    indicator.style.background='rgba(255,0,0,0.6)';
-                }
-            }
-        }
-
-        function updateHUD() {
-            document.getElementById('currentTime').innerText=Math.floor(gameTime/1000);
-            document.getElementById('currentKills').innerText=killCount;
-            let kpm=0;
-            if(gameTime>0) kpm=(killCount*60000/gameTime).toFixed(2);
-            document.getElementById('killsPerMin').innerText=kpm;
-        }
-
-        function togglePause() {
-            if(!gameInterval) return;
-            if(paused) {
-                paused=false;
-                document.getElementById('pauseScreen').style.display='none';
-            } else {
-                paused=true;
-                document.getElementById('pauseScreen').style.display='flex';
-            }
-        }
-
-        function endGame() {
-            clearInterval(gameInterval);
-            canvas.style.display='none';
-            document.getElementById('gameHUD').style.display='none';
-            document.getElementById('attackButton').style.display='none';
-            document.getElementById('keyboardAttackIndicator').style.display='none';
-            document.getElementById('pauseButton').style.display='none';
-            document.getElementById('pauseScreen').style.display='none';
-            document.getElementById('endScreen').style.display='flex';
-
-            let finalTime=gameTime/1000;
-            let finalKPM=0;
-            if(gameTime>0) finalKPM=(killCount*60000/gameTime).toFixed(2);
-
-            document.getElementById('gameDuration').innerText=Math.floor(finalTime);
-            document.getElementById('killCount').innerText=killCount;
-            document.getElementById('endKillsPerMin').innerText=finalKPM;
-
-            if(finalTime>curLongestTime) curLongestTime=Math.floor(finalTime);
-            if(killCount>curHighestKills) curHighestKills=killCount;
-            if(finalKPM>curHighestKPM) curHighestKPM=parseFloat(finalKPM);
-
-            saveCurrentVersionRecords();
-
-            document.getElementById('curLongestTime').innerText=curLongestTime;
-            document.getElementById('curHighestKills').innerText=curHighestKills;
-            document.getElementById('curHighestKPM').innerText=curHighestKPM.toFixed(2);
-
-            let improved=false;
-            if(finalTime>allLongestTime) {
-                allLongestTime=Math.floor(finalTime);
-                allVersionString=GAME_VERSION;
-                improved=true;
-            }
-            if(killCount>allHighestKills) {
-                allHighestKills=killCount;
-                allVersionString=GAME_VERSION;
-                improved=true;
-            }
-            if(finalKPM>allHighestKPM) {
-                allHighestKPM=parseFloat(finalKPM);
-                allVersionString=GAME_VERSION;
-                improved=true;
-            }
-
-            if(improved) {
-                saveAllVersionRecords();
-            }
-
-            document.getElementById('allLongestTime2').innerText=allLongestTime;
-            document.getElementById('allHighestKills2').innerText=allHighestKills;
-            document.getElementById('allHighestKPM2').innerText=allHighestKPM.toFixed(2);
-            document.getElementById('allVersionString2').innerText=allVersionString;
-        }
-
-        function getRandomMonsterClass() {
-            let classes=[Goblin,Orc,Slime];
-            let idx=Math.floor(Math.random()*classes.length);
-            return classes[idx];
-        }
-
-        function spawnMonster() {
-            let MonsterClass=getRandomMonsterClass();
-            let m=new MonsterClass(Math.random()*canvas.width,Math.random()*canvas.height);
-            monsters.push(m);
-        }
-
-        function updateGame() {
-            let acceleration={x:0,y:0};
-
-            if(!settings.showVirtualJoystick) {
-                let moveSpeed=player.speed;
-                if(keysPressed['Shift']) moveSpeed*=1.5;
-                if(keysPressed['ArrowUp']||keysPressed['w']) acceleration.y=-moveSpeed;
-                if(keysPressed['ArrowDown']||keysPressed['s']) acceleration.y=moveSpeed;
-                if(keysPressed['ArrowLeft']||keysPressed['a']) acceleration.x=-moveSpeed;
-                if(keysPressed['ArrowRight']||keysPressed['d']) acceleration.x=moveSpeed;
-            }
-
-            if(settings.showVirtualJoystick && joystick.active) {
-                acceleration.x=(joystick.deltaX/joystick.maxDistance)*player.speed*5;
-                acceleration.y=(joystick.deltaY/joystick.maxDistance)*player.speed*5;
-            }
-
-            player.inertia.x+=acceleration.x;
-            player.inertia.y+=acceleration.y;
-
-            let maxSpeed=5;
-            player.inertia.x=Math.max(Math.min(player.inertia.x,maxSpeed),-maxSpeed);
-            player.inertia.y=Math.max(Math.min(player.inertia.y,maxSpeed),-maxSpeed);
-
-            player.x+=player.inertia.x;
-            player.y+=player.inertia.y;
-
-            player.inertia.x*=0.9;
-            player.inertia.y*=0.9;
-
-            if(player.x<0) player.x=0;
-            if(player.x>canvas.width) player.x=canvas.width;
-            if(player.y<0) player.y=0;
-            if(player.y>canvas.height) player.y=canvas.height;
-
-            if(player.attackCooldown>0) {
-                player.attackCooldown-=16;
-                if(player.attackCooldown<0) player.attackCooldown=0;
-            }
-
-            if(player.isAttacking) {
-                player.attackEffectDuration-=16;
-                if(player.attackEffectDuration<=0) {
-                    player.isAttacking=false;
-                }
-            }
-
-            updateAttackButtonCooldown();
-
-            if(monsters.length<10 && Math.random()<0.02) {
-                spawnMonster();
-            }
-
-            monsters.forEach(function(monster,index){
-                let dx=player.x - monster.x;
-                let dy=player.y - monster.y;
-                let dist=Math.hypot(dx,dy);
-
-                if(dist>0) {
-                    monster.x+=(dx/dist)*monster.speed;
-                    monster.y+=(dy/dist)*monster.speed;
-                }
-
-                if(monster.isAttacking) {
-                    monster.attackEffectDuration-=16;
-                    if(monster.attackEffectDuration<=0) monster.isAttacking=false;
-                }
-
-                if(dist<monster.attackRange) {
-                    if(monster.reactionTime===undefined) {
-                        monster.reactionTime=300+Math.random()*300; // 300~600ms
-                    } else {
-                        monster.reactionTime-=16;
-                    }
-
-                    if(monster.reactionTime<=0) {
-                        if(monster.attackCooldown<=0) {
-                            let dmg=monster.getRandomDamage();
-                            player.takeDamage(dmg);
-                            monster.attackCooldown=monster.attackSpeed;
-                            monster.isAttacking=true;
-                            monster.attackEffectDuration=200;
-                            if(player.hp<=0) {
-                                endGame();
-                            }
-                        } else {
-                            monster.attackCooldown-=16;
-                        }
-                    }
-                } else {
-                    monster.reactionTime=undefined;
-                }
-
-                if(monster.hp<=0) {
-                    monsters.splice(index,1);
-                    killCount++;
-                }
-            });
-
-            let playerRadius=player.size/2;
-            monsters.forEach(function(monster){
-                let dx=player.x - monster.x;
-                let dy=player.y - monster.y;
-                let dist=Math.hypot(dx,dy);
-                let mr=monster.size/2;
-                let minDist=playerRadius+mr;
-                if(dist<minDist && dist>0) {
-                    let overlap=minDist-dist;
-                    player.x+=(dx/dist)*overlap;
-                    player.y+=(dy/dist)*overlap;
-                }
-            });
-        }
-
-        function renderGame() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-
-            if(player.isAttacking) {
-                ctx.fillStyle='rgba(0,0,255,0.3)';
-                ctx.beginPath();
-                ctx.arc(player.x,player.y,player.attackRange,0,Math.PI*2);
-                ctx.fill();
-            }
-
-            if(player.attackCooldown>0) {
-                let cooldownRatio=player.attackCooldown/player.attackCooldownTime;
-                ctx.fillStyle='rgba(128,128,128,0.7)';
-                ctx.beginPath();
-                ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
-                ctx.fill();
-
-                ctx.save();
-                let clipHeight=player.size*(1-cooldownRatio);
-                ctx.beginPath();
-                ctx.rect(player.x - player.size/2, player.y+player.size/2 - clipHeight, player.size,clipHeight);
-                ctx.clip();
-
-                ctx.fillStyle=player.color;
-                ctx.beginPath();
-                ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
-                ctx.fill();
-                ctx.restore();
-            } else {
-                ctx.fillStyle=player.color;
-                ctx.beginPath();
-                ctx.arc(player.x,player.y,player.size/2,0,Math.PI*2);
-                ctx.fill();
-            }
-
-            ctx.strokeStyle='blue';
-            ctx.setLineDash([5,5]);
-            ctx.beginPath();
-            ctx.arc(player.x,player.y,player.attackRange,0,Math.PI*2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            ctx.fillStyle='black';
-            ctx.fillText('HP: '+player.hp, player.x-20, player.y-30);
-
-            monsters.forEach(function(monster){
-                if(monster.isAttacking) {
-                    ctx.fillStyle='rgba(255,0,0,0.3)';
-                    ctx.beginPath();
-                    ctx.arc(monster.x,monster.y,monster.attackRange,0,Math.PI*2);
-                    ctx.fill();
-                }
-
-                ctx.fillStyle=monster.color;
-                ctx.beginPath();
-                ctx.arc(monster.x,monster.y,monster.size/2,0,Math.PI*2);
-                ctx.fill();
-
-                ctx.strokeStyle='red';
-                ctx.setLineDash([5,5]);
-                ctx.beginPath();
-                ctx.arc(monster.x,monster.y,monster.attackRange,0,Math.PI*2);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                ctx.fillStyle='black';
-                ctx.fillText('HP: '+monster.hp, monster.x-20, monster.y-30);
-            });
-        }
-
-        function gameLoop() {
-            if(paused)return;
-            updateGame();
-            renderGame();
-            gameTime+=16;
-            updateHUD();
-        }
-
-        function endGame() {
-            clearInterval(gameInterval);
-            canvas.style.display='none';
-            document.getElementById('gameHUD').style.display='none';
-            document.getElementById('attackButton').style.display='none';
-            document.getElementById('keyboardAttackIndicator').style.display='none';
-            document.getElementById('pauseButton').style.display='none';
-            document.getElementById('pauseScreen').style.display='none';
-            document.getElementById('endScreen').style.display='flex';
-
-            let finalTime=gameTime/1000;
-            let finalKPM=0;
-            if(gameTime>0) finalKPM=(killCount*60000/gameTime).toFixed(2);
-
-            document.getElementById('gameDuration').innerText=Math.floor(finalTime);
-            document.getElementById('killCount').innerText=killCount;
-            document.getElementById('endKillsPerMin').innerText=finalKPM;
-
-            if(finalTime>curLongestTime) curLongestTime=Math.floor(finalTime);
-            if(killCount>curHighestKills) curHighestKills=killCount;
-            if(finalKPM>curHighestKPM) curHighestKPM=parseFloat(finalKPM);
-
-            saveCurrentVersionRecords();
-
-            document.getElementById('curLongestTime').innerText=curLongestTime;
-            document.getElementById('curHighestKills').innerText=curHighestKills;
-            document.getElementById('curHighestKPM').innerText=curHighestKPM.toFixed(2);
-
-            let improved=false;
-            if(finalTime>allLongestTime) {
-                allLongestTime=Math.floor(finalTime);
-                allVersionString=GAME_VERSION;
-                improved=true;
-            }
-            if(killCount>allHighestKills) {
-                allHighestKills=killCount;
-                allVersionString=GAME_VERSION;
-                improved=true;
-            }
-            if(finalKPM>allHighestKPM) {
-                allHighestKPM=parseFloat(finalKPM);
-                allVersionString=GAME_VERSION;
-                improved=true;
-            }
-
-            if(improved) {
-                saveAllVersionRecords();
-            }
-
-            document.getElementById('allLongestTime2').innerText=allLongestTime;
-            document.getElementById('allHighestKills2').innerText=allHighestKills;
-            document.getElementById('allHighestKPM2').innerText=allHighestKPM.toFixed(2);
-            document.getElementById('allVersionString2').innerText=allVersionString;
-        }
-
-        window.onload=initGame;
     </script>
 </body>
 </html>
