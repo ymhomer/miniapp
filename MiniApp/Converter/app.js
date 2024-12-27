@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let formulaInput = document.getElementById('simplifiedConcatFomular');
     //let status = checkTextareaStatus();
 
+    updateStatus();
+
     document.getElementById('addQuote').addEventListener('click', () => {
         handleWithHistory('Add Quote', convert);
     });
@@ -141,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let sortType = document.getElementById("sortType").value;
             items.sort();
             if (sortType === "descending") {
-                items.revert();
+                items.reverse();
             }
         }
 
