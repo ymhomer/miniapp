@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Piano + Metronome (Custom Layout)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      user-select: none;
+    }
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+
+    /* ====== Metronome / Controls ====== */
+    .controls {
+      margin-bottom: 10px;
+    }
+    .controls label {
+      margin-right: 8px;
+    }
+    input[type="number"] {
+      width: 60px;
+      text-align: right;
+    }
+
+    /* ====== Octave Table Visualization ====== */
+    .octave-table {
+      width: 100%;
+      max-width: 600px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      border-collapse: collapse;
+    }
+    .octave-table thead th,
+    .octave-table tbody td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    .octave-table thead {
+      background: #f0f0f0;
+    }
+
+    .row-group-1 { background-color: #ffe0e0; } /* Highest: 1..7 => C7~B7 */
+    .row-group-2 { background-color: #fff0d0; } /* Q..U => C6~B6         */
+    .row-group-3 { background-color: #e0ffe0; } /* A..J => C5~B5         */
+    .row-group-4 { background-color: #d0f0ff; } /* Z..M => C4~B4 (lowest)*/
+
+    .shift-level--2 { background-color: #ddeaff; }
+    .shift-level--1 { background-color: #eef5ff; }
+    .shift-level-0  { background-color: #ffffff; }
+    .shift-level-1  { background-color: #fff8d5; }
+    .shift-level-2  { background-color: #ffe5e5; }
+
+  </style>
+</head>
+<body>
+  <h1>Piano + Metronome (PC only)</h1>
+
+  <!-- ========== Metronome Section ========== -->
+  <div class="section">
+    <h2>Metronome</h2>
+    <div class="controls">
+      <label for="bpmInput">BPM:</label>
+      <input type="number" id="bpmInput" min="30" max="300" value="120" />
+      <button id="startBtn">Start</button>
+      <button id="stopBtn">Stop</button>
+    </div>
+    <p>
+      <strong>Keyboard short-cuts (Metronome):</strong><br />
+      - Press <strong>+</strong> or <strong>-</strong> to adjust BPM by ±5.<br />
+      - Press <strong>Enter</strong> to toggle start/stop the metronome.
+    </p>
+  </div>
+
+  <!-- ========== Octave Visualization (Only One Column for Range) ========== -->
+  <div class="section">
+    <h2>Octave Range Table</h2>
+    <table class="octave-table" id="octaveTable">
+      <thead>
+        <tr>
+          <th>Key Group</th>
+          <th>Keyboard Keys</th>
+          <th>Octave Range</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Highest: 1..7 => C7~B7 -->
+        <tr class="row-group-1">
+          <td>Highest</td>
+          <td>1, 2, 3, 4, 5, 6, 7</td>
+          <td id="range1">C7 ~ B7</td>
+        </tr>
+        <!-- Next: Q..U => C6~B6 -->
+        <tr class="row-group-2">
+          <td>Next</td>
+          <td>Q, W, E, R, T, Y, U</td>
+          <td id="range2">C6 ~ B6</td>
+        </tr>
+        <!-- Next: A..J => C5~B5 -->
+        <tr class="row-group-3">
+          <td>Next</td>
+          <td>A, S, D, F, G, H, J</td>
+          <td id="range3">C5 ~ B5</td>
+        </tr>
+        <!-- Lowest: Z..M => C4~B4 -->
+        <tr class="row-group-4">
+          <td>Lowest</td>
+          <td>Z, X, C, V, B, N, M</td>
+          <td id="range4">C4 ~ B4</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      <strong>Keyboard short-cuts for playing notes:</strong><br />
+      - Press <strong>↑</strong> / <strong>↓</strong> to shift the octave up or down (range: -2 ~ +2).<br />
+      - Press and hold <strong>Shift</strong> while playing a note to raise it by a half tone (C → C#).<br />
+    </p>
+  </div>
+
+  <!-- ========== Piano Logic (JavaScript) ========== -->
+  <script>
+    // ===================== Audio Context =====================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // ===================== Metronome Variables =====================
+    let metronomeIntervalId = null;
+    let currentBpm = 120;
+
+    // ===================== Octave Shift Variables =====================
+    let isShiftPressed = false;       // For half-step
+    let octaveShift = 0;             // Range: -2 to +2
+    const maxShift = 2;
+    const minShift = -2;
+
+    // ===================== Key-Frequency Mappings (Highest -> Lowest) =====================
+    // [1..7]  => C7~B7
+    // [Q..U]  => C6~B6
+    // [A..J]  => C5~B5
+    // [Z..M]  => C4~B4
+    //
+    // Frequencies reference:
+    //   C4=261.63, C5=523.25, C6=1046.50, C7=2093.00 (近似值)
+    // We'll apply "octaveShift" multiplier at runtime:
+    //   freq * 2^octaveShift
+    //
+    // SHIFT (capital) -> half-step up: freq *= 2^(1/12)
+
+    const SEMITONE_RATIO = Math.pow(2, 1/12);
+
+    function applyOctaveShift(baseFreq) {
+      return baseFreq * Math.pow(2, octaveShift);
+    }
+
+    const keyToBaseFreq = {
+      // Group1: 1..7 => C7..B7
+      Digit1: 2093.00,  // C7
+      Digit2: 2349.32,  // D7
+      Digit3: 2637.02,  // E7
+      Digit4: 2793.83,  // F7
+      Digit5: 3135.96,  // G7
+      Digit6: 3520.00,  // A7
+      Digit7: 3951.07,  // B7
+
+      // Group2: Q..U => C6..B6
+      KeyQ: 1046.50,  // C6
+      KeyW: 1174.66,  // D6
+      KeyE: 1318.51,  // E6
+      KeyR: 1396.91,  // F6
+      KeyT: 1567.98,  // G6
+      KeyY: 1760.00,  // A6
+      KeyU: 1975.53,  // B6
+
+      // Group3: A..J => C5..B5
+      KeyA: 523.25,   // C5
+      KeyS: 587.33,   // D5
+      KeyD: 659.25,   // E5
+      KeyF: 698.46,   // F5
+      KeyG: 783.99,   // G5
+      KeyH: 880.00,   // A5
+      KeyJ: 987.77,   // B5
+
+      // Group4: Z..M => C4..B4
+      KeyZ: 261.63,   // C4
+      KeyX: 293.66,   // D4
+      KeyC: 329.63,   // E4
+      KeyV: 349.23,   // F4
+      KeyB: 392.00,   // G4
+      KeyN: 440.00,   // A4
+      KeyM: 493.88    // B4
+    };
+
+    // Track active oscillators (key -> {osc, gain})
+    const activeOscillators = {};
+
+    // ===================== Piano (Oscillator) Functions =====================
+    function playNote(keyCode, freq) {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = freq;
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      // Basic envelope
+      gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+
+      osc.start();
+      activeOscillators[keyCode] = { oscillator: osc, gainNode: gainNode };
+    }
+
+    function stopNote(keyCode) {
+      if (!activeOscillators[keyCode]) return;
+      const { oscillator, gainNode } = activeOscillators[keyCode];
+      const now = audioCtx.currentTime;
+
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      oscillator.stop(now + 0.1);
+
+      delete activeOscillators[keyCode];
+    }
+
+    // ===================== Metronome =====================
+    function startMetronome(bpm) {
+      stopMetronome();
+      const interval = 60000 / bpm;
+      metronomeIntervalId = setInterval(() => {
+        playMetronomeClick();
+      }, interval);
+    }
+
+    function stopMetronome() {
+      if (metronomeIntervalId) {
+        clearInterval(metronomeIntervalId);
+        metronomeIntervalId = null;
+      }
+    }
+
+    function playMetronomeClick() {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = "square";
+      osc.frequency.value = 1000;
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioCtx.currentTime + 0.05
+      );
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    // ===================== Event Listeners =====================
+    window.addEventListener("keydown", (e) => {
+      // Prevent repeat if key is held
+      if (e.repeat) return;
+
+      switch (e.code) {
+        case "ShiftLeft":
+        case "ShiftRight":
+          isShiftPressed = true;
+          break;
+
+        case "Equal":  
+        case "NumpadAdd": 
+          adjustBPM(5);
+          break;
+
+        case "Minus":
+        case "NumpadSubtract":
+          adjustBPM(-5);
+          break;
+
+        case "Enter":
+          toggleMetronome();
+          break;
+
+        case "ArrowUp":
+          shiftOctave(1);
+          break;
+
+        case "ArrowDown":
+          shiftOctave(-1);
+          break;
+
+        default:
+          // Piano key
+          if (keyToBaseFreq[e.code] && !activeOscillators[e.code]) {
+            let freq = applyOctaveShift(keyToBaseFreq[e.code]);
+            if (isShiftPressed) {
+              freq *= SEMITONE_RATIO; // half step
+            }
+            playNote(e.code, freq);
+          }
+          break;
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
+        isShiftPressed = false;
+        return;
+      }
+      if (keyToBaseFreq[e.code]) {
+        stopNote(e.code);
+      }
+    });
+
+    // ===================== Metronome UI =====================
+    const bpmInput = document.getElementById("bpmInput");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
+    startBtn.addEventListener("click", () => {
+      currentBpm = parseInt(bpmInput.value, 10) || 120;
+      startMetronome(currentBpm);
+    });
+    stopBtn.addEventListener("click", () => {
+      stopMetronome();
+    });
+
+    function adjustBPM(delta) {
+      currentBpm = parseInt(bpmInput.value, 10) || 120;
+      currentBpm += delta;
+      if (currentBpm < 30) currentBpm = 30;
+      if (currentBpm > 300) currentBpm = 300;
+      bpmInput.value = currentBpm;
+
+      // If metronome is running, update it
+      if (metronomeIntervalId) {
+        startMetronome(currentBpm);
+      }
+    }
+
+    function toggleMetronome() {
+      if (metronomeIntervalId) {
+        stopMetronome();
+      } else {
+        currentBpm = parseInt(bpmInput.value, 10) || 120;
+        startMetronome(currentBpm);
+      }
+    }
+
+    // ===================== Octave Shift / Range Text =====================
+    const octaveTable = document.getElementById("octaveTable");
+    const range1 = document.getElementById("range1"); // row1 => C7~B7
+    const range2 = document.getElementById("range2"); // row2 => C6~B6
+    const range3 = document.getElementById("range3"); // row3 => C5~B5
+    const range4 = document.getElementById("range4"); // row4 => C4~B4
+
+    // row1 => [ "C7", "B7" ]
+    // row2 => [ "C6", "B6" ]
+    // row3 => [ "C5", "B5" ]
+    // row4 => [ "C4", "B4" ]
+    function shiftNoteName(noteName, shift) {
+      const match = noteName.match(/^([A-G]#?)(\d+)$/);
+      if (!match) return noteName;
+      let [ , letterPart, octaveNum ] = match;
+      octaveNum = parseInt(octaveNum, 10) + shift;
+      return letterPart + octaveNum;
+    }
+
+    function getShiftedRangeText(baseStart, baseEnd, shift) {
+      const start = shiftNoteName(baseStart, shift);
+      const end   = shiftNoteName(baseEnd,   shift);
+      return `${start} ~ ${end}`;
+    }
+
+    function updateRanges() {
+      range1.textContent = getShiftedRangeText("C7","B7", octaveShift);
+      range2.textContent = getShiftedRangeText("C6","B6", octaveShift);
+      range3.textContent = getShiftedRangeText("C5","B5", octaveShift);
+      range4.textContent = getShiftedRangeText("C4","B4", octaveShift);
+    }
+
+    function updateTableColor() {
+      octaveTable.classList.remove(
+        "shift-level--2",
+        "shift-level--1",
+        "shift-level-0",
+        "shift-level-1",
+        "shift-level-2"
+      );
+      octaveTable.classList.add(`shift-level-${octaveShift}`);
+    }
+
+    function shiftOctave(dir) {
+      const newVal = octaveShift + dir;
+      if (newVal > maxShift || newVal < minShift) return; 
+      octaveShift = newVal;
+      updateRanges();
+      updateTableColor();
+    }
+
+    updateRanges();
+    updateTableColor();
+  </script>
+</body>
+</html>
