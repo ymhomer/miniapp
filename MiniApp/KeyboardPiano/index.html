@@ -6,9 +6,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 0;
+      padding: 20px;
       user-select: none;
       background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
     h1, h2 {
       margin-bottom: 10px;
@@ -20,14 +25,18 @@
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 800px;
     }
 
     /* ====== Metronome / Controls ====== */
     .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
     }
     .controls label {
-      margin-right: 8px;
       font-weight: bold;
     }
     input[type="number"] {
@@ -45,12 +54,30 @@
       color: white;
       cursor: pointer;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     button:hover {
       background-color: #0056b3;
     }
+    button.recording {
+      background-color: #dc3545; /* Red for recording state */
+    }
+    .shortcut {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
 
     /* ====== Octave Table Visualization ====== */
+    .octave-table-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
     .octave-table {
       width: 100%;
       max-width: 600px;
@@ -101,11 +128,6 @@
       color: #333;
       font-weight: bold;
     }
-    #recordingStatus {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #555;
-    }
   </style>
 </head>
 <body>
@@ -113,10 +135,9 @@
 
   <!-- ========== Recording and Playback Controls ========== -->
   <div class="recording-controls">
-    <button id="recordBtn">Record (O)</button>
-    <button id="playbackBtn">Playback (P)</button>
+    <button id="recordBtn">Record <span class="shortcut">O</span></button>
+    <button id="playbackBtn">Playback <span class="shortcut">P</span></button>
     <div class="key-display" id="keyDisplay">Press a key</div>
-    <div id="recordingStatus">Not Recording</div>
   </div>
 
   <!-- ========== Metronome Section ========== -->
@@ -125,59 +146,56 @@
     <div class="controls">
       <label for="bpmInput">BPM:</label>
       <input type="number" id="bpmInput" min="30" max="300" value="120" />
-      <button id="startBtn">Start</button>
-      <button id="stopBtn">Stop</button>
+      <button id="bpmDecreaseBtn">- <span class="shortcut">-</span></button>
+      <button id="bpmIncreaseBtn">+ <span class="shortcut">+</span></button>
+      <button id="toggleMetronomeBtn">Start <span class="shortcut">Enter</span></button>
     </div>
-    <p>
-      <strong>Keyboard short-cuts (Metronome):</strong><br />
-      - Press <strong>+</strong> or <strong>-</strong> to adjust BPM by ±5.<br />
-      - Press <strong>Enter</strong> to toggle start/stop the metronome.
-    </p>
   </div>
 
-  <!-- ========== Octave Visualization (Only One Column for Range) ========== -->
+  <!-- ========== Octave Visualization ========== -->
   <div class="section">
     <h2>Octave Range Table</h2>
-    <table class="octave-table" id="octaveTable">
-      <thead>
-        <tr>
-          <th>Key Group</th>
-          <th>Keyboard Keys</th>
-          <th>Octave Range</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Highest: 1..7 => C7~B7 -->
-        <tr class="row-group-1">
-          <td>Highest</td>
-          <td>1, 2, 3, 4, 5, 6, 7</td>
-          <td id="range1">C7 ~ B7</td>
-        </tr>
-        <!-- Next: Q..U => C6~B6 -->
-        <tr class="row-group-2">
-          <td>Next</td>
-          <td>Q, W, E, R, T, Y, U</td>
-          <td id="range2">C6 ~ B6</td>
-        </tr>
-        <!-- Next: A..J => C5~B5 -->
-        <tr class="row-group-3">
-          <td>Next</td>
-          <td>A, S, D, F, G, H, J</td>
-          <td id="range3">C5 ~ B5</td>
-        </tr>
-        <!-- Lowest: Z..M => C4~B4 -->
-        <tr class="row-group-4">
-          <td>Lowest</td>
-          <td>Z, X, C, V, B, N, M</td>
-          <td id="range4">C4 ~ B4</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      <strong>Keyboard short-cuts for playing notes:</strong><br />
-      - Press <strong>↑</strong> / <strong>↓</strong> to shift the octave up or down (range: -2 ~ +2).<br />
-      - Press and hold <strong>Shift</strong> while playing a note to raise it by a half tone (C → C#).<br />
-    </p>
+    <div class="octave-table-container">
+      <table class="octave-table" id="octaveTable">
+        <thead>
+          <tr>
+            <th>Key Group</th>
+            <th>Keyboard Keys</th>
+            <th>Octave Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Highest: 1..7 => C7~B7 -->
+          <tr class="row-group-1">
+            <td>Highest</td>
+            <td>1, 2, 3, 4, 5, 6, 7</td>
+            <td id="range1">C7 ~ B7</td>
+          </tr>
+          <!-- Next: Q..U => C6~B6 -->
+          <tr class="row-group-2">
+            <td>Next</td>
+            <td>Q, W, E, R, T, Y, U</td>
+            <td id="range2">C6 ~ B6</td>
+          </tr>
+          <!-- Next: A..J => C5~B5 -->
+          <tr class="row-group-3">
+            <td>Next</td>
+            <td>A, S, D, F, G, H, J</td>
+            <td id="range3">C5 ~ B5</td>
+          </tr>
+          <!-- Lowest: Z..M => C4~B4 -->
+          <tr class="row-group-4">
+            <td>Lowest</td>
+            <td>Z, X, C, V, B, N, M</td>
+            <td id="range4">C4 ~ B4</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="octave-controls">
+        <button id="octaveUpBtn">↑ <span class="shortcut">↑</span></button>
+        <button id="octaveDownBtn">↓ <span class="shortcut">↓</span></button>
+      </div>
+    </div>
   </div>
 
   <!-- ========== Piano Logic (JavaScript) ========== -->
@@ -278,17 +296,55 @@
       delete activeOscillators[keyCode];
     }
 
+    // ===================== Metronome =====================
+    function startMetronome(bpm) {
+      stopMetronome();
+      const interval = 60000 / bpm;
+      metronomeIntervalId = setInterval(() => {
+        playMetronomeClick();
+      }, interval);
+      updateToggleMetronomeButton('Stop');
+    }
+
+    function stopMetronome() {
+      if (metronomeIntervalId) {
+        clearInterval(metronomeIntervalId);
+        metronomeIntervalId = null;
+      }
+      updateToggleMetronomeButton('Start');
+    }
+
+    function playMetronomeClick() {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = "square";
+      osc.frequency.value = 1000;
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioCtx.currentTime + 0.05
+      );
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
+
     // ===================== Recording and Playback Functions =====================
     function startRecording() {
       isRecording = true;
       recordedEvents = [];
       recordingStartTime = Date.now();
-      document.getElementById('recordingStatus').textContent = 'Recording...';
+      updateRecordButton('Recording...', true);
     }
 
     function stopRecording() {
       isRecording = false;
-      document.getElementById('recordingStatus').textContent = 'Not Recording';
+      updateRecordButton('Record', false);
     }
 
     function toggleRecording() {
@@ -343,6 +399,22 @@
       let [ , letterPart, octaveNum ] = match;
       octaveNum = parseInt(octaveNum, 10) + octaveShift;
       return letterPart + octaveNum;
+    }
+
+    // ===================== Button Update Functions =====================
+    function updateToggleMetronomeButton(text) {
+      const button = document.getElementById('toggleMetronomeBtn');
+      button.innerHTML = `${text} <span class="shortcut">Enter</span>`;
+    }
+
+    function updateRecordButton(text, isRecording) {
+      const button = document.getElementById('recordBtn');
+      button.innerHTML = `${text} <span class="shortcut">O</span>`;
+      if (isRecording) {
+        button.classList.add('recording');
+      } else {
+        button.classList.remove('recording');
+      }
     }
 
     // ===================== Event Listeners =====================
@@ -421,16 +493,13 @@
 
     // ===================== Metronome UI =====================
     const bpmInput = document.getElementById("bpmInput");
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
+    const bpmDecreaseBtn = document.getElementById("bpmDecreaseBtn");
+    const bpmIncreaseBtn = document.getElementById("bpmIncreaseBtn");
+    const toggleMetronomeBtn = document.getElementById("toggleMetronomeBtn");
 
-    startBtn.addEventListener("click", () => {
-      currentBpm = parseInt(bpmInput.value, 10) || 120;
-      startMetronome(currentBpm);
-    });
-    stopBtn.addEventListener("click", () => {
-      stopMetronome();
-    });
+    bpmDecreaseBtn.addEventListener("click", () => adjustBPM(-5));
+    bpmIncreaseBtn.addEventListener("click", () => adjustBPM(5));
+    toggleMetronomeBtn.addEventListener("click", toggleMetronome);
 
     function adjustBPM(delta) {
       currentBpm = parseInt(bpmInput.value, 10) || 120;
@@ -460,6 +529,11 @@
     const range2 = document.getElementById("range2"); // row2 => C6~B6
     const range3 = document.getElementById("range3"); // row3 => C5~B5
     const range4 = document.getElementById("range4"); // row4 => C4~B4
+    const octaveUpBtn = document.getElementById("octaveUpBtn");
+    const octaveDownBtn = document.getElementById("octaveDownBtn");
+
+    octaveUpBtn.addEventListener("click", () => shiftOctave(1));
+    octaveDownBtn.addEventListener("click", () => shiftOctave(-1));
 
     function shiftNoteName(noteName, shift) {
       const match = noteName.match(/^([A-G]#?)(\d+)$/);
@@ -503,6 +577,10 @@
 
     updateRanges();
     updateTableColor();
+
+    // ===================== Record and Playback Button Events =====================
+    document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+    document.getElementById('playbackBtn').addEventListener('click', playBackRecording);
   </script>
 </body>
 </html>
