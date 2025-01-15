@@ -117,6 +117,7 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s ease; /* Add transition for smooth color change */
     }
     .recording-controls button {
       margin: 5px;
@@ -134,7 +135,7 @@
   <h1>Piano + Metronome (PC only)</h1>
 
   <!-- ========== Recording and Playback Controls ========== -->
-  <div class="recording-controls">
+  <div class="recording-controls" id="recordingControls">
     <button id="recordBtn">Record <span class="shortcut">O</span></button>
     <button id="playbackBtn">Playback <span class="shortcut">P</span></button>
     <div class="key-display" id="keyDisplay">Press a key</div>
@@ -283,6 +284,9 @@
 
       osc.start();
       activeOscillators[keyCode] = { oscillator: osc, gainNode: gainNode };
+
+      // Change background color when a key is pressed
+      document.getElementById('recordingControls').style.backgroundColor = '#ffcccb';
     }
 
     function stopNote(keyCode) {
@@ -294,6 +298,9 @@
       oscillator.stop(now + 0.1);
 
       delete activeOscillators[keyCode];
+
+      // Restore background color when the key is released
+      document.getElementById('recordingControls').style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
     }
 
     // ===================== Metronome =====================
