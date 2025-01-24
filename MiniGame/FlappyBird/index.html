@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-bit Flappy Bird Complete</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+            touch-action: manipulation;
+        }
+        
+        #gameCanvas {
+            border: 4px solid #3a3a3a;
+            image-rendering: pixelated;
+            background: #70c5ce;
+            position: relative;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px #000;
+            z-index: 2;
+            width: 100%;
+            text-align: center;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 24px;
+            background: #5c995c;
+            box-shadow: 0 -4px #4a7a4a;
+            z-index: 1;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="score">0</div>
+    <div class="ground"></div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 400;
+canvas.height = 600;
+
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+const CONFIG = {
+    GRAVITY: 0.6,
+    JUMP_FORCE: -9,
+    BASE_PIPE_SPEED: 3.5,
+    BIRD: {
+        SIZE: 28,
+        WING_CYCLE: [0, 4, 8, 4, 0],
+        COLOR: ['#FFD700', '#FFB300']
+    },
+    PIPE: {
+        WIDTH: 52,
+        MIN_GAP: 140,
+        BASE_GAP: 160,
+        SPAWN_INTERVAL: 120
+    },
+    CLOUDS: [
+        { x: 50, y: 80, w: 40, h: 16 },
+        { x: 200, y: 150, w: 60, h: 20 },
+        { x: 350, y: 100, w: 30, h: 12 }
+    ],
+    DIFFICULTY_INTERVAL: 10
+};
+
+let gameState = {
+    bird: {
+        x: 80,
+        y: canvas.height/2,
+        velocity: 0,
+        wingFrame: 0,
+        get bottom() { return this.y + CONFIG.BIRD.SIZE }
+    },
+    pipes: [],
+    clouds: CONFIG.CLOUDS.map(c => ({...c})),
+    score: 0,
+    gameOver: false,
+    frameCount: 0,
+    startScreen: true,
+    highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
+    currentPipeSpeed: CONFIG.BASE_PIPE_SPEED
+};
+
+function playTone(frequency, type='square', duration=0.2) {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + duration);
+}
+
+const SFX = {
+    JUMP: () => playTone(880, 'square', 0.1),
+    HIT: () => {
+        playTone(220, 'square', 0.5);
+        playTone(110, 'sawtooth', 0.5);
+    }
+};
+
+class Pipe {
+    constructor() {
+        const maxY = canvas.height - CONFIG.PIPE.MIN_GAP - 120;
+        const gapReduction = Math.floor(gameState.score/CONFIG.DIFFICULTY_INTERVAL)*4;
+        
+        this.x = canvas.width;
+        this.gapY = Math.random() * (maxY - 100) + 60;
+        this.passed = false;
+        this.topHeight = this.gapY;
+        this.bottomY = this.gapY + Math.max(
+            CONFIG.PIPE.BASE_GAP - gapReduction, 
+            CONFIG.PIPE.MIN_GAP
+        );
+    }
+
+    get right() { return this.x + CONFIG.PIPE.WIDTH }
+}
+
+function gameLoop() {
+    if(gameState.gameOver || gameState.startScreen) return;
+    
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function update() {
+    gameState.frameCount++;
+    
+    gameState.bird.velocity += CONFIG.GRAVITY;
+    gameState.bird.y += gameState.bird.velocity;
+    gameState.bird.y = Math.max(0, Math.min(canvas.height - CONFIG.BIRD.SIZE, gameState.bird.y));
+    
+    if(gameState.frameCount % 6 === 0) {
+        gameState.bird.wingFrame++;
+    }
+
+    const difficultyLevel = Math.floor(gameState.score / CONFIG.DIFFICULTY_INTERVAL);
+    gameState.currentPipeSpeed = CONFIG.BASE_PIPE_SPEED + difficultyLevel * 0.5;
+
+    if(gameState.frameCount % CONFIG.PIPE.SPAWN_INTERVAL === 0) {
+        gameState.pipes.push(new Pipe());
+    }
+
+    gameState.pipes.forEach(pipe => {
+        pipe.x -= gameState.currentPipeSpeed;
+
+        if(checkCollision(pipe)) {
+            if(!gameState.gameOver) SFX.HIT();
+            gameState.gameOver = true;
+            if(gameState.score > gameState.highestScore) {
+                gameState.highestScore = gameState.score;
+                localStorage.setItem('flappyBirdHighScore', gameState.highestScore);
+            }
+        }
+
+        if(!pipe.passed && pipe.x + CONFIG.PIPE.WIDTH < gameState.bird.x) {
+            gameState.score++;
+            document.getElementById('score').textContent = gameState.score;
+            pipe.passed = true;
+        }
+    });
+
+    gameState.pipes = gameState.pipes.filter(pipe => pipe.x > -CONFIG.PIPE.WIDTH);
+
+    gameState.clouds.forEach(cloud => {
+        cloud.x -= 0.5;
+        if(cloud.x + cloud.w < 0) {
+            cloud.x = canvas.width + Math.random() * 100;
+        }
+    });
+}
+
+function draw() {
+    ctx.fillStyle = '#70c5ce';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    gameState.clouds.forEach(cloud => {
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.fillRect(cloud.x, cloud.y, cloud.w, cloud.h);
+    });
+
+    gameState.pipes.forEach(pipe => {
+        ctx.fillStyle = '#5c995c';
+        ctx.fillRect(pipe.x, 0, CONFIG.PIPE.WIDTH, pipe.topHeight);
+        ctx.fillStyle = '#4a7a4a';
+        ctx.fillRect(pipe.x - 4, pipe.topHeight - 16, CONFIG.PIPE.WIDTH + 8, 16);
+        
+        ctx.fillStyle = '#5c995c';
+        ctx.fillRect(pipe.x, pipe.bottomY, CONFIG.PIPE.WIDTH, canvas.height - pipe.bottomY);
+        ctx.fillStyle = '#4a7a4a';
+        ctx.fillRect(pipe.x - 4, pipe.bottomY, CONFIG.PIPE.WIDTH + 8, 16);
+    });
+
+    drawPixelArtBird();
+
+    if(gameState.startScreen) {
+        drawStartScreen();
+    } else if(gameState.gameOver) {
+        drawGameOverScreen();
+    }
+}
+
+function drawStartScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = 'white';
+    ctx.font = '32px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Flappy Bird', canvas.width/2, canvas.height/2 - 60);
+    
+    ctx.font = '16px "Press Start 2P"';
+    ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 - 20);
+    ctx.fillText('Tap/SPACE to Start', canvas.width/2, canvas.height/2 + 40);
+
+    ctx.fillStyle = '#666';
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillText('Font "Press Start 2P" by Cody Boisvert (OFL License)', canvas.width/2, canvas.height - 20);
+}
+
+function drawGameOverScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = 'red';
+    ctx.font = '32px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over!', canvas.width/2, canvas.height/2 - 60);
+    
+    ctx.fillStyle = 'white';
+    ctx.font = '18px "Press Start 2P"';
+    ctx.fillText('SCORE: ' + gameState.score, canvas.width/2, canvas.height/2 - 20);
+    ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 + 20);
+    
+    ctx.fillStyle = 'yellow';
+    ctx.fillText('Tap/SPACE to Restart', canvas.width/2, canvas.height/2 + 60);
+}
+
+function drawPixelArtBird() {
+    const { SIZE, WING_CYCLE, COLOR } = CONFIG.BIRD;
+    const wingOffset = WING_CYCLE[gameState.bird.wingFrame % WING_CYCLE.length];
+    
+    ctx.fillStyle = COLOR[0];
+    ctx.fillRect(gameState.bird.x, gameState.bird.y, SIZE, SIZE);
+    
+    ctx.fillStyle = COLOR[1];
+    ctx.fillRect(gameState.bird.x - 4, gameState.bird.y + 8 + wingOffset, 8, 8);
+    ctx.fillRect(gameState.bird.x + SIZE - 4, gameState.bird.y + 8 + wingOffset, 8, 8);
+    
+    ctx.fillStyle = '#000';
+    ctx.fillRect(gameState.bird.x + 16, gameState.bird.y + 10, 4, 4);
+    
+    ctx.fillStyle = COLOR[1];
+    ctx.fillRect(gameState.bird.x - 6, gameState.bird.y + 12, 6, 4);
+}
+
+function checkCollision(pipe) {
+    return (
+        gameState.bird.x + CONFIG.BIRD.SIZE > pipe.x &&
+        gameState.bird.x < pipe.x + CONFIG.PIPE.WIDTH &&
+        (gameState.bird.y < pipe.topHeight || 
+         gameState.bird.bottom > pipe.bottomY)
+    );
+}
+
+function handleAction() {
+    if(gameState.startScreen) {
+        gameState.startScreen = false;
+        gameLoop();
+    } else if(gameState.gameOver) {
+        resetGame();
+    } else {
+        gameState.bird.velocity = CONFIG.JUMP_FORCE;
+        SFX.JUMP();
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if(e.code === 'Space') {
+        e.preventDefault();
+        handleAction();
+    }
+});
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    handleAction();
+});
+
+canvas.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handleAction();
+});
+
+function resetGame() {
+    gameState = {
+        bird: {
+            x: 80,
+            y: canvas.height/2,
+            velocity: 0,
+            wingFrame: 0,
+            get bottom() { return this.y + CONFIG.BIRD.SIZE }
+        },
+        pipes: [],
+        clouds: CONFIG.CLOUDS.map(c => ({...c})),
+        score: 0,
+        gameOver: false,
+        frameCount: 0,
+        startScreen: false,
+        highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
+        currentPipeSpeed: CONFIG.BASE_PIPE_SPEED
+    };
+    document.getElementById('score').textContent = '0';
+    gameLoop();
+}
+
+drawStartScreen();
+</script>
+</body>
+</html>
