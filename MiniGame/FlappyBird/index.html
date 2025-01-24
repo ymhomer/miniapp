@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-bit Flappy Bird Complete</title>
+    <title>8-bit Flappy Bird Final</title>
     <style>
         body {
             margin: 0;
@@ -80,7 +80,8 @@ const CONFIG = {
         { x: 200, y: 150, w: 60, h: 20 },
         { x: 350, y: 100, w: 30, h: 12 }
     ],
-    DIFFICULTY_INTERVAL: 10
+    DIFFICULTY_INTERVAL: 10,
+    COOLDOWN_DURATION: 180 // 3秒冷却
 };
 
 let gameState = {
@@ -98,7 +99,8 @@ let gameState = {
     frameCount: 0,
     startScreen: true,
     highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
-    currentPipeSpeed: CONFIG.BASE_PIPE_SPEED
+    currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
+    cooldownTimer: 0
 };
 
 function playTone(frequency, type='square', duration=0.2) {
@@ -145,16 +147,23 @@ class Pipe {
 }
 
 function gameLoop() {
-    if(gameState.gameOver || gameState.startScreen) return;
-    
     update();
     draw();
     requestAnimationFrame(gameLoop);
 }
 
 function update() {
+    if(gameState.startScreen) return;
+
     gameState.frameCount++;
     
+    if(gameState.gameOver) {
+        if(gameState.cooldownTimer > 0) {
+            gameState.cooldownTimer--;
+        }
+        return;
+    }
+
     gameState.bird.velocity += CONFIG.GRAVITY;
     gameState.bird.y += gameState.bird.velocity;
     gameState.bird.y = Math.max(0, Math.min(canvas.height - CONFIG.BIRD.SIZE, gameState.bird.y));
@@ -174,11 +183,14 @@ function update() {
         pipe.x -= gameState.currentPipeSpeed;
 
         if(checkCollision(pipe)) {
-            if(!gameState.gameOver) SFX.HIT();
-            gameState.gameOver = true;
-            if(gameState.score > gameState.highestScore) {
-                gameState.highestScore = gameState.score;
-                localStorage.setItem('flappyBirdHighScore', gameState.highestScore);
+            if(!gameState.gameOver) {
+                SFX.HIT();
+                gameState.gameOver = true;
+                gameState.cooldownTimer = CONFIG.COOLDOWN_DURATION;
+                if(gameState.score > gameState.highestScore) {
+                    gameState.highestScore = gameState.score;
+                    localStorage.setItem('flappyBirdHighScore', gameState.highestScore);
+                }
             }
         }
 
@@ -261,8 +273,14 @@ function drawGameOverScreen() {
     ctx.fillText('SCORE: ' + gameState.score, canvas.width/2, canvas.height/2 - 20);
     ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 + 20);
     
-    ctx.fillStyle = 'yellow';
-    ctx.fillText('Tap/SPACE to Restart', canvas.width/2, canvas.height/2 + 60);
+    const remaining = gameState.cooldownTimer / 60;
+    if(remaining > 0) {
+        ctx.fillStyle = '#888';
+        ctx.fillText(`Restart in ${remaining.toFixed(1)}s`, canvas.width/2, canvas.height/2 + 60);
+    } else {
+        ctx.fillStyle = 'yellow';
+        ctx.fillText('Tap/SPACE to Restart', canvas.width/2, canvas.height/2 + 60);
+    }
 }
 
 function drawPixelArtBird() {
@@ -295,13 +313,18 @@ function checkCollision(pipe) {
 function handleAction() {
     if(gameState.startScreen) {
         gameState.startScreen = false;
-        gameLoop();
-    } else if(gameState.gameOver) {
-        resetGame();
-    } else {
-        gameState.bird.velocity = CONFIG.JUMP_FORCE;
-        SFX.JUMP();
+        return;
     }
+    
+    if(gameState.gameOver) {
+        if(gameState.cooldownTimer <= 0) {
+            resetGame();
+        }
+        return;
+    }
+    
+    gameState.bird.velocity = CONFIG.JUMP_FORCE;
+    SFX.JUMP();
 }
 
 document.addEventListener('keydown', (e) => {
@@ -337,13 +360,14 @@ function resetGame() {
         frameCount: 0,
         startScreen: false,
         highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
-        currentPipeSpeed: CONFIG.BASE_PIPE_SPEED
+        currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
+        cooldownTimer: 0
     };
     document.getElementById('score').textContent = '0';
-    gameLoop();
 }
 
 drawStartScreen();
+gameLoop();
 </script>
 </body>
 </html>
