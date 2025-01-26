@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-bit Flappy Bird Final</title>
+    <title>8-bit Flappy Bird</title>
     <style>
         body {
             margin: 0;
@@ -62,7 +62,7 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 const CONFIG = {
     GRAVITY: 0.6,
-    JUMP_FORCE: -9,
+    JUMP_FORCE: -10,
     BASE_PIPE_SPEED: 3.5,
     BIRD: {
         SIZE: 28,
@@ -81,7 +81,9 @@ const CONFIG = {
         { x: 350, y: 100, w: 30, h: 12 }
     ],
     DIFFICULTY_INTERVAL: 10,
-    COOLDOWN_DURATION: 180 // 3秒冷却
+    COOLDOWN_DURATION: 180,
+    SCORE_EFFECT_INTERVAL: 10,
+    FLASH_DURATION: 30
 };
 
 let gameState = {
@@ -100,7 +102,11 @@ let gameState = {
     startScreen: true,
     highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
     currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
-    cooldownTimer: 0
+    cooldownTimer: 0,
+    lastEffectScore: 0,
+    flashCounter: 0,
+    flashFrameCount: 0,
+    flashOn: false
 };
 
 function playTone(frequency, type='square', duration=0.2) {
@@ -125,8 +131,20 @@ const SFX = {
     HIT: () => {
         playTone(220, 'square', 0.5);
         playTone(110, 'sawtooth', 0.5);
+    },
+    SCORE: () => {
+        playTone(880, 'square', 0.1);
+        playTone(1320, 'square', 0.2);
+        playTone(1760, 'square', 0.3);
     }
 };
+
+function playScoreEffect() {
+    SFX.SCORE();
+    gameState.flashCounter = CONFIG.FLASH_DURATION;
+    gameState.flashOn = true;
+    gameState.flashFrameCount = 0;
+}
 
 class Pipe {
     constructor() {
@@ -157,6 +175,24 @@ function update() {
 
     gameState.frameCount++;
     
+    if(gameState.score > 0 && gameState.score % CONFIG.SCORE_EFFECT_INTERVAL === 0) {
+        if(!gameState.lastEffectScore || gameState.lastEffectScore !== gameState.score) {
+            playScoreEffect();
+            gameState.lastEffectScore = gameState.score;
+        }
+    }
+
+    if(gameState.flashCounter > 0) {
+        gameState.flashCounter--;
+        gameState.flashFrameCount++;
+        if(gameState.flashFrameCount >= 5) {
+            gameState.flashOn = !gameState.flashOn;
+            gameState.flashFrameCount = 0;
+        }
+    } else {
+        gameState.flashOn = false;
+    }
+
     if(gameState.gameOver) {
         if(gameState.cooldownTimer > 0) {
             gameState.cooldownTimer--;
@@ -233,6 +269,11 @@ function draw() {
     });
 
     drawPixelArtBird();
+
+    if(gameState.flashOn) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     if(gameState.startScreen) {
         drawStartScreen();
@@ -361,7 +402,11 @@ function resetGame() {
         startScreen: false,
         highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
         currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
-        cooldownTimer: 0
+        cooldownTimer: 0,
+        lastEffectScore: 0,
+        flashCounter: 0,
+        flashFrameCount: 0,
+        flashOn: false
     };
     document.getElementById('score').textContent = '0';
 }
