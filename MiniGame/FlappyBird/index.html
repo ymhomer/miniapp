@@ -1,645 +1,984 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-bit Flappy Bird</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #2c3e50;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: 'Press Start 2P', cursive;
-            touch-action: manipulation;
-        }
-        
-        #gameCanvas {
-            border: 4px solid #3a3a3a;
-            image-rendering: pixelated;
-            background: #70c5ce;
-            position: relative;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8-bit Flappy Bird</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #2c3e50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Press Start 2P', cursive;
+      touch-action: manipulation;
+    }
+    
+    #gameCanvas {
+      border: 4px solid #3a3a3a;
+      image-rendering: pixelated;
+      background: #70c5ce;
+      position: relative;
+      z-index: 1;
+    }
 
-        #score {
-            position: absolute;
-            top: 20px;
-            color: white;
-            font-size: 24px;
-            text-shadow: 2px 2px #000;
-            z-index: 2;
-            width: 100%;
-            text-align: center;
-        }
+    #score {
+      position: absolute;
+      top: 20px;
+      color: white;
+      font-size: 24px;
+      text-shadow: 2px 2px #000;
+      z-index: 2;
+      width: 100%;
+      text-align: center;
+    }
 
-        .ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 24px;
-            background: #5c995c;
-            box-shadow: 0 -4px #4a7a4a;
-            z-index: 1;
-        }
+    .ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 24px;
+      background: #5c995c;
+      box-shadow: 0 -4px #4a7a4a;
+      z-index: 1;
+    }
 
-        #flappyBotInfo {
-            position: absolute;
-            top: 60px;
-            left: 0;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            font-size: 12px;
-            display: none;
-            z-index: 9999;
-        }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    #flappyBotInfo {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 12px;
+      display: none;
+      z-index: 9999;
+    }
+
+    #flappyBotInfo div {
+      margin-bottom: 4px;
+    }
+
+    #controlsContainer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .iconButton {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+    }
+
+    .pauseIcon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyBmaWxsPSJ3aGl0ZSIgIHZpZXdCb3g9IjAgMCAxMjggMTI4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik00OCAxMjRIMjZBNiA2IDAgMCAxIDIwIDExOFYxMC4xQTYgNiAwIDAgMSAyNiA0aDIyQTYgNiAwIDAgMSA1NCAxMC4xVjExOHoiLz48cGF0aCBkPSJNMTI0IDEyNEg5MkE2IDYgMCAwIDEgODYgMTE4VjEwLjFBNiA2IDAgMCAxIDkyIDRoMzJBNiA2IDAgMCAxIDEzNiAxMC4xVjExOHoiLz48L3N2Zz4=');
+    }
+
+    .settingsIcon {
+      background-image: url('data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgNjQgNjQiIHhtbDpzcGFjZT0icHJlc2VydmUiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNTIuNCAzNi42YzAuMS0xLjMgMC4xLTIuNiAwLjEtMy45bDcuNy01LjljMS4xLTEgMS40LTIuNiAwLjktMy45bC0xLjgtNC4xYy0wLjUtMS4zLTEuNy0yLjItMy4xLTIuMmwtOC4xIDEuMWMtMS43IDAuMi0zLjEtMC4zLTQtMS43bC00LjctNy4xYy0wLjYtMS4xLTEuOC0xLjgtMy4xLTEuOGgtNC4zYy0xLjMgMC0yLjYgMC43LTMuMyAxLjhsLTQuNyA3LjFjLTEgMS40LTIuNiAxLjktNC4xIDEuM2wtOC4xLTEuMWMtMS4zIDAtMi41IDAuOS0zLjEgMi4ybC0xLjggNC4xYy0wLjUgMS4zIDAgMi45IDEuMSAzLjlsNy43IDUuOWMuOS43LjkgMi4zIDAgMy4xbC01LjkgNS45Yy0xIDEtMS41IDIuNi0xLjEgNGwxLjggNC4xYzAuNSAxLjMgMS43IDIuMiAzLjEgMi4ybDguMS0xLjFjMS41LTAuMiAyLjkgMC4zIDQuMSAxLjFsNC43IDcuMWMuNiAxLjEgMS44IDEuOCAzLjEgMS44aDQuM2MxLjMgMCAyLjYtMC43IDMuMy0xLjhsNC42LTcuMWMxLTEuNCAyLjYtMS45IDQuMS0xLjNsOC4xIDEuMWMxLjMgMCAyLjUtMC45IDMuMS0yLjJsMS44LTQuMWMwLjUtMS4zIDAtMi45LTEuMS0zLjlsLTUuOS01LjljLTAuOC0wLjgtMC44LTIuMiAwLTMuMXoiIGZpbGw9IiMwMDAiLz48cGF0aCBkPSJNMzIgNDIuM2MtNS43IDAtMTAtNC4zLTEwLTEwcyA0LjMtMTAgMTAtMTAgMTAgNC4zIDEwIDEwLTQuMyAxMC0xMCAxMCIgZmlsbD0iIzAwMCIvPjwvc3ZnPg==');
+    }
+
+    #settingsPanel {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px;
+      border: 2px solid #3a3a3a;
+      display: none;
+      font-size: 12px;
+      width: 150px;
+      z-index: 9999;
+    }
+    #settingsPanel label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    #settingsPanel label input {
+      transform: scale(1.5);
+    }
+
+    #pauseOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      flex-direction: column;
+    }
+    #pauseOverlayText {
+      color: #fff;
+      font-size: 32px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="score">0</div>
-    <div class="ground"></div>
-    <canvas id="gameCanvas"></canvas>
 
-    <!-- FlappyBot info panel -->
-    <div id="flappyBotInfo">
-        <div>FlappyBot Highest Score: <span id="flappyBotHighScore">0</span></div>
-        <div>FlappyBot Last Score: <span id="flappyBotLastScore">0</span></div>
-    </div>
+  <div id="score">0</div>
+  <div class="ground"></div>
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="pauseOverlay">
+    <div id="pauseOverlayText">PAUSED</div>
+  </div>
+
+  <div id="controlsContainer">
+    <div id="pauseBtn" class="iconButton pauseIcon" title="Pause" style="display:none;"></div>
+    <div id="settingsBtn" class="iconButton settingsIcon" title="Settings"></div>
+  </div>
+
+  <div id="settingsPanel">
+    <label>
+      <span>Keep Awake</span>
+      <input type="checkbox" id="keepAwakeChk" />
+    </label>
+    <label>
+      <span>Sound</span>
+      <input type="checkbox" id="soundChk" checked />
+    </label>
+  </div>
+
+  <!-- FlappyBot info panel -->
+  <div id="flappyBotInfo">
+    <div>FlappyBot Highest Score: <span id="flappyBotHighScore">0</span></div>
+    <div>FlappyBot Last Score: <span id="flappyBotLastScore">0</span></div>
+    <div>FlappyBot Collision Type: <span id="flappyBotCollisionType">N/A</span></div>
+    <div>FlappyBot Velocity State: <span id="flappyBotVelocityState">N/A</span></div>
+    <div>FlappyBot Memory Length: <span id="flappyBotMemoryLength">0</span></div>
+  </div>
 
 <script>
-// 全部逻辑整合到一个函数
+
 function integrateFlappyBot() {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 400;
-    canvas.height = 600;
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 400;
+  canvas.height = 600;
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  // UI elements
+  const pauseOverlay = document.getElementById('pauseOverlay');
+  const pauseOverlayText = document.getElementById('pauseOverlayText');
 
-    const CONFIG = {
-        GRAVITY: 0.6,
-        JUMP_FORCE: -10,
-        BASE_PIPE_SPEED: 3.5,
-        BIRD: {
-            SIZE: 28,
-            WING_CYCLE: [0, 4, 8, 4, 0],
-            COLOR: ['#FFD700', '#FFB300']
-        },
-        PIPE: {
-            WIDTH: 52,
-            MIN_GAP: 140,
-            BASE_GAP: 160,
-            SPAWN_INTERVAL: 120
-        },
-        CLOUDS: [
-            { x: 50, y: 80, w: 40, h: 16 },
-            { x: 200, y: 150, w: 60, h: 20 },
-            { x: 350, y: 100, w: 30, h: 12 }
-        ],
-        DIFFICULTY_INTERVAL: 10,
-        COOLDOWN_DURATION: 180,
-        SCORE_EFFECT_INTERVAL: 10,
-        FLASH_DURATION: 30
-    };
+  const pauseBtn = document.getElementById('pauseBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
 
-    let gameState = {
-        bird: {
-            x: 80,
-            y: canvas.height/2,
-            velocity: 0,
-            wingFrame: 0,
-            get bottom() { return this.y + CONFIG.BIRD.SIZE; }
-        },
-        pipes: [],
-        clouds: CONFIG.CLOUDS.map(c => ({...c})),
-        score: 0,
-        gameOver: false,
-        frameCount: 0,
-        startScreen: true,
-        highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
-        currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
-        cooldownTimer: 0,
-        lastEffectScore: 0,
-        flashCounter: 0,
-        flashFrameCount: 0,
-        flashOn: false
-    };
+  const keepAwakeChk = document.getElementById('keepAwakeChk');
+  const soundChk = document.getElementById('soundChk');
 
-    function playTone(frequency, type='square', duration=0.2) {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.type = type;
-        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-        
-        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + duration);
+  let isPaused = false;
+  let settingsVisible = false;
+
+  // Sound settings
+  let soundEnabled = true;
+  function loadSoundSetting() {
+    const soundStr = localStorage.getItem('flappyBirdSoundOn');
+    if (soundStr !== null) {
+      soundEnabled = (soundStr === 'true');
+    } else {
+      soundEnabled = true;
+    }
+    soundChk.checked = soundEnabled;
+  }
+  function saveSoundSetting() {
+    localStorage.setItem('flappyBirdSoundOn', soundEnabled.toString());
+  }
+
+  loadSoundSetting();
+
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) {
+      console.warn('Wake lock is not supported in this environment.');
+      return;
+    }
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch (err) {
+      console.error('Wake lock request failed:', err);
+    }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) {
+      wakeLock.release();
+      wakeLock = null;
+    }
+  }
+
+  keepAwakeChk.addEventListener('change', () => {
+    if (keepAwakeChk.checked) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+  });
+
+  soundChk.addEventListener('change', () => {
+    soundEnabled = soundChk.checked;
+    saveSoundSetting();
+  });
+
+  settingsBtn.addEventListener('click', () => {
+    settingsVisible = !settingsVisible;
+    settingsPanel.style.display = settingsVisible ? 'block' : 'none';
+  });
+
+  function pauseGame() {
+    if (gameState.gameOver || gameState.startScreen) return;
+    isPaused = true;
+    pauseOverlay.style.display = 'flex';
+    pauseOverlayText.textContent = 'PAUSED';
+  }
+
+  function resumeGame() {
+    if (!isPaused) return;
+    let countdownVal = 3;
+    pauseOverlayText.textContent = countdownVal.toString();
+    const countdownInterval = setInterval(() => {
+      countdownVal--;
+      if (countdownVal > 0) {
+        pauseOverlayText.textContent = countdownVal.toString();
+      } else {
+        clearInterval(countdownInterval);
+        pauseOverlay.style.display = 'none';
+        isPaused = false;
+      }
+    }, 1000);
+  }
+
+  pauseBtn.addEventListener('click', () => {
+    if (!isPaused) {
+      pauseGame();
+    } else {
+      resumeGame();
+    }
+  });
+
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+  // FlappyBot memory
+  let flappyBotMemory = { experiences: [] };
+  function loadFlappyBotMemory() {
+    let memoryStr = localStorage.getItem('flappyBotMemory');
+    if (memoryStr) {
+      try {
+        flappyBotMemory = JSON.parse(memoryStr);
+      } catch(e) {
+        flappyBotMemory = { experiences: [] };
+      }
+    } else {
+      flappyBotMemory = { experiences: [] };
+    }
+  }
+  function saveFlappyBotMemory() {
+    localStorage.setItem('flappyBotMemory', JSON.stringify(flappyBotMemory));
+  }
+
+  loadFlappyBotMemory();
+
+  const CONFIG = {
+    GRAVITY: 0.6,
+    JUMP_FORCE: -10,
+    BASE_PIPE_SPEED: 3.5,
+    BIRD: {
+      SIZE: 28,
+      WING_CYCLE: [0, 4, 8, 4, 0],
+      COLOR: ['#FFD700', '#FFB300']
+    },
+    PIPE: {
+      WIDTH: 52,
+      MIN_GAP: 140,
+      BASE_GAP: 160,
+      SPAWN_INTERVAL: 120
+    },
+    CLOUDS: [
+      { x: 50, y: 80, w: 40, h: 16 },
+      { x: 200, y: 150, w: 60, h: 20 },
+      { x: 350, y: 100, w: 30, h: 12 }
+    ],
+    DIFFICULTY_INTERVAL: 10,
+    COOLDOWN_DURATION: 180,
+    SCORE_EFFECT_INTERVAL: 10,
+    FLASH_DURATION: 30
+  };
+
+  let gameState = {
+    bird: {
+      x: 80,
+      y: canvas.height/2,
+      velocity: 0,
+      wingFrame: 0,
+      get bottom() { return this.y + CONFIG.BIRD.SIZE; }
+    },
+    pipes: [],
+    clouds: CONFIG.CLOUDS.map(c => ({...c})),
+    score: 0,
+    gameOver: false,
+    frameCount: 0,
+    startScreen: true,
+    highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
+    currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
+    cooldownTimer: 0,
+    lastEffectScore: 0,
+    flashCounter: 0,
+    flashFrameCount: 0,
+    flashOn: false,
+    collisionInfo: { type: null, velocityState: null }
+  };
+
+  let activeGameExperiences = [];
+
+  function updatePauseButtonVisibility() {
+    if(!gameState.startScreen && !gameState.gameOver) {
+      pauseBtn.style.display = 'block';
+    } else {
+      pauseBtn.style.display = 'none';
+    }
+  }
+
+  function playTone(frequency, type='square', duration=0.2) {
+    if(!soundEnabled) return;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + duration);
+  }
+
+  const SFX = {
+    JUMP: () => playTone(880, 'square', 0.1),
+    HIT: () => {
+      if(!soundEnabled) return;
+      playTone(220, 'square', 0.5);
+      playTone(110, 'sawtooth', 0.5);
+    },
+    SCORE: () => {
+      if(!soundEnabled) return;
+      playTone(880, 'square', 0.1);
+      playTone(1320, 'square', 0.2);
+      playTone(1760, 'square', 0.3);
+    }
+  };
+
+  function playScoreEffect() {
+    SFX.SCORE();
+    gameState.flashCounter = CONFIG.FLASH_DURATION;
+    gameState.flashOn = true;
+    gameState.flashFrameCount = 0;
+  }
+
+  class Pipe {
+    constructor() {
+      const maxY = canvas.height - CONFIG.PIPE.MIN_GAP - 120;
+      const gapReduction = Math.floor(gameState.score / CONFIG.DIFFICULTY_INTERVAL) * 4;
+
+      this.x = canvas.width;
+      this.gapY = Math.random() * (maxY - 100) + 60;
+      this.passed = false;
+      this.topHeight = this.gapY;
+      this.bottomY = this.gapY + Math.max(
+        CONFIG.PIPE.BASE_GAP - gapReduction,
+        CONFIG.PIPE.MIN_GAP
+      );
+      this.pipeId = Date.now() + Math.random();
+
+      this.initialBirdCenterY = gameState.bird.y + CONFIG.BIRD.SIZE / 2;
+      this.gapCenter = (this.topHeight + this.bottomY) / 2;
+      this.initialDiff = this.initialBirdCenterY - this.gapCenter;
     }
 
-    const SFX = {
-        JUMP: () => playTone(880, 'square', 0.1),
-        HIT: () => {
-            playTone(220, 'square', 0.5);
-            playTone(110, 'sawtooth', 0.5);
-        },
-        SCORE: () => {
-            playTone(880, 'square', 0.1);
-            playTone(1320, 'square', 0.2);
-            playTone(1760, 'square', 0.3);
-        }
+    get right() { return this.x + CONFIG.PIPE.WIDTH; }
+  }
+
+  function recordLocalExperience(e) {
+    activeGameExperiences.push(e);
+  }
+
+  function finalizeGameExperiences() {
+    for (let e of activeGameExperiences) {
+      flappyBotMemory.experiences.push(e);
+    }
+    if(flappyBotMemory.experiences.length > 1000) {
+      flappyBotMemory.experiences.splice(0, flappyBotMemory.experiences.length - 1000);
+    }
+    saveFlappyBotMemory();
+
+    endOfGameAnalysis(activeGameExperiences);
+    activeGameExperiences = [];
+  }
+
+  function endOfGameAnalysis(gameSessionData) {
+    let collisionStats = {
+      top_rising: 0,
+      top_falling: 0,
+      bottom_rising: 0,
+      bottom_falling: 0,
+      passes: 0
     };
 
-    function playScoreEffect() {
-        SFX.SCORE();
-        gameState.flashCounter = CONFIG.FLASH_DURATION;
-        gameState.flashOn = true;
+    for (let d of gameSessionData) {
+      if(d.collisionType === 'top') {
+        if(d.velocityState === 'rising') collisionStats.top_rising++;
+        else collisionStats.top_falling++;
+      } else if(d.collisionType === 'bottom') {
+        if(d.velocityState === 'rising') collisionStats.bottom_rising++;
+        else collisionStats.bottom_falling++;
+      }
+      if(d.reward > 0) {
+        collisionStats.passes++;
+      }
+    }
+
+    let {top_rising, top_falling, bottom_rising, bottom_falling, passes} = collisionStats;
+    if(top_rising > 0) {
+      let factor = Math.min(1, top_rising / 5.0);
+      baseThreshold -= 0.1 * factor;
+    }
+    if(bottom_falling > 0) {
+      let factor = Math.min(1, bottom_falling / 5.0);
+      baseThreshold += 0.1 * factor;
+    }
+    if(top_falling > 0) {
+      let factor = Math.min(1, top_falling / 5.0);
+      microThreshold -= 0.05 * factor;
+    }
+    if(bottom_rising > 0) {
+      let factor = Math.min(1, bottom_rising / 5.0);
+      microThreshold -= 0.05 * factor;
+    }
+    if(passes > 3) {
+      let factor = Math.min(3, passes);
+      baseThreshold += 0.02 * factor;
+      microThreshold += 0.01 * factor;
+    }
+
+    baseThreshold = Math.max(1.0, Math.min(30.0, baseThreshold));
+    microThreshold = Math.max(1.0, Math.min(15.0, microThreshold));
+
+    saveThresholds();
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  function update() {
+    handleIdleTimer();
+    updatePauseButtonVisibility();
+
+    if(gameState.startScreen) return;
+    if(isPaused) return;
+
+    gameState.frameCount++;
+
+    if(gameState.score > 0 && gameState.score % CONFIG.SCORE_EFFECT_INTERVAL === 0) {
+      if(!gameState.lastEffectScore || gameState.lastEffectScore !== gameState.score) {
+        playScoreEffect();
+        gameState.lastEffectScore = gameState.score;
+      }
+    }
+
+    if(gameState.flashCounter > 0) {
+      gameState.flashCounter--;
+      gameState.flashFrameCount++;
+      if(gameState.flashFrameCount >= 5) {
+        gameState.flashOn = !gameState.flashOn;
         gameState.flashFrameCount = 0;
+      }
+    } else {
+      gameState.flashOn = false;
     }
 
-    class Pipe {
-        constructor() {
-            const maxY = canvas.height - CONFIG.PIPE.MIN_GAP - 120;
-            const gapReduction = Math.floor(gameState.score / CONFIG.DIFFICULTY_INTERVAL) * 4;
-            
-            this.x = canvas.width;
-            this.gapY = Math.random() * (maxY - 100) + 60;
-            this.passed = false;
-            this.topHeight = this.gapY;
-            this.bottomY = this.gapY + Math.max(
-                CONFIG.PIPE.BASE_GAP - gapReduction, 
-                CONFIG.PIPE.MIN_GAP
-            );
-        }
-
-        get right() { return this.x + CONFIG.PIPE.WIDTH; }
+    if(gameState.gameOver) {
+      if(gameState.cooldownTimer > 0) {
+        gameState.cooldownTimer--;
+      }
+      return;
     }
 
-    function gameLoop() {
-        update();
-        draw();
-        requestAnimationFrame(gameLoop);
+    // Bird physics
+    gameState.bird.velocity += CONFIG.GRAVITY;
+    gameState.bird.y += gameState.bird.velocity;
+    gameState.bird.y = Math.max(0, Math.min(canvas.height - CONFIG.BIRD.SIZE, gameState.bird.y));
+    if(gameState.frameCount % 6 === 0) {
+      gameState.bird.wingFrame++;
     }
 
-    function update() {
-        // Idle timer check
-        handleIdleTimer();
+    const difficultyLevel = Math.floor(gameState.score / CONFIG.DIFFICULTY_INTERVAL);
+    gameState.currentPipeSpeed = CONFIG.BASE_PIPE_SPEED + difficultyLevel * 0.5;
 
-        if(gameState.startScreen) return;
+    if(gameState.frameCount % CONFIG.PIPE.SPAWN_INTERVAL === 0) {
+      gameState.pipes.push(new Pipe());
+    }
 
-        gameState.frameCount++;
-        
-        if(gameState.score > 0 && gameState.score % CONFIG.SCORE_EFFECT_INTERVAL === 0) {
-            if(!gameState.lastEffectScore || gameState.lastEffectScore !== gameState.score) {
-                playScoreEffect();
-                gameState.lastEffectScore = gameState.score;
+    gameState.pipes.forEach(pipe => {
+      pipe.x -= gameState.currentPipeSpeed;
+      const collision = checkCollision(pipe);
+      if(collision.isCollide) {
+        if(!gameState.gameOver) {
+          SFX.HIT();
+          gameState.gameOver = true;
+          gameState.cooldownTimer = CONFIG.COOLDOWN_DURATION;
+          gameState.collisionInfo.type = collision.type;
+          gameState.collisionInfo.velocityState = collision.velocityState;
+
+          if(!flappyBotActive) {
+            if(gameState.score > gameState.highestScore) {
+              gameState.highestScore = gameState.score;
+              localStorage.setItem('flappyBirdHighScore', gameState.highestScore);
             }
-        }
-
-        if(gameState.flashCounter > 0) {
-            gameState.flashCounter--;
-            gameState.flashFrameCount++;
-            if(gameState.flashFrameCount >= 5) {
-                gameState.flashOn = !gameState.flashOn;
-                gameState.flashFrameCount = 0;
+          } else {
+            if(gameState.score > flappyBotHighestScore) {
+              flappyBotHighestScore = gameState.score;
+              localStorage.setItem('flappyBotHighestScore', flappyBotHighestScore);
+              updateFlappyBotInfoPanel();
             }
-        } else {
-            gameState.flashOn = false;
+            flappyBotLastScore = gameState.score;
+            updateFlappyBotInfoPanel();
+          }
+
+          recordLocalExperience({
+            score: gameState.score,
+            collisionType: collision.type,
+            velocityState: collision.velocityState,
+            reward: -1,
+            timestamp: Date.now(),
+            pipeId: pipe.pipeId,
+            initialDiff: pipe.initialDiff,
+            gapCenter: pipe.gapCenter
+          });
         }
+      }
 
-        if(gameState.gameOver) {
-            if(gameState.cooldownTimer > 0) {
-                gameState.cooldownTimer--;
-            }
-            return;
-        }
-
-        gameState.bird.velocity += CONFIG.GRAVITY;
-        gameState.bird.y += gameState.bird.velocity;
-        gameState.bird.y = Math.max(0, Math.min(canvas.height - CONFIG.BIRD.SIZE, gameState.bird.y));
-        
-        if(gameState.frameCount % 6 === 0) {
-            gameState.bird.wingFrame++;
-        }
-
-        const difficultyLevel = Math.floor(gameState.score / CONFIG.DIFFICULTY_INTERVAL);
-        gameState.currentPipeSpeed = CONFIG.BASE_PIPE_SPEED + difficultyLevel * 0.5;
-
-        if(gameState.frameCount % CONFIG.PIPE.SPAWN_INTERVAL === 0) {
-            gameState.pipes.push(new Pipe());
-        }
-
-        gameState.pipes.forEach(pipe => {
-            pipe.x -= gameState.currentPipeSpeed;
-
-            if(checkCollision(pipe)) {
-                if(!gameState.gameOver) {
-                    SFX.HIT();
-                    gameState.gameOver = true;
-                    gameState.cooldownTimer = CONFIG.COOLDOWN_DURATION;
-                    if(!flappyBotActive) {
-                        // 只有玩家时，才更新本地最高分
-                        if(gameState.score > gameState.highestScore) {
-                            gameState.highestScore = gameState.score;
-                            localStorage.setItem('flappyBirdHighScore', gameState.highestScore);
-                        }
-                    } else {
-                        if(gameState.score > flappyBotHighestScore) {
-                            flappyBotHighestScore = gameState.score;
-                            localStorage.setItem('flappyBotHighestScore', flappyBotHighestScore);
-                            updateFlappyBotInfoPanel();
-                        }
-                        flappyBotLastScore = gameState.score;
-                        updateFlappyBotInfoPanel();
-                    }
-                }
-            }
-
-            if(!pipe.passed && pipe.x + CONFIG.PIPE.WIDTH < gameState.bird.x) {
-                gameState.score++;
-                document.getElementById('score').textContent = gameState.score;
-                pipe.passed = true;
-            }
+      if(!pipe.passed && pipe.x + CONFIG.PIPE.WIDTH < gameState.bird.x) {
+        gameState.score++;
+        document.getElementById('score').textContent = gameState.score;
+        pipe.passed = true;
+        recordLocalExperience({
+          score: gameState.score,
+          collisionType: null,
+          velocityState: null,
+          reward: +1,
+          timestamp: Date.now(),
+          pipeId: pipe.pipeId,
+          initialDiff: pipe.initialDiff,
+          gapCenter: pipe.gapCenter
         });
-
-        gameState.pipes = gameState.pipes.filter(pipe => pipe.x > -CONFIG.PIPE.WIDTH);
-
-        gameState.clouds.forEach(cloud => {
-            cloud.x -= 0.5;
-            if(cloud.x + cloud.w < 0) {
-                cloud.x = canvas.width + Math.random() * 100;
-            }
-        });
-    }
-
-    function draw() {
-        ctx.fillStyle = '#70c5ce';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        gameState.clouds.forEach(cloud => {
-            ctx.fillStyle = 'rgba(255,255,255,0.8)';
-            ctx.fillRect(cloud.x, cloud.y, cloud.w, cloud.h);
-        });
-
-        gameState.pipes.forEach(pipe => {
-            ctx.fillStyle = '#5c995c';
-            ctx.fillRect(pipe.x, 0, CONFIG.PIPE.WIDTH, pipe.topHeight);
-            ctx.fillStyle = '#4a7a4a';
-            ctx.fillRect(pipe.x - 4, pipe.topHeight - 16, CONFIG.PIPE.WIDTH + 8, 16);
-            
-            ctx.fillStyle = '#5c995c';
-            ctx.fillRect(pipe.x, pipe.bottomY, CONFIG.PIPE.WIDTH, canvas.height - pipe.bottomY);
-            ctx.fillStyle = '#4a7a4a';
-            ctx.fillRect(pipe.x - 4, pipe.bottomY, CONFIG.PIPE.WIDTH + 8, 16);
-        });
-
-        drawPixelArtBird();
-
-        if(gameState.flashOn) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        if(gameState.startScreen) {
-            drawStartScreen();
-        } else if(gameState.gameOver) {
-            drawGameOverScreen();
-        }
-    }
-
-    function drawStartScreen() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = 'white';
-        ctx.font = '32px "Press Start 2P"';
-        ctx.textAlign = 'center';
-        ctx.fillText('Flappy Bird', canvas.width/2, canvas.height/2 - 60);
-        
-        ctx.font = '16px "Press Start 2P"';
-        ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 - 20);
-        ctx.fillText('Tap/SPACE to Start', canvas.width/2, canvas.height/2 + 40);
-
-        ctx.fillStyle = '#666';
-        ctx.font = '8px "Press Start 2P"';
-        ctx.fillText('Font "Press Start 2P" by Cody Boisvert (OFL License)', canvas.width/2, canvas.height - 20);
-    }
-
-    function drawGameOverScreen() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = 'red';
-        ctx.font = '32px "Press Start 2P"';
-        ctx.textAlign = 'center';
-        ctx.fillText('Game Over!', canvas.width/2, canvas.height/2 - 60);
-        
-        ctx.fillStyle = 'white';
-        ctx.font = '18px "Press Start 2P"';
-        ctx.fillText('SCORE: ' + gameState.score, canvas.width/2, canvas.height/2 - 20);
-        if(!flappyBotActive) {
-            ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 + 20);
-        } else {
-            ctx.fillText('FlappyBot SCORE: ' + gameState.score, canvas.width/2, canvas.height/2 + 20);
-        }
-        
-        const remaining = gameState.cooldownTimer / 60;
-        if(remaining > 0) {
-            ctx.fillStyle = '#888';
-            ctx.fillText(`Restart in ${remaining.toFixed(1)}s`, canvas.width/2, canvas.height/2 + 60);
-        } else {
-            ctx.fillStyle = 'yellow';
-            ctx.fillText('Tap/SPACE to Restart', canvas.width/2, canvas.height/2 + 60);
-        }
-    }
-
-    function drawPixelArtBird() {
-        const { SIZE, WING_CYCLE, COLOR } = CONFIG.BIRD;
-        const wingOffset = WING_CYCLE[gameState.bird.wingFrame % WING_CYCLE.length];
-        
-        ctx.fillStyle = COLOR[0];
-        ctx.fillRect(gameState.bird.x, gameState.bird.y, SIZE, SIZE);
-        
-        ctx.fillStyle = COLOR[1];
-        ctx.fillRect(gameState.bird.x - 4, gameState.bird.y + 8 + wingOffset, 8, 8);
-        ctx.fillRect(gameState.bird.x + SIZE - 4, gameState.bird.y + 8 + wingOffset, 8, 8);
-        
-        ctx.fillStyle = '#000';
-        ctx.fillRect(gameState.bird.x + 16, gameState.bird.y + 10, 4, 4);
-        
-        ctx.fillStyle = COLOR[1];
-        ctx.fillRect(gameState.bird.x - 6, gameState.bird.y + 12, 6, 4);
-    }
-
-    function checkCollision(pipe) {
-        return (
-            gameState.bird.x + CONFIG.BIRD.SIZE > pipe.x &&
-            gameState.bird.x < pipe.x + CONFIG.PIPE.WIDTH &&
-            (gameState.bird.y < pipe.topHeight || 
-             gameState.bird.bottom > pipe.bottomY)
-        );
-    }
-
-    function handleAction() {
-        resetIdleTimer(); // user action resets idle timer
-        if(gameState.startScreen) {
-            gameState.startScreen = false;
-            return;
-        }
-        
-        if(gameState.gameOver) {
-            if(gameState.cooldownTimer <= 0) {
-                resetGame();
-            }
-            return;
-        }
-        
-        gameState.bird.velocity = CONFIG.JUMP_FORCE;
-        SFX.JUMP();
-    }
-
-    document.addEventListener('keydown', (e) => {
-        if(e.code === 'Space') {
-            e.preventDefault();
-            if(flappyBotActive) {
-                stopFlappyBotAndGoStart();
-                return;
-            }
-            handleAction();
-        } else {
-            if(flappyBotActive) {
-                stopFlappyBotAndGoStart();
-                return;
-            }
-            resetIdleTimer();
-        }
+      }
     });
 
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if(flappyBotActive) {
-            stopFlappyBotAndGoStart();
-            return;
-        }
-        handleAction();
+    gameState.pipes = gameState.pipes.filter(pipe => pipe.x > -CONFIG.PIPE.WIDTH);
+
+    gameState.clouds.forEach(cloud => {
+      cloud.x -= 0.5;
+      if(cloud.x + cloud.w < 0) {
+        cloud.x = canvas.width + Math.random() * 100;
+      }
+    });
+  }
+
+  function draw() {
+    ctx.fillStyle = '#70c5ce';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    gameState.clouds.forEach(cloud => {
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.fillRect(cloud.x, cloud.y, cloud.w, cloud.h);
     });
 
-    canvas.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        if(flappyBotActive) {
-            stopFlappyBotAndGoStart();
-            return;
-        }
-        handleAction();
+    gameState.pipes.forEach(pipe => {
+      ctx.fillStyle = '#5c995c';
+      ctx.fillRect(pipe.x, 0, CONFIG.PIPE.WIDTH, pipe.topHeight);
+      ctx.fillStyle = '#4a7a4a';
+      ctx.fillRect(pipe.x - 4, pipe.topHeight - 16, CONFIG.PIPE.WIDTH + 8, 16);
+      ctx.fillStyle = '#5c995c';
+      ctx.fillRect(pipe.x, pipe.bottomY, CONFIG.PIPE.WIDTH, canvas.height - pipe.bottomY);
+      ctx.fillStyle = '#4a7a4a';
+      ctx.fillRect(pipe.x - 4, pipe.bottomY, CONFIG.PIPE.WIDTH + 8, 16);
     });
 
-    function resetGame() {
-        gameState = {
-            bird: {
-                x: 80,
-                y: canvas.height/2,
-                velocity: 0,
-                wingFrame: 0,
-                get bottom() { return this.y + CONFIG.BIRD.SIZE; }
-            },
-            pipes: [],
-            clouds: CONFIG.CLOUDS.map(c => ({...c})),
-            score: 0,
-            gameOver: false,
-            frameCount: 0,
-            startScreen: false,
-            highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
-            currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
-            cooldownTimer: 0,
-            lastEffectScore: 0,
-            flashCounter: 0,
-            flashFrameCount: 0,
-            flashOn: false
-        };
-        document.getElementById('score').textContent = '0';
-    }
-    let idleTime = 0;
-    let flappyBotActive = false;
-    let flappyBotHighestScore = parseInt(localStorage.getItem('flappyBotHighestScore') || '0', 10);
-    let flappyBotLastScore = 0;
-    let flappyBotInterval = null;
+    drawPixelArtBird();
 
-    function resetIdleTimer() {
-        idleTime = 0;
+    if(gameState.flashOn) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    function stopFlappyBotAndGoStart() {
-        flappyBotActive = false;
-        hideFlappyBotInfo();
-        if(flappyBotInterval) {
-            clearInterval(flappyBotInterval);
-            flappyBotInterval = null;
-        }
-        gameState.startScreen = true;
+    if(gameState.startScreen) {
+      drawStartScreen();
+    } else if(gameState.gameOver) {
+      drawGameOverScreen();
+    }
+  }
+
+  function drawStartScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = '32px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Flappy Bird', canvas.width/2, canvas.height/2 - 60);
+    ctx.font = '16px "Press Start 2P"';
+    ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 - 20);
+    ctx.fillText('Tap/SPACE to Start', canvas.width/2, canvas.height/2 + 40);
+    ctx.fillStyle = '#666';
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillText('Font "Press Start 2P" by Cody Boisvert (OFL License)', canvas.width/2, canvas.height - 20);
+  }
+
+  function drawGameOverScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '32px "Press Start 2P"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over!', canvas.width/2, canvas.height/2 - 60);
+    ctx.fillStyle = 'white';
+    ctx.font = '18px "Press Start 2P"';
+    ctx.fillText('SCORE: ' + gameState.score, canvas.width/2, canvas.height/2 - 20);
+    if(!flappyBotActive) {
+      ctx.fillText('HIGH SCORE: ' + gameState.highestScore, canvas.width/2, canvas.height/2 + 20);
+    } else {
+      ctx.fillText('FlappyBot SCORE: ' + gameState.score, canvas.width/2, canvas.height/2 + 20);
+    }
+    const remaining = gameState.cooldownTimer / 60;
+    if(remaining > 0) {
+      ctx.fillStyle = '#888';
+      ctx.fillText(`Restart in ${remaining.toFixed(1)}s`, canvas.width/2, canvas.height/2 + 60);
+    } else {
+      ctx.fillStyle = 'yellow';
+      ctx.fillText('Tap/SPACE to Restart', canvas.width/2, canvas.height/2 + 60);
+    }
+  }
+
+  function drawPixelArtBird() {
+    const { SIZE, WING_CYCLE, COLOR } = CONFIG.BIRD;
+    const wingOffset = WING_CYCLE[gameState.bird.wingFrame % WING_CYCLE.length];
+    ctx.fillStyle = COLOR[0];
+    ctx.fillRect(gameState.bird.x, gameState.bird.y, SIZE, SIZE);
+    ctx.fillStyle = COLOR[1];
+    ctx.fillRect(gameState.bird.x - 4, gameState.bird.y + 8 + wingOffset, 8, 8);
+    ctx.fillRect(gameState.bird.x + SIZE - 4, gameState.bird.y + 8 + wingOffset, 8, 8);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(gameState.bird.x + 16, gameState.bird.y + 10, 4, 4);
+    ctx.fillStyle = COLOR[1];
+    ctx.fillRect(gameState.bird.x - 6, gameState.bird.y + 12, 6, 4);
+  }
+
+  function checkCollision(pipe) {
+    const birdLeft = gameState.bird.x;
+    const birdRight = gameState.bird.x + CONFIG.BIRD.SIZE;
+    const birdTop = gameState.bird.y;
+    const birdBottom = gameState.bird.y + CONFIG.BIRD.SIZE;
+    const pipeLeft = pipe.x;
+    const pipeRight = pipe.x + CONFIG.PIPE.WIDTH;
+    const pipeTopHeight = pipe.topHeight;
+    const pipeBottomY = pipe.bottomY;
+    let isCollide = false;
+    let collisionType = null;
+    let velocityState = (gameState.bird.velocity < 0) ? 'rising' : 'falling';
+
+    if(birdRight > pipeLeft && birdLeft < pipeRight && birdTop < pipeTopHeight) {
+      isCollide = true;
+      collisionType = 'top';
+    } else if(birdRight > pipeLeft && birdLeft < pipeRight && birdBottom > pipeBottomY) {
+      isCollide = true;
+      collisionType = 'bottom';
+    }
+
+    return { isCollide, type: collisionType, velocityState };
+  }
+
+  function handleAction() {
+    resetIdleTimer();
+    if(gameState.startScreen) {
+      gameState.startScreen = false;
+      return;
+    }
+    if(gameState.gameOver) {
+      if(gameState.cooldownTimer <= 0) {
         resetGame();
+      }
+      return;
+    }
+    gameState.bird.velocity = CONFIG.JUMP_FORCE;
+    SFX.JUMP();
+  }
+
+  document.addEventListener('keydown', e => {
+    if(e.code === 'Space') {
+      e.preventDefault();
+      if(flappyBotActive) {
+        stopFlappyBotAndGoStart();
+        return;
+      }
+      handleAction();
+    } else {
+      if(flappyBotActive) {
+        stopFlappyBotAndGoStart();
+        return;
+      }
+      resetIdleTimer();
+    }
+  });
+
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if(flappyBotActive) {
+      stopFlappyBotAndGoStart();
+      return;
+    }
+    handleAction();
+  });
+
+  canvas.addEventListener('mousedown', e => {
+    e.preventDefault();
+    if(flappyBotActive) {
+      stopFlappyBotAndGoStart();
+      return;
+    }
+    handleAction();
+  });
+
+  function resetGame() {
+    if(gameState.gameOver) {
+      finalizeGameExperiences();
+    }
+    gameState = {
+      bird: {
+        x: 80,
+        y: canvas.height/2,
+        velocity: 0,
+        wingFrame: 0,
+        get bottom() { return this.y + CONFIG.BIRD.SIZE; }
+      },
+      pipes: [],
+      clouds: CONFIG.CLOUDS.map(c => ({...c})),
+      score: 0,
+      gameOver: false,
+      frameCount: 0,
+      startScreen: false,
+      highestScore: localStorage.getItem('flappyBirdHighScore') || 0,
+      currentPipeSpeed: CONFIG.BASE_PIPE_SPEED,
+      cooldownTimer: 0,
+      lastEffectScore: 0,
+      flashCounter: 0,
+      flashFrameCount: 0,
+      flashOn: false,
+      collisionInfo: {
+        type: null,
+        velocityState: null
+      }
+    };
+    document.getElementById('score').textContent = '0';
+    activeGameExperiences = [];
+  }
+
+  let idleTime = 0;
+  let flappyBotActive = false;
+  let flappyBotHighestScore = parseInt(localStorage.getItem('flappyBotHighestScore') || '0');
+  let flappyBotLastScore = 0;
+  let flappyBotInterval = null;
+
+  function resetIdleTimer() {
+    idleTime = 0;
+  }
+
+  function stopFlappyBotAndGoStart() {
+    flappyBotActive = false;
+    hideFlappyBotInfo();
+    if(flappyBotInterval) {
+      clearInterval(flappyBotInterval);
+      flappyBotInterval = null;
+    }
+    gameState.startScreen = true;
+    resetGame();
+  }
+
+  function handleIdleTimer() {
+    idleTime += 16.7;
+    if(!flappyBotActive && idleTime >= 10000) {
+      activateFlappyBot();
+    }
+  }
+
+  function activateFlappyBot() {
+    flappyBotActive = true;
+    showFlappyBotInfo();
+    if(!flappyBotInterval) {
+      flappyBotInterval = setInterval(botLoop, 50);
+    }
+  }
+
+  function showFlappyBotInfo() {
+    updateFlappyBotInfoPanel();
+    document.getElementById('flappyBotInfo').style.display = 'block';
+  }
+
+  function hideFlappyBotInfo() {
+    document.getElementById('flappyBotInfo').style.display = 'none';
+  }
+
+  function updateFlappyBotInfoPanel() {
+    if(!flappyBotActive) return;
+    document.getElementById('flappyBotHighScore').textContent = flappyBotHighestScore;
+    document.getElementById('flappyBotLastScore').textContent = flappyBotLastScore;
+    document.getElementById('flappyBotCollisionType').textContent = gameState.collisionInfo.type || 'N/A';
+    document.getElementById('flappyBotVelocityState').textContent = gameState.collisionInfo.velocityState || 'N/A';
+    document.getElementById('flappyBotMemoryLength').textContent = flappyBotMemory.experiences.length;
+  }
+
+  let lastJumpTime = 0;
+  const jumpCooldown = 200;
+
+  let baseThreshold = parseFloat(localStorage.getItem('flappyBot_baseThreshold')) || 12.5;
+  let microThreshold = parseFloat(localStorage.getItem('flappyBot_microThreshold')) || 5.0;
+  let historicalAvgScore = parseFloat(localStorage.getItem('flappyBot_avgScore')) || 0;
+  let updatedLearningThisGame = false;
+
+  function saveThresholds() {
+    localStorage.setItem('flappyBot_baseThreshold', baseThreshold.toFixed(2));
+    localStorage.setItem('flappyBot_microThreshold', microThreshold.toFixed(2));
+  }
+
+  function getDesiredAltitude(bird, canvas, pipes, config) {
+    if(!canvas) return 0;
+    let middle = canvas.height/2;
+    let targetPipe = null;
+    for(let i=0; i<pipes.length; i++) {
+      if(pipes[i].x + config.PIPE.WIDTH > bird.x) {
+        targetPipe = pipes[i];
+        break;
+      }
+    }
+    if(!targetPipe) {
+      return middle;
+    } else {
+      let gapCenter = (targetPipe.topHeight + targetPipe.bottomY)/2;
+      let horizontalDistance = (targetPipe.x + config.PIPE.WIDTH) - bird.x;
+      let maxDist = 400;
+      if(horizontalDistance > maxDist) {
+        return middle;
+      } else {
+        let ratio = 1 - (horizontalDistance / maxDist);
+        let factor = Math.pow(ratio, 1.2);
+        return middle + factor*(gapCenter - middle);
+      }
+    }
+  }
+
+  function simulateAction() {
+    if(typeof handleAction === 'function') {
+      handleAction();
+    } else {
+      let c = document.getElementById('gameCanvas');
+      if(c) {
+        let evt = new MouseEvent('mousedown', {bubbles:true, cancelable:true});
+        c.dispatchEvent(evt);
+      }
+    }
+    lastJumpTime = Date.now();
+  }
+
+  function botLoop() {
+    if(!flappyBotActive) return;
+    if(typeof gameState === 'undefined') return;
+
+    if(gameState.startScreen) {
+      simulateAction();
+      return;
     }
 
-    function handleIdleTimer() {
-        // 每次update大约16.7ms，这里简单计算
-        idleTime += 16.7;
-        // 30秒
-        if(!flappyBotActive && idleTime >= 30000) {
-            // 启动flappybot
-            activateFlappyBot();
-        }
-    }
-
-    function activateFlappyBot() {
-        flappyBotActive = true;
-        showFlappyBotInfo();
-        // 启动自动循环
-        if(!flappyBotInterval) {
-            flappyBotInterval = setInterval(botLoop, 50);
-        }
-    }
-
-    function showFlappyBotInfo() {
-        updateFlappyBotInfoPanel();
-        document.getElementById('flappyBotInfo').style.display = 'block';
-    }
-
-    function hideFlappyBotInfo() {
-        document.getElementById('flappyBotInfo').style.display = 'none';
-    }
-
-    function updateFlappyBotInfoPanel() {
-        if(!flappyBotActive) return;
-        document.getElementById('flappyBotHighScore').textContent = flappyBotHighestScore;
-        document.getElementById('flappyBotLastScore').textContent = flappyBotLastScore;
-    }
-
-    let lastJumpTime = 0;
-    const jumpCooldown = 200;
-    let baseThreshold = parseFloat(localStorage.getItem('flappyBot_baseThreshold')) || 12.5;
-    let microThreshold = parseFloat(localStorage.getItem('flappyBot_microThreshold')) || 5.0;
-    let historicalAvgScore = parseFloat(localStorage.getItem('flappyBot_avgScore')) || 0;
-    let updatedLearningThisGame = false;
-
-    function saveThresholds() {
-        localStorage.setItem('flappyBot_baseThreshold', baseThreshold.toFixed(2));
-        localStorage.setItem('flappyBot_microThreshold', microThreshold.toFixed(2));
-    }
-
-    function getDesiredAltitude(bird, canvas, pipes, config) {
-        if (!canvas) return 0;
-        let middle = canvas.height / 2;
-
-        let targetPipe = null;
-        for (let i = 0; i < pipes.length; i++) {
-            if (pipes[i].x + config.PIPE.WIDTH > bird.x) {
-                targetPipe = pipes[i];
-                break;
-            }
-        }
-        if (!targetPipe) {
-            return middle;
+    if(gameState.gameOver) {
+      if(!updatedLearningThisGame) {
+        if(historicalAvgScore === 0) {
+          historicalAvgScore = gameState.score;
         } else {
-            let gapCenter = (targetPipe.topHeight + targetPipe.bottomY) / 2;
-            let horizontalDistance = (targetPipe.x + config.PIPE.WIDTH) - bird.x;
-            let maxDist = 400;
-            if (horizontalDistance > maxDist) {
-                return middle;
-            } else {
-                let ratio = 1 - (horizontalDistance / maxDist);
-                let factor = Math.pow(ratio, 1.2);
-                let desired = middle + factor * (gapCenter - middle);
-                return desired;
-            }
+          historicalAvgScore = (historicalAvgScore + gameState.score)/2;
         }
-    }
+        localStorage.setItem('flappyBot_avgScore', historicalAvgScore.toFixed(2));
 
-    function simulateAction() {
-        if (typeof handleAction === 'function') {
-            handleAction();
+        if(gameState.score < historicalAvgScore) {
+          baseThreshold = Math.max(3.0, baseThreshold - 0.7);
+          microThreshold = Math.max(1.0, microThreshold - 0.3);
         } else {
-            let canvas = document.getElementById('gameCanvas');
-            if (canvas) {
-                let evt = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
-                canvas.dispatchEvent(evt);
-            }
+          baseThreshold = Math.min(30.0, baseThreshold + 0.5);
+          microThreshold = Math.min(15.0, microThreshold + 0.2);
         }
-        lastJumpTime = Date.now();
+        saveThresholds();
+        updatedLearningThisGame = true;
+      }
+      if(gameState.cooldownTimer <= 0) {
+        simulateAction();
+        updatedLearningThisGame = false;
+      }
+      return;
     }
 
-    function botLoop() {
-        if(!flappyBotActive) return;
+    let bird = gameState.bird;
+    if(!bird) return;
 
-        if (typeof gameState === 'undefined') return;
+    let config = CONFIG;
+    let pipes = gameState.pipes;
+    let desiredAltitude = getDesiredAltitude(bird, canvas, pipes, config);
+    let birdCenterY = bird.y + config.BIRD.SIZE/2;
+    let verticalDiff = birdCenterY - desiredAltitude;
+    let now = Date.now();
 
-        if (gameState.startScreen) {
-            simulateAction();
-            return;
-        }
-
-        if (gameState.gameOver) {
-            if (!updatedLearningThisGame) {
-                if (historicalAvgScore === 0) {
-                    historicalAvgScore = gameState.score;
-                } else {
-                    historicalAvgScore = (historicalAvgScore + gameState.score) / 2;
-                }
-                localStorage.setItem('flappyBot_avgScore', historicalAvgScore.toFixed(2));
-
-                if (gameState.score < historicalAvgScore) {
-                    baseThreshold = Math.max(3.0, baseThreshold - 0.7);
-                    microThreshold = Math.max(1.0, microThreshold - 0.3);
-                } else {
-                    baseThreshold = Math.min(30.0, baseThreshold + 0.5);
-                    microThreshold = Math.min(15.0, microThreshold + 0.2);
-                }
-                saveThresholds();
-                updatedLearningThisGame = true;
-            }
-            if (gameState.cooldownTimer <= 0) {
-                simulateAction();
-                updatedLearningThisGame = false;
-            }
-            return;
-        }
-
-        let bird = gameState.bird;
-        if (!bird) return;
-
-        let config = (typeof CONFIG !== 'undefined') ? CONFIG : { BIRD: { SIZE: 28 }, PIPE: { WIDTH: 52 } };
-        let pipes = gameState.pipes;
-        let canvas = document.getElementById('gameCanvas');
-        
-        let desiredAltitude = getDesiredAltitude(bird, canvas, pipes, config);
-        let birdCenterY = bird.y + config.BIRD.SIZE / 2;
-        let verticalDiff = birdCenterY - desiredAltitude;
-
-        let now = Date.now();
-        if (verticalDiff > baseThreshold) {
-            if (now - lastJumpTime > jumpCooldown) {
-                simulateAction();
-            }
-        } else if (verticalDiff > microThreshold) {
-            let microCooldown = jumpCooldown * 0.8;
-            if (now - lastJumpTime > microCooldown) {
-                simulateAction();
-            }
-        }
+    if(verticalDiff > baseThreshold) {
+      if(now - lastJumpTime > jumpCooldown) {
+        simulateAction();
+      }
+    } else if(verticalDiff > microThreshold) {
+      let microCooldown = jumpCooldown * 0.8;
+      if(now - lastJumpTime > microCooldown) {
+        simulateAction();
+      }
     }
+  }
 
-    drawStartScreen();
-    gameLoop();
+  drawStartScreen();
+  gameLoop();
 }
 
 integrateFlappyBot();
 </script>
+
 </body>
 </html>
