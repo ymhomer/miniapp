@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中國象棋</title>
+  <style>
+    :root {
+      --chessScale: 1;
+    }
+    body {
+      background: #f0e4d7;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    /* 棋盘包装容器，固定设计尺寸为540x570，实际显示时通过 transform 缩放 */
+    #chessboardWrapper {
+      width: 540px;
+      height: 570px;
+      margin: 20px auto;
+      position: relative;
+    }
+    #chessboard {
+      width: 540px;
+      height: 570px;
+      position: relative;
+      transform: scale(var(--chessScale));
+      transform-origin: top left;
+    }
+    #boardSVG {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #piecesLayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 540px;
+      height: 570px;
+    }
+    .piece {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 40px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .red {
+      background: #e57373;
+      color: #fff;
+    }
+    .black {
+      background: #757575;
+      color: #fff;
+    }
+    .selected {
+      border: 2px solid #ffd54f;
+    }
+    .controls {
+      width: 540px;
+      max-width: 100%;
+      margin: 20px auto;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .top-controls .left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .top-controls input,
+    .top-controls button {
+      font-size: 16px;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+      transition: all 0.3s;
+    }
+    .top-controls button {
+      background: #4caf50;
+      color: #fff;
+      cursor: pointer;
+    }
+    .top-controls button:hover {
+      background: #45a049;
+    }
+    .log-container {
+      position: relative;
+      margin-top: 10px;
+    }
+    #moveLog {
+      font-size: 16px;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 8px;
+      background: #fafafa;
+      border-radius: 4px;
+    }
+    #copyLogButton {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 14px;
+      padding: 4px 8px;
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #copyLogButton:hover {
+      background: #1976d2;
+    }
+    @media (max-width: 600px) {
+      :root {
+        --chessScale: calc((100vw - 40px) / 540);
+      }
+      #chessboardWrapper {
+        width: calc(540 * var(--chessScale));
+        height: calc(570 * var(--chessScale));
+      }
+      .controls {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>中國象棋</h1>
+  <div id="chessboardWrapper">
+    <div id="chessboard">
+      <svg id="boardSVG" width="540" height="570" viewBox="0 0 540 570"></svg>
+      <div id="piecesLayer"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="top-controls">
+      <div class="left">
+        <input id="moveInput" type="text" placeholder="请输入棋谱（如兵3进1或象3进1）" />
+        <button id="moveSubmit">执行</button>
+      </div>
+      <div class="right">
+        <button id="undoButton">悔棋</button>
+      </div>
+    </div>
+    <div class="log-container">
+      <div id="moveLog"></div>
+      <button id="copyLogButton">复制日志</button>
+    </div>
+  </div>
+
+  <script>
+    const margin = 30,
+          spacing = 60,
+          boardCols = 9,
+          boardRows = 10,
+          pieceSize = 40;
+    let currentPlayer = "red";
+    let selectedPiece = null;
+    let pieces = [];
+    let moveHistory = [];
+
+    function initPieces() {
+      pieces = [];
+      const blackBack = ["車", "馬", "象", "士", "將", "士", "象", "馬", "車"];
+      for (let x = 0; x < 9; x++) {
+        pieces.push({ id: "b_back_" + x, type: blackBack[x], color: "black", x: x, y: 0 });
+      }
+      pieces.push({ id: "b_cannon_0", type: "炮", color: "black", x: 1, y: 2 });
+      pieces.push({ id: "b_cannon_1", type: "炮", color: "black", x: 7, y: 2 });
+      [0, 2, 4, 6, 8].forEach(x => {
+        pieces.push({ id: "b_soldier_" + x, type: "兵", color: "black", x: x, y: 3 });
+      });
+      const redBack = ["車", "馬", "相", "仕", "帥", "仕", "相", "馬", "車"];
+      for (let x = 0; x < 9; x++) {
+        pieces.push({ id: "r_back_" + x, type: redBack[x], color: "red", x: x, y: 9 });
+      }
+      pieces.push({ id: "r_cannon_0", type: "炮", color: "red", x: 1, y: 7 });
+      pieces.push({ id: "r_cannon_1", type: "炮", color: "red", x: 7, y: 7 });
+      [0, 2, 4, 6, 8].forEach(x => {
+        pieces.push({ id: "r_soldier_" + x, type: "兵", color: "red", x: x, y: 6 });
+      });
+    }
+
+    function drawBoard() {
+      const svg = document.getElementById("boardSVG");
+      svg.innerHTML = "";
+      for (let i = 0; i < boardRows; i++) {
+        const y = margin + i * spacing;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", margin);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", margin + (boardCols - 1) * spacing);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", "black");
+        svg.appendChild(line);
+      }
+      for (let j = 0; j < boardCols; j++) {
+        const x = margin + j * spacing;
+        if (j === 0 || j === boardCols - 1) {
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", x);
+          line.setAttribute("y1", margin);
+          line.setAttribute("x2", x);
+          line.setAttribute("y2", margin + (boardRows - 1) * spacing);
+          line.setAttribute("stroke", "black");
+          svg.appendChild(line);
+        } else {
+          const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line1.setAttribute("x1", x);
+          line1.setAttribute("y1", margin);
+          line1.setAttribute("x2", x);
+          line1.setAttribute("y2", margin + 4 * spacing);
+          line1.setAttribute("stroke", "black");
+          svg.appendChild(line1);
+          const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line2.setAttribute("x1", x);
+          line2.setAttribute("y1", margin + 5 * spacing);
+          line2.setAttribute("x2", x);
+          line2.setAttribute("y2", margin + (boardRows - 1) * spacing);
+          line2.setAttribute("stroke", "black");
+          svg.appendChild(line2);
+        }
+      }
+      // 宫内斜线
+      let x1 = margin + 3 * spacing, y1 = margin,
+          x2 = margin + 5 * spacing, y2 = margin + 2 * spacing;
+      let diag1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      diag1.setAttribute("x1", x1);
+      diag1.setAttribute("y1", y1);
+      diag1.setAttribute("x2", x2);
+      diag1.setAttribute("y2", y2);
+      diag1.setAttribute("stroke", "black");
+      svg.appendChild(diag1);
+      let diag2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      diag2.setAttribute("x1", x2);
+      diag2.setAttribute("y1", y1);
+      diag2.setAttribute("x2", x1);
+      diag2.setAttribute("y2", y2);
+      diag2.setAttribute("stroke", "black");
+      svg.appendChild(diag2);
+      
+      x1 = margin + 3 * spacing; y1 = margin + 7 * spacing;
+      x2 = margin + 5 * spacing; y2 = margin + 9 * spacing;
+      let diag3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      diag3.setAttribute("x1", x1);
+      diag3.setAttribute("y1", y1);
+      diag3.setAttribute("x2", x2);
+      diag3.setAttribute("y2", y2);
+      diag3.setAttribute("stroke", "black");
+      svg.appendChild(diag3);
+      let diag4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      diag4.setAttribute("x1", x2);
+      diag4.setAttribute("y1", y1);
+      diag4.setAttribute("x2", x1);
+      diag4.setAttribute("y2", y2);
+      diag4.setAttribute("stroke", "black");
+      svg.appendChild(diag4);
+      
+      let text1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text1.setAttribute("x", margin + 2.5 * spacing);
+      text1.setAttribute("y", margin + 4.6 * spacing);
+      text1.setAttribute("font-size", "24");
+      text1.setAttribute("text-anchor", "middle");
+      text1.textContent = "楚河";
+      svg.appendChild(text1);
+      
+      let text2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text2.setAttribute("x", margin + 5.5 * spacing);
+      text2.setAttribute("y", margin + 4.6 * spacing);
+      text2.setAttribute("font-size", "24");
+      text2.setAttribute("text-anchor", "middle");
+      text2.textContent = "漢界";
+      svg.appendChild(text2);
+      
+      const markerPositions = [
+        { x: 0, y: 3, side: "bottom" },
+        { x: 2, y: 3, side: "bottom" },
+        { x: 4, y: 3, side: "bottom" },
+        { x: 6, y: 3, side: "bottom" },
+        { x: 8, y: 3, side: "bottom" },
+        { x: 1, y: 2, side: "bottom" },
+        { x: 7, y: 2, side: "bottom" },
+        { x: 0, y: 6, side: "top" },
+        { x: 2, y: 6, side: "top" },
+        { x: 4, y: 6, side: "top" },
+        { x: 6, y: 6, side: "top" },
+        { x: 8, y: 6, side: "top" },
+        { x: 1, y: 7, side: "top" },
+        { x: 7, y: 7, side: "top" }
+      ];
+      markerPositions.forEach(mp => {
+        let cx = margin + mp.x * spacing,
+            cy = margin + mp.y * spacing;
+        drawMarker(svg, cx, cy, mp.side);
+      });
+    }
+
+    function drawMarker(svg, cx, cy, side) {
+      const markerGap = 4, markerLen = 10;
+      if (side === "top") {
+        let startX = cx - markerGap, startY = cy - markerGap;
+        let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", startX);
+        line1.setAttribute("y1", startY);
+        line1.setAttribute("x2", startX);
+        line1.setAttribute("y2", startY - markerLen);
+        line1.setAttribute("stroke", "black");
+        svg.appendChild(line1);
+        let line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line2.setAttribute("x1", startX);
+        line2.setAttribute("y1", startY);
+        line2.setAttribute("x2", startX - markerLen);
+        line2.setAttribute("y2", startY);
+        line2.setAttribute("stroke", "black");
+        svg.appendChild(line2);
+        startX = cx + markerGap; startY = cy - markerGap;
+        let line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line3.setAttribute("x1", startX);
+        line3.setAttribute("y1", startY);
+        line3.setAttribute("x2", startX);
+        line3.setAttribute("y2", startY - markerLen);
+        line3.setAttribute("stroke", "black");
+        svg.appendChild(line3);
+        let line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line4.setAttribute("x1", startX);
+        line4.setAttribute("y1", startY);
+        line4.setAttribute("x2", startX + markerLen);
+        line4.setAttribute("y2", startY);
+        line4.setAttribute("stroke", "black");
+        svg.appendChild(line4);
+      } else if (side === "bottom") {
+        let startX = cx - markerGap, startY = cy + markerGap;
+        let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line1.setAttribute("x1", startX);
+        line1.setAttribute("y1", startY);
+        line1.setAttribute("x2", startX);
+        line1.setAttribute("y2", startY + markerLen);
+        line1.setAttribute("stroke", "black");
+        svg.appendChild(line1);
+        let line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line2.setAttribute("x1", startX);
+        line2.setAttribute("y1", startY);
+        line2.setAttribute("x2", startX - markerLen);
+        line2.setAttribute("y2", startY);
+        line2.setAttribute("stroke", "black");
+        svg.appendChild(line2);
+        startX = cx + markerGap; startY = cy + markerGap;
+        let line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line3.setAttribute("x1", startX);
+        line3.setAttribute("y1", startY);
+        line3.setAttribute("x2", startX);
+        line3.setAttribute("y2", startY + markerLen);
+        line3.setAttribute("stroke", "black");
+        svg.appendChild(line3);
+        let line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line4.setAttribute("x1", startX);
+        line4.setAttribute("y1", startY);
+        line4.setAttribute("x2", startX + markerLen);
+        line4.setAttribute("y2", startY);
+        line4.setAttribute("stroke", "black");
+        svg.appendChild(line4);
+      }
+    }
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function isValidMove(piece, newX, newY) {
+      if (newX < 0 || newX > boardCols - 1 || newY < 0 || newY > boardRows - 1) return false;
+      const targetPiece = getPieceAt(newX, newY);
+      if (targetPiece && targetPiece.color === piece.color) return false;
+      const dx = newX - piece.x, dy = newY - piece.y,
+            adx = Math.abs(dx), ady = Math.abs(dy);
+      switch (piece.type) {
+        case "車":
+          if (dx !== 0 && dy !== 0) return false;
+          return isPathClear(piece.x, piece.y, newX, newY);
+        case "馬":
+          if (adx === 2 && ady === 1) {
+            let blockX = piece.x + dx / 2;
+            if (getPieceAt(blockX, piece.y)) return false;
+            return true;
+          } else if (adx === 1 && ady === 2) {
+            let blockY = piece.y + dy / 2;
+            if (getPieceAt(piece.x, blockY)) return false;
+            return true;
+          }
+          return false;
+        case "炮":
+          if (dx !== 0 && dy !== 0) return false;
+          const between = countPiecesBetween(piece.x, piece.y, newX, newY);
+          if (targetPiece) {
+            return between === 1;
+          } else {
+            return between === 0;
+          }
+        case "兵":
+          if (ady === 1 && dx === 0) return true;
+          return false;
+        case "士":
+        case "仕":
+          if (adx !== 1 || ady !== 1) return false;
+          if (piece.color === "red") {
+            if (newX < 3 || newX > 5 || newY < 7 || newY > 9) return false;
+          } else {
+            if (newX < 3 || newX > 5 || newY < 0 || newY > 2) return false;
+          }
+          return true;
+        case "象":
+        case "相":
+          if (adx !== 2 || ady !== 2) return false;
+          let eyeX = piece.x + dx / 2, eyeY = piece.y + dy / 2;
+          if (getPieceAt(eyeX, eyeY)) return false;
+          if (piece.color === "red") {
+            if (newY < 5) return false;
+          } else {
+            if (newY > 4) return false;
+          }
+          return true;
+        case "將":
+        case "帥":
+          if (adx + ady !== 1) return false;
+          if (piece.color === "red") {
+            if (newX < 3 || newX > 5 || newY < 7 || newY > 9) return false;
+          } else {
+            if (newX < 3 || newX > 5 || newY < 0 || newY > 2) return false;
+          }
+          let enemyGeneral = pieces.find(p => (p.type === "將" || p.type === "帥") && p.color !== piece.color);
+          if (enemyGeneral && newX === enemyGeneral.x) {
+            if (isPathClear(newX, newY, enemyGeneral.x, enemyGeneral.y)) return false;
+          }
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    function attemptMove(piece, newX, newY) {
+      if (isValidMove(piece, newX, newY)) {
+        const target = getPieceAt(newX, newY);
+        const move = {
+          pieceId: piece.id,
+          pieceType: piece.type,
+          pieceColor: piece.color,
+          oldX: piece.x,
+          oldY: piece.y,
+          newX: newX,
+          newY: newY,
+          captured: target ? { id: target.id, type: target.type, color: target.color, x: target.x, y: target.y } : null,
+          currentPlayerBefore: currentPlayer
+        };
+        moveHistory.push(move);
+        if (target) {
+          pieces = pieces.filter(p => p.id !== target.id);
+        }
+        piece.x = newX;
+        piece.y = newY;
+        currentPlayer = currentPlayer === "red" ? "black" : "red";
+        selectedPiece = null;
+        renderPieces();
+        updateMoveLog();
+      }
+    }
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + startFile + "进" + destFile;
+      } else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      } else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction;
+        if (move.pieceColor === "red") {
+          direction = (move.newY < move.oldY) ? "进" : "退";
+        } else {
+          direction = (move.newY > move.oldY) ? "进" : "退";
+        }
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        newY = candidate.y + (currentPlayer === "red" ? -2 : 2);
+      } else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    function initGame() {
+      initPieces();
+      drawBoard();
+      renderPieces();
+    }
+    initGame();
+  </script>
+</body>
+</html>
