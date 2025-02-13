@@ -21,19 +21,18 @@
     h1 {
       margin-top: 20px;
     }
-    /* 棋盘包装容器，固定设计尺寸为540x570，实际显示时通过 transform 缩放 */
+    /* 棋盘包装容器 */
     #chessboardWrapper {
       width: 540px;
       height: 570px;
       margin: 20px auto;
       position: relative;
     }
+    /* 棋盘区域采用 viewBox 保证内部坐标缩放 */
     #chessboard {
       width: 540px;
       height: 570px;
       position: relative;
-      transform: scale(var(--chessScale));
-      transform-origin: top left;
     }
     #boardSVG {
       position: absolute;
@@ -160,11 +159,11 @@
       <div id="piecesLayer"></div>
     </div>
   </div>
-
+  
   <div class="controls">
     <div class="top-controls">
       <div class="left">
-        <input id="moveInput" type="text" placeholder="请输入棋谱（如兵3进1或象3进1）" />
+        <input id="moveInput" type="text" placeholder="请输入棋谱（如兵3进1或馬2进3）" />
         <button id="moveSubmit">执行</button>
       </div>
       <div class="right">
@@ -176,7 +175,7 @@
       <button id="copyLogButton">复制日志</button>
     </div>
   </div>
-
+  
   <script>
     const margin = 30,
           spacing = 60,
@@ -250,7 +249,6 @@
           svg.appendChild(line2);
         }
       }
-      // 宫内斜线
       let x1 = margin + 3 * spacing, y1 = margin,
           x2 = margin + 5 * spacing, y2 = margin + 2 * spacing;
       let diag1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -462,13 +460,377 @@
           if (dx !== 0 && dy !== 0) return false;
           return isPathClear(piece.x, piece.y, newX, newY);
         case "馬":
-          if (adx === 2 && ady === 1) {
-            let blockX = piece.x + dx / 2;
-            if (getPieceAt(blockX, piece.y)) return false;
+          if ((adx === 2 && ady === 1) || (adx === 1 && ady === 2)) {
+            if (adx === 2 && ady === 1) {
+              let blockX = piece.x + dx / 2;
+              if (getPieceAt(blockX, piece.y)) return false;
+            } else if (adx === 1 && ady === 2) {
+              let blockY = piece.y + dy / 2;
+              if (getPieceAt(piece.x, blockY)) return false;
+            }
             return true;
-          } else if (adx === 1 && ady === 2) {
-            let blockY = piece.y + dy / 2;
-            if (getPieceAt(piece.x, blockY)) return false;
+          }
+          return false;
+        case "炮":
+          if (dx !== 0 && dy !== 0) return false;
+          const between = countPiecesBetween(piece.x, piece.y, newX, newY);
+          if (targetPiece) {
+            return between === 1;
+          } else {
+            return between === 0;
+          }
+        case "兵":
+          if (ady === 1 && dx === 0) return true;
+          return false;
+        case "士":
+        case "仕":
+          if (adx !== 1 || ady !== 1) return false;
+          if (piece.color === "red") {
+            if (newX < 3 || newX > 5 || newY < 7 || newY > 9) return false;
+          } else {
+            if (newX < 3 || newX > 5 || newY < 0 || newY > 2) return false;
+          }
+          return true;
+        case "象":
+        case "相":
+          if (adx !== 2 || ady !== 2) return false;
+          let eyeX = piece.x + dx / 2, eyeY = piece.y + dy / 2;
+          if (getPieceAt(eyeX, eyeY)) return false;
+          if (piece.color === "red") {
+            if (newY < 5) return false;
+          } else {
+            if (newY > 4) return false;
+          }
+          return true;
+        case "將":
+        case "帥":
+          if (adx + ady !== 1) return false;
+          if (piece.color === "red") {
+            if (newX < 3 || newX > 5 || newY < 7 || newY > 9) return false;
+          } else {
+            if (newX < 3 || newX > 5 || newY < 0 || newY > 2) return false;
+          }
+          let enemyGeneral = pieces.find(p => (p.type === "將" || p.type === "帥") && p.color !== piece.color);
+          if (enemyGeneral && newX === enemyGeneral.x) {
+            if (isPathClear(newX, newY, enemyGeneral.x, enemyGeneral.y)) return false;
+          }
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    function attemptMove(piece, newX, newY) {
+      if (isValidMove(piece, newX, newY)) {
+        const target = getPieceAt(newX, newY);
+        const move = {
+          pieceId: piece.id,
+          pieceType: piece.type,
+          pieceColor: piece.color,
+          oldX: piece.x,
+          oldY: piece.y,
+          newX: newX,
+          newY: newY,
+          captured: target ? { id: target.id, type: target.type, color: target.color, x: target.x, y: target.y } : null,
+          currentPlayerBefore: currentPlayer
+        };
+        moveHistory.push(move);
+        if (target) {
+          pieces = pieces.filter(p => p.id !== target.id);
+        }
+        piece.x = newX;
+        piece.y = newY;
+        currentPlayer = currentPlayer === "red" ? "black" : "red";
+        selectedPiece = null;
+        renderPieces();
+        updateMoveLog();
+      }
+    }
+
+    // 点击棋盘包装容器时，需要还原缩放后的坐标
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      // 对象/相：直接以起始文件和目标文件记录
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      // 马：根据目标文件计算横向差值，确定应走1或2格，目标数字表示目标文件
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let diffX = Math.abs(move.newX - move.oldX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      // 水平移动
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      // 其他直走棋子：用步数表示
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        // 对象走斜线：横向差值必须为2，否则无效
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : candidate.y + 2)
+                 : (moveChar === "进" ? candidate.y + 2 : candidate.y - 2);
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法不支持平走");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function isValidMove(piece, newX, newY) {
+      if (newX < 0 || newX > boardCols - 1 || newY < 0 || newY > boardRows - 1) return false;
+      const targetPiece = getPieceAt(newX, newY);
+      if (targetPiece && targetPiece.color === piece.color) return false;
+      const dx = newX - piece.x, dy = newY - piece.y,
+            adx = Math.abs(dx), ady = Math.abs(dy);
+      switch (piece.type) {
+        case "車":
+          if (dx !== 0 && dy !== 0) return false;
+          return isPathClear(piece.x, piece.y, newX, newY);
+        case "馬":
+          if ((adx === 2 && ady === 1) || (adx === 1 && ady === 2)) {
+            if (adx === 2 && ady === 1) {
+              let blockX = piece.x + dx / 2;
+              if (getPieceAt(blockX, piece.y)) return false;
+            } else if (adx === 1 && ady === 2) {
+              let blockY = piece.y + dy / 2;
+              if (getPieceAt(piece.x, blockY)) return false;
+            }
             return true;
           }
           return false;
@@ -577,11 +939,64 @@
     }
     document.getElementById("undoButton").addEventListener("click", undoMove);
 
-    function getFileNumber(color, x) {
-      return color === "red" ? (9 - x) : (x + 1);
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
     }
-    function getRankNumber(color, y) {
-      return color === "red" ? (boardRows - y) : (y + 1);
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
     }
 
     function getMoveNotation(move) {
@@ -589,21 +1004,32 @@
       if (move.pieceType === "象" || move.pieceType === "相") {
         let startFile = getFileNumber(move.pieceColor, move.oldX);
         let destFile = getFileNumber(move.pieceColor, move.newX);
-        notation = move.pieceType + startFile + "进" + destFile;
-      } else if (move.oldY === move.newY) {
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let diffX = Math.abs(move.newX - move.oldX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
         let originFile = getFileNumber(move.pieceColor, move.oldX);
         let destFile = getFileNumber(move.pieceColor, move.newX);
         notation = move.pieceType + originFile + "平" + destFile;
-      } else {
+      }
+      else {
         let originRank = getRankNumber(move.pieceColor, move.oldY);
         let destRank = getRankNumber(move.pieceColor, move.newY);
         let step = Math.abs(destRank - originRank);
-        let direction;
-        if (move.pieceColor === "red") {
-          direction = (move.newY < move.oldY) ? "进" : "退";
-        } else {
-          direction = (move.newY > move.oldY) ? "进" : "退";
-        }
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
         notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
       }
       if (move.captured) {
@@ -624,6 +1050,10 @@
       });
     }
 
+    // 解析输入走法：格式为 棋子类型+初始文件+移动标记（平/进/退）+目的数字
+    // 对于马：目标数字表示目标文件，新横坐标根据转换得到，
+    // 然后根据横向差值决定应走1或2格，并根据"进"/"退"调整纵向（红棋“进”上移，黑棋“进”下移）。
+    // 对于象：目标数字表示目标文件，横向差值必须为2，纵向固定移动2格。
     function parseMoveText(moveText) {
       if (moveText.length < 4) {
         alert("棋谱格式不正确");
@@ -641,8 +1071,39 @@
       let newX = candidate.x, newY = candidate.y;
       if (pieceType === "象" || pieceType === "相") {
         newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
-        newY = candidate.y + (currentPlayer === "red" ? -2 : 2);
-      } else {
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字代表目标文件");
+          return;
+        }
+      }
+      else {
         if (moveChar === "平") {
           newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
           newY = candidate.y;
@@ -680,12 +1141,4415 @@
       });
     });
 
-    function initGame() {
-      initPieces();
-      drawBoard();
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
       renderPieces();
+      updateMoveLog();
     }
-    initGame();
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    function getFileNumber(color, x) {
+      return color === "red" ? (9 - x) : (x + 1);
+    }
+    function getRankNumber(color, y) {
+      return color === "red" ? (boardRows - y) : (y + 1);
+    }
+
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    // 解析输入走法
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    // 以上说明：对于马和象，输入格式如“馬2进3”或“象3退1”，
+    // 第一位数字代表初始文件（从当前方视角计算），目标数字代表目标文件，
+    // 根据横向差值决定纵向移动应为1格还是2格，从而实现“进”或“退”的逻辑判断。
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    // 以上说明：对于马和象，输入格式如“馬2进3”、“象3退1”，其中数字代表当前棋子所在的文件与目标文件，
+    // 根据横向移动的差值确定纵向应走的格数（马走法：横差1则纵走2，横差2则纵走1；象走法固定2格）。
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) {
+        alert("棋谱格式不正确");
+        return;
+      }
+      const pieceType = moveText.charAt(0);
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) {
+        alert("未找到符合条件的棋子");
+        return;
+      }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "象" || pieceType === "相") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        if (Math.abs(newX - candidate.x) !== 2) {
+          alert("象/相走法错误：横向移动必须为2格");
+          return;
+        }
+        newY = currentPlayer === "red"
+                 ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                 : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        if (newY === null) {
+          alert("象/相只支持“进”或“退”");
+          return;
+        }
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        const diffX = Math.abs(newX - candidate.x);
+        if (diffX === 1) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 2 : (moveChar === "退" ? candidate.y + 2 : null))
+                   : (moveChar === "进" ? candidate.y + 2 : (moveChar === "退" ? candidate.y - 2 : null));
+        } else if (diffX === 2) {
+          newY = currentPlayer === "red"
+                   ? (moveChar === "进" ? candidate.y - 1 : (moveChar === "退" ? candidate.y + 1 : null))
+                   : (moveChar === "进" ? candidate.y + 1 : (moveChar === "退" ? candidate.y - 1 : null));
+        } else {
+          alert("马走法错误：横向移动必须为1或2格");
+          return;
+        }
+        if (newY === null) {
+          alert("马走法只支持“进”或“退”，目标数字表示目标文件");
+          return;
+        }
+      }
+      else {
+        if (moveChar === "平") {
+          newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+          newY = candidate.y;
+        } else if (moveChar === "进") {
+          newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum;
+        } else if (moveChar === "退") {
+          newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum;
+        } else {
+          alert("未知的移动标记：" + moveChar);
+          return;
+        }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) {
+        parseMoveText(moveText);
+        document.getElementById("moveInput").value = "";
+      }
+    });
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        document.getElementById("moveSubmit").click();
+      }
+    });
+
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => {
+        alert("日志已复制到剪贴板！");
+      }).catch(err => {
+        alert("复制失败：" + err);
+      });
+    });
+
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chessScale'));
+      const x = (e.clientX - rect.left) / scale,
+            y = (e.clientY - rect.top) / scale;
+      let col = Math.round((x - margin) / spacing),
+          row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) {
+        movedPiece.x = lastMove.oldX;
+        movedPiece.y = lastMove.oldY;
+      }
+      if (lastMove.captured) {
+        pieces.push(lastMove.captured);
+      }
+      currentPlayer = lastMove.currentPlayerBefore;
+      selectedPiece = null;
+      renderPieces();
+      updateMoveLog();
+    }
+    document.getElementById("undoButton").addEventListener("click", undoMove);
+
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer");
+      layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        div.className = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e) {
+          e.stopPropagation();
+          if (piece.color === currentPlayer) {
+            selectedPiece = piece;
+            renderPieces();
+          } else {
+            if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) {
+              attemptMove(selectedPiece, piece.x, piece.y);
+            }
+          }
+        });
+        layer.appendChild(div);
+      });
+    }
+
+    function getPieceAt(x, y) {
+      return pieces.find(p => p.x === x && p.y === y);
+    }
+
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) return false;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) return false;
+        }
+      }
+      return true;
+    }
+
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) {
+          if (getPieceAt(x1, y)) count++;
+        }
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) {
+          if (getPieceAt(x, y1)) count++;
+        }
+      }
+      return count;
+    }
+
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = (move.pieceColor === "red")
+                          ? (move.newY < move.oldY ? "进" : "退")
+                          : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = (move.pieceColor === "red")
+                        ? (move.newY < move.oldY ? "进" : "退")
+                        : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) {
+        notation += "（吃" + move.captured.type + "）";
+      }
+      return notation;
+    }
+
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog");
+      logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const notation = getMoveNotation(move);
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + notation;
+        logDiv.appendChild(p);
+      });
+    }
+
+    initPieces();
+    drawBoard();
+    renderPieces();
   </script>
 </body>
 </html>
