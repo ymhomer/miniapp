@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const newTabIcon = document.createElement('img');
         newTabIcon.src = "/miniapp/icon/box-arrow-up-right.svg";
         newTabIcon.alt = "New-Tab";
-        newTabIcon.style.marginLeft = "8px";
+        newTabIcon.style.marginLeft = "2px";
         newTabIcon.style.cursor = "pointer";
         newTabIcon.addEventListener('click', function(e) {
             e.stopPropagation();
