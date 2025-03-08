@@ -139,18 +139,27 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Handle clicks on dataApp elements
-    var dataAppElements = document.querySelectorAll('[data-app]');
-    for (let i = 0; i < dataAppElements.length; i++) {
-        dataAppElements[i].addEventListener('click', function(e) {
+    // 为每个带有 data-app 属性的导航项添加新标签打开的图标
+    document.querySelectorAll('[data-app]').forEach(function(item) {
+        // 创建图标元素
+        const newTabIcon = document.createElement('img');
+        newTabIcon.src = "/miniapp/icon/box-arrow-up-right.svg"; // 图标路径，可根据需要调整
+        newTabIcon.alt = "在新标签页打开";
+        newTabIcon.style.marginLeft = "8px"; // 与文字保持一定间距
+        newTabIcon.style.cursor = "pointer";
+        // 点击图标时阻止父元素的点击事件，并在新标签中打开页面
+        newTabIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
             e.preventDefault();
-            var app = dataAppElements[i].getAttribute('data-app');
-            var targetUrl = projectPath + app + '/index.html';
-            myIframe.setAttribute('src', targetUrl);
-            currentIframeSrc = targetUrl;
-            console.log("Setting iframe source to:", targetUrl);
+            const app = item.getAttribute('data-app');
+            const targetUrl = projectPath + app + '/index.html';
+            window.open(targetUrl, '_blank');
+            console.log("Opening in new tab:", targetUrl);
         });
-    }
+        // 将图标追加到导航项中（如果需要更精细的位置可考虑调整 HTML 结构或用 CSS 定位）
+        item.appendChild(newTabIcon);
+    });
+
 
     // Close navbar when link is clicked
     document.querySelectorAll('.close-navbar').forEach(function(element) {
