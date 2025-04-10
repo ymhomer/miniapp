@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中國象棋</title>
+  <style>
+    :root {
+      --chessScale: 1;
+      --primary-color: #A0522D;
+      --secondary-color: #D2B48C;
+      --piece-red: #FF6347;
+      --piece-black: #555;
+      --text-color-dark: #333;
+      --text-color-light: #fff;
+      --highlight-color: #FFD700;
+      --board-background: #f0e4d7;
+      --control-background: #fff;
+      --control-border: #ccc;
+      --shadow-color: rgba(0, 0, 0, 0.2);
+    }
+    body {
+      background: var(--board-background);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text-color-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.6;
+    }
+    h1 {
+      margin: 30px 0 20px;
+      color: var(--primary-color);
+      text-shadow: 1px 1px 2px var(--shadow-color);
+    }
+    .start-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #8B4513, #D2B48C);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      color: var(--text-color-light);
+      text-align: center;
+      padding: 20px;
+    }
+    .start-screen h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    }
+    .start-screen p {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .start-screen .settings {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .start-screen .settings label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .start-screen button {
+      font-size: 20px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary-color);
+      color: var(--text-color-light);
+      cursor: pointer;
+      box-shadow: 0 3px 6px var(--shadow-color);
+      transition: background 0.3s;
+    }
+    .start-screen button:hover {
+      background: #8B3A2A;
+    }
+    #chessboardWrapper {
+      width: 540px;
+      height: 570px;
+      margin: 20px auto;
+      position: relative;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      border-radius: 8px;
+      overflow: hidden;
+      padding-bottom: 30px;
+      transition: opacity 0.3s ease, transform 0.5s ease;
+    }
+    #chessboardWrapper.rotated .piece,
+    #chessboardWrapper.rotated svg text {
+      transform: rotate(180deg) !important;
+    }
+    #chessboard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    #boardSVG {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #boardSVG line {
+      stroke: var(--primary-color);
+      stroke-width: 1.5;
+    }
+    #boardSVG text {
+      fill: var(--primary-color);
+    }
+    #piecesLayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+    }
+    .piece {
+      position: absolute;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 45px;
+      font-size: 26px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 6px var(--shadow-color);
+      transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+    }
+    .piece:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px var(--shadow-color);
+    }
+    .red {
+      background: var(--piece-red);
+      color: var(--text-color-light);
+      border: 2px solid #8B3A2A;
+    }
+    .black {
+      background: var(--piece-black);
+      color: var(--text-color-light);
+      border: 2px solid #666;
+    }
+    .selected {
+      border: 3px solid var(--highlight-color);
+      transform: scale(1.1) !important;
+      box-shadow: 0 5px 10px var(--shadow-color);
+    }
+    .piece.cannon {
+      border-width: 2px;
+    }
+    .controls {
+      width: 540px;
+      max-width: 100%;
+      margin: 30px auto;
+      padding: 20px;
+      background: var(--control-background);
+      border: 1px solid var(--control-border);
+      border-radius: 10px;
+      box-shadow: 0 3px 9px var(--shadow-color);
+    }
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .top-controls .left,
+    .top-controls .right {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .top-controls input,
+    .top-controls button {
+      font-size: 16px;
+      padding: 10px 16px;
+      border: 1px solid var(--control-border);
+      border-radius: 6px;
+      outline: none;
+      transition: all 0.3s;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .top-controls input:focus {
+      border-color: var(--primary-color);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 5px rgba(160, 82, 45, 0.5);
+    }
+    .top-controls button {
+      background: var(--primary-color);
+      color: var(--text-color-light);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px var(--shadow-color);
+    }
+    .top-controls button:hover {
+      background: #8B3A2A;
+      box-shadow: 0 3px 6px var(--shadow-color);
+    }
+    .log-container {
+      position: relative;
+      margin-top: 15px;
+    }
+    #moveLog {
+      font-size: 16px;
+      max-height: 180px;
+      overflow-y: auto;
+      border: 1px solid var(--control-border);
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      min-height: 60px;
+    }
+    #copyLogButton {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 14px;
+      padding: 6px 10px;
+      background: #6495ED;
+      color: var(--text-color-light);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+      box-shadow: 0 1px 3px var(--shadow-color);
+    }
+    #copyLogButton:hover {
+      background: #4178BE;
+      box-shadow: 0 2px 4px var(--shadow-color);
+    }
+    @media (max-width: 600px) {
+      :root { --chessScale: calc((100vw - 40px) / 540); }
+      #chessboardWrapper {
+        width: calc(540 * var(--chessScale));
+        height: calc(570 * var(--chessScale));
+        margin: 10px auto;
+      }
+      .controls {
+        width: 95%;
+        margin: 15px auto;
+      }
+      .top-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .top-controls .left,
+      .top-controls .right {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+    }
+    .valid-move {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: rgba(255, 215, 0, 0.7);
+      pointer-events: none;
+      z-index: 1;
+      box-shadow: 0 1px 3px var(--shadow-color);
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen" class="start-screen">
+    <h1>中國象棋</h1>
+    <div class="settings">
+      <label><input type="checkbox" id="autoPerspective" checked> 自动切换棋手视角</label>
+      <label><input type="checkbox" id="showControls" checked> 显示控制面板</label>
+    </div>
+    <button id="startButton">开始游戏</button>
+  </div>
+  <div id="chessboardWrapper">
+    <div id="chessboard">
+      <svg id="boardSVG" width="540" height="570" viewBox="0 0 540 570"></svg>
+      <div id="piecesLayer"></div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="top-controls">
+      <div class="left">
+        <input id="moveInput" type="text" placeholder="请输入棋谱（如兵3进1、马2进3、象3退1）" />
+        <button id="moveSubmit">执行</button>
+      </div>
+      <div class="right">
+        <button id="undoButton">悔棋</button>
+      </div>
+    </div>
+    <div class="log-container">
+      <div id="moveLog"></div>
+      <button id="copyLogButton">复制日志</button>
+    </div>
+  </div>
+  <script>
+    // Global settings and variables
+    let autoSwitchPerspective = true, showControls = true;
+    const margin = 30, spacing = 60, boardCols = 9, boardRows = 10, pieceSize = 45;
+    let currentPlayer = "red", selectedPiece = null, pieces = [], moveHistory = [], validMovesDisplay = [];
+    
+    // Initialize pieces
+    function initPieces() {
+      pieces = [];
+      const blackBack = ["車","馬","象","士","將","士","象","馬","車"];
+      for (let x = 0; x < 9; x++) pieces.push({id:"b_back_"+x, type:blackBack[x], color:"black", x:x, y:0});
+      pieces.push({id:"b_cannon_0", type:"炮", color:"black", x:1, y:2});
+      pieces.push({id:"b_cannon_1", type:"炮", color:"black", x:7, y:2});
+      [0,2,4,6,8].forEach(x => pieces.push({id:"b_soldier_"+x, type:"卒", color:"black", x:x, y:3}));
+      const redBack = ["車","馬","相","仕","帥","仕","相","馬","車"];
+      for (let x = 0; x < 9; x++) pieces.push({id:"r_back_"+x, type:redBack[x], color:"red", x:x, y:9});
+      pieces.push({id:"r_cannon_0", type:"炮", color:"red", x:1, y:7});
+      pieces.push({id:"r_cannon_1", type:"炮", color:"red", x:7, y:7});
+      [0,2,4,6,8].forEach(x => pieces.push({id:"r_soldier_"+x, type:"兵", color:"red", x:x, y:6}));
+    }
+    
+    // Draw board and markers
+    function drawBoard() {
+      const svg = document.getElementById("boardSVG"); svg.innerHTML = "";
+      for (let i = 0; i < boardRows; i++) {
+        let y = margin + i * spacing, line = document.createElementNS("http://www.w3.org/2000/svg","line");
+        line.setAttribute("x1", margin); line.setAttribute("y1", y);
+        line.setAttribute("x2", margin + (boardCols - 1) * spacing); line.setAttribute("y2", y);
+        line.setAttribute("stroke", "black"); svg.appendChild(line);
+      }
+      for (let j = 0; j < boardCols; j++) {
+        let x = margin + j * spacing;
+        if(j === 0 || j === boardCols - 1){
+          let line = document.createElementNS("http://www.w3.org/2000/svg","line");
+          line.setAttribute("x1", x); line.setAttribute("y1", margin);
+          line.setAttribute("x2", x); line.setAttribute("y2", margin + (boardRows - 1) * spacing);
+          line.setAttribute("stroke", "black"); svg.appendChild(line);
+        } else {
+          let line1 = document.createElementNS("http://www.w3.org/2000/svg","line");
+          line1.setAttribute("x1", x); line1.setAttribute("y1", margin);
+          line1.setAttribute("x2", x); line1.setAttribute("y2", margin + 4 * spacing);
+          line1.setAttribute("stroke", "black"); svg.appendChild(line1);
+          let line2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+          line2.setAttribute("x1", x); line2.setAttribute("y1", margin + 5 * spacing);
+          line2.setAttribute("x2", x); line2.setAttribute("y2", margin + (boardRows - 1) * spacing);
+          line2.setAttribute("stroke", "black"); svg.appendChild(line2);
+        }
+      }
+      let x1 = margin + 3 * spacing, y1 = margin, x2 = margin + 5 * spacing, y2 = margin + 2 * spacing;
+      let diag1 = document.createElementNS("http://www.w3.org/2000/svg","line");
+      diag1.setAttribute("x1", x1); diag1.setAttribute("y1", y1);
+      diag1.setAttribute("x2", x2); diag1.setAttribute("y2", y2); diag1.setAttribute("stroke", "black");
+      svg.appendChild(diag1);
+      let diag2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+      diag2.setAttribute("x1", x2); diag2.setAttribute("y1", y1);
+      diag2.setAttribute("x2", x1); diag2.setAttribute("y2", y2); diag2.setAttribute("stroke", "black");
+      svg.appendChild(diag2);
+      x1 = margin + 3 * spacing; y1 = margin + 7 * spacing; x2 = margin + 5 * spacing; y2 = margin + 9 * spacing;
+      let diag3 = document.createElementNS("http://www.w3.org/2000/svg","line");
+      diag3.setAttribute("x1", x1); diag3.setAttribute("y1", y1);
+      diag3.setAttribute("x2", x2); diag3.setAttribute("y2", y2); diag3.setAttribute("stroke", "black");
+      svg.appendChild(diag3);
+      let diag4 = document.createElementNS("http://www.w3.org/2000/svg","line");
+      diag4.setAttribute("x1", x2); diag4.setAttribute("y1", y1);
+      diag4.setAttribute("x2", x1); diag4.setAttribute("y2", y2); diag4.setAttribute("stroke", "black");
+      svg.appendChild(diag4);
+      let text1 = document.createElementNS("http://www.w3.org/2000/svg","text");
+      text1.setAttribute("x", margin + 2.5 * spacing); text1.setAttribute("y", margin + 4.6 * spacing);
+      text1.setAttribute("font-size", "24"); text1.setAttribute("text-anchor", "middle");
+      text1.textContent = "楚河"; svg.appendChild(text1);
+      let text2 = document.createElementNS("http://www.w3.org/2000/svg","text");
+      text2.setAttribute("x", margin + 5.5 * spacing); text2.setAttribute("y", margin + 4.6 * spacing);
+      text2.setAttribute("font-size", "24"); text2.setAttribute("text-anchor", "middle");
+      text2.textContent = "漢界"; svg.appendChild(text2);
+      const markers = [
+        {x:0, y:3, side:"bottom"}, {x:2, y:3, side:"bottom"}, {x:4, y:3, side:"bottom"},
+        {x:6, y:3, side:"bottom"}, {x:8, y:3, side:"bottom"}, {x:1, y:2, side:"bottom"},
+        {x:7, y:2, side:"bottom"}, {x:0, y:6, side:"top"}, {x:2, y:6, side:"top"},
+        {x:4, y:6, side:"top"}, {x:6, y:6, side:"top"}, {x:8, y:6, side:"top"},
+        {x:1, y:7, side:"top"}, {x:7, y:7, side:"top"}
+      ];
+      markers.forEach(mp => { let cx = margin + mp.x * spacing, cy = margin + mp.y * spacing; drawMarker(svg, cx, cy, mp.side); });
+    }
+    
+    // Draw board markers
+    function drawMarker(svg, cx, cy, side) {
+      const markerGap = 4, markerLen = 10;
+      if (side === "top" || side === "bottom") {
+        const isOuter = cx === margin || cx === margin + 8 * spacing;
+        if (isOuter) {
+          if (cx === margin) {
+            let startX = cx + markerGap, startY = cy - markerGap;
+            let line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line3.setAttribute("x1", startX); line3.setAttribute("y1", startY);
+            line3.setAttribute("x2", startX); line3.setAttribute("y2", startY - markerLen);
+            line3.setAttribute("stroke", "black"); svg.appendChild(line3);
+            let line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line4.setAttribute("x1", startX); line4.setAttribute("y1", startY);
+            line4.setAttribute("x2", startX + markerLen); line4.setAttribute("y2", startY);
+            line4.setAttribute("stroke", "black"); svg.appendChild(line4);
+            startX = cx + markerGap; startY = cy + markerGap;
+            let line7 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line7.setAttribute("x1", startX); line7.setAttribute("y1", startY);
+            line7.setAttribute("x2", startX); line7.setAttribute("y2", startY + markerLen);
+            line7.setAttribute("stroke", "black"); svg.appendChild(line7);
+            let line8 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line8.setAttribute("x1", startX); line8.setAttribute("y1", startY);
+            line8.setAttribute("x2", startX + markerLen); line8.setAttribute("y2", startY);
+            line8.setAttribute("stroke", "black"); svg.appendChild(line8);
+          } else if (cx === margin + 8 * spacing) {
+            let startX = cx - markerGap, startY = cy - markerGap;
+            let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line1.setAttribute("x1", startX); line1.setAttribute("y1", startY);
+            line1.setAttribute("x2", startX); line1.setAttribute("y2", startY - markerLen);
+            line1.setAttribute("stroke", "black"); svg.appendChild(line1);
+            let line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line2.setAttribute("x1", startX); line2.setAttribute("y1", startY);
+            line2.setAttribute("x2", startX - markerLen); line2.setAttribute("y2", startY);
+            line2.setAttribute("stroke", "black"); svg.appendChild(line2);
+            startX = cx - markerGap; startY = cy + markerGap;
+            let line5 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line5.setAttribute("x1", startX); line5.setAttribute("y1", startY);
+            line5.setAttribute("x2", startX); line5.setAttribute("y2", startY + markerLen);
+            line5.setAttribute("stroke", "black"); svg.appendChild(line5);
+            let line6 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line6.setAttribute("x1", startX); line6.setAttribute("y1", startY);
+            line6.setAttribute("x2", startX - markerLen); line6.setAttribute("y2", startY);
+            line6.setAttribute("stroke", "black"); svg.appendChild(line6);
+          }
+        } else {
+          let startX = cx - markerGap, startY = cy - markerGap;
+          let line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line1.setAttribute("x1", startX); line1.setAttribute("y1", startY);
+          line1.setAttribute("x2", startX); line1.setAttribute("y2", startY - markerLen);
+          line1.setAttribute("stroke", "black"); svg.appendChild(line1);
+          let line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line2.setAttribute("x1", startX); line2.setAttribute("y1", startY);
+          line2.setAttribute("x2", startX - markerLen); line2.setAttribute("y2", startY);
+          line2.setAttribute("stroke", "black"); svg.appendChild(line2);
+          startX = cx + markerGap; startY = cy - markerGap;
+          let line3 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line3.setAttribute("x1", startX); line3.setAttribute("y1", startY);
+          line3.setAttribute("x2", startX); line3.setAttribute("y2", startY - markerLen);
+          line3.setAttribute("stroke", "black"); svg.appendChild(line3);
+          let line4 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line4.setAttribute("x1", startX); line4.setAttribute("y1", startY);
+          line4.setAttribute("x2", startX + markerLen); line4.setAttribute("y2", startY);
+          line4.setAttribute("stroke", "black"); svg.appendChild(line4);
+          startX = cx - markerGap; startY = cy + markerGap;
+          let line5 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line5.setAttribute("x1", startX); line5.setAttribute("y1", startY);
+          line5.setAttribute("x2", startX); line5.setAttribute("y2", startY + markerLen);
+          line5.setAttribute("stroke", "black"); svg.appendChild(line5);
+          let line6 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line6.setAttribute("x1", startX); line6.setAttribute("y1", startY);
+          line6.setAttribute("x2", startX - markerLen); line6.setAttribute("y2", startY);
+          line6.setAttribute("stroke", "black"); svg.appendChild(line6);
+          startX = cx + markerGap; startY = cy + markerGap;
+          let line7 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line7.setAttribute("x1", startX); line7.setAttribute("y1", startY);
+          line7.setAttribute("x2", startX); line7.setAttribute("y2", startY + markerLen);
+          line7.setAttribute("stroke", "black"); svg.appendChild(line7);
+          let line8 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line8.setAttribute("x1", startX); line8.setAttribute("y1", startY);
+          line8.setAttribute("x2", startX + markerLen); line8.setAttribute("y2", startY);
+          line8.setAttribute("stroke", "black"); svg.appendChild(line8);
+        }
+      }
+    }
+    
+    // Render pieces on board
+    function renderPieces() {
+      const layer = document.getElementById("piecesLayer"); layer.innerHTML = "";
+      pieces.forEach(piece => {
+        const div = document.createElement("div");
+        let cls = "piece " + piece.color + (selectedPiece && selectedPiece.id === piece.id ? " selected" : "");
+        if (piece.type === "炮") cls += " cannon";
+        if (piece.type === "兵" || piece.type === "卒") cls += " soldier";
+        div.className = cls;
+        div.textContent = piece.type;
+        div.style.left = (margin + piece.x * spacing - pieceSize / 2) + "px";
+        div.style.top = (margin + piece.y * spacing - pieceSize / 2) + "px";
+        div.dataset.id = piece.id;
+        div.addEventListener("click", function(e){ e.stopPropagation(); handlePieceClick(piece); });
+        layer.appendChild(div);
+      });
+      renderValidMoves();
+    }
+    
+    function handlePieceClick(piece) {
+      if (piece.color === currentPlayer) selectPiece(piece);
+      else { if (selectedPiece && isValidMove(selectedPiece, piece.x, piece.y)) attemptMove(selectedPiece, piece.x, piece.y); }
+    }
+    
+    function selectPiece(piece) {
+      selectedPiece = (selectedPiece && selectedPiece.id === piece.id) ? null : piece;
+      renderPieces();
+      if (selectedPiece) showValidMoves(selectedPiece);
+    }
+    
+    function deselectPiece() {
+      selectedPiece = null;
+      clearValidMovesDisplay();
+      renderPieces();
+    }
+    
+    function showValidMoves(piece) {
+      clearValidMovesDisplay();
+      const moves = getValidMoves(piece);
+      moves.forEach(move => {
+        const indicator = document.createElement("div");
+        indicator.className = "valid-move";
+        indicator.style.left = (margin + move.x * spacing - 10) + "px";
+        indicator.style.top = (margin + move.y * spacing - 10) + "px";
+        indicator.addEventListener("click", function(e){ e.stopPropagation(); attemptMove(piece, move.x, move.y); });
+        document.getElementById("piecesLayer").appendChild(indicator);
+        validMovesDisplay.push(indicator);
+      });
+    }
+    
+    function clearValidMovesDisplay() {
+      validMovesDisplay.forEach(ind => ind.remove());
+      validMovesDisplay = [];
+    }
+    
+    function renderValidMoves() { if (selectedPiece) showValidMoves(selectedPiece); }
+    
+    function getPieceAt(x, y) { return pieces.find(p => p.x === x && p.y === y); }
+    
+    function isPathClear(x1, y1, x2, y2) {
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) if (getPieceAt(x1, y)) return false;
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) if (getPieceAt(x, y1)) return false;
+      }
+      return true;
+    }
+    
+    function countPiecesBetween(x1, y1, x2, y2) {
+      let count = 0;
+      if (x1 === x2) {
+        let minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY + 1; y < maxY; y++) if (getPieceAt(x1, y)) count++;
+      } else if (y1 === y2) {
+        let minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX + 1; x < maxX; x++) if (getPieceAt(x, y1)) count++;
+      }
+      return count;
+    }
+    
+    function getValidMoves(piece) {
+      const valid = [];
+      for (let y = 0; y < boardRows; y++) {
+        for (let x = 0; x < boardCols; x++) {
+          if (isValidMove(piece, x, y)) valid.push({x: x, y: y});
+        }
+      }
+      return valid;
+    }
+    
+    function isValidMove(piece, newX, newY) {
+      if (newX < 0 || newX > boardCols - 1 || newY < 0 || newY > boardRows - 1) return false;
+      const target = getPieceAt(newX, newY);
+      if (target && target.color === piece.color) return false;
+      const dx = newX - piece.x, dy = newY - piece.y, adx = Math.abs(dx), ady = Math.abs(dy);
+      switch (piece.type) {
+        case "車": return (dx === 0 || dy === 0) && isPathClear(piece.x, piece.y, newX, newY);
+        case "馬":
+          if ((adx === 2 && ady === 1) || (adx === 1 && ady === 2)) {
+            if (adx === 2 && ady === 1) { let blockX = piece.x + dx / 2; if (getPieceAt(blockX, piece.y)) return false; }
+            else if (adx === 1 && ady === 2) { let blockY = piece.y + dy / 2; if (getPieceAt(piece.x, blockY)) return false; }
+            return true;
+          }
+          return false;
+        case "炮":
+          if (dx !== 0 && dy !== 0) return false;
+          const between = countPiecesBetween(piece.x, piece.y, newX, newY);
+          return target ? between === 1 : between === 0;
+        case "兵": case "卒":
+          if (ady === 1 && dx === 0) return piece.color === "red" ? newY < piece.y : newY > piece.y;
+          if (piece.color === "red" && newY === piece.y && Math.abs(dx) === 1 && newY < 5) return true;
+          if (piece.color === "black" && newY === piece.y && Math.abs(dx) === 1 && newY > 4) return true;
+          return false;
+        case "士": case "仕":
+          if (adx !== 1 || ady !== 1) return false;
+          return piece.color === "red" ? !(newX < 3 || newX > 5 || newY < 7 || newY > 9) : !(newX < 3 || newX > 5 || newY < 0 || newY > 2);
+        case "象": case "相":
+          if (adx !== 2 || ady !== 2) return false;
+          let eyeX = piece.x + dx / 2, eyeY = piece.y + dy / 2;
+          if (getPieceAt(eyeX, eyeY)) return false;
+          return piece.color === "red" ? newY >= 5 : newY <= 4;
+        case "將": case "帥":
+          if (adx + ady !== 1) return false;
+          if (piece.color === "red") { if (newX < 3 || newX > 5 || newY < 7 || newY > 9) return false; }
+          else { if (newX < 3 || newX > 5 || newY < 0 || newY > 2) return false; }
+          let enemyGeneral = pieces.find(p => (p.type === "將" || p.type === "帥") && p.color !== piece.color);
+          if (enemyGeneral && newX === enemyGeneral.x && isPathClear(newX, newY, enemyGeneral.x, enemyGeneral.y)) return false;
+          return true;
+        default: return false;
+      }
+    }
+    
+    // Attempt move and update game state
+    function attemptMove(piece, newX, newY) {
+      if (isValidMove(piece, newX, newY)) {
+        const target = getPieceAt(newX, newY);
+        const move = {
+          pieceId: piece.id,
+          pieceType: piece.type,
+          pieceColor: piece.color,
+          oldX: piece.x,
+          oldY: piece.y,
+          newX: newX,
+          newY: newY,
+          captured: target ? { id: target.id, type: target.type, color: target.color, x: target.x, y: target.y } : null,
+          currentPlayerBefore: currentPlayer
+        };
+        moveHistory.push(move);
+        if (target) pieces = pieces.filter(p => p.id !== target.id);
+        piece.x = newX; piece.y = newY;
+        currentPlayer = currentPlayer === "red" ? "black" : "red";
+        deselectPiece();
+        renderPieces();
+        updateMoveLog();
+        updatePerspective();
+      }
+    }
+    
+    // Undo the last move
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      const lastMove = moveHistory.pop();
+      let movedPiece = pieces.find(p => p.id === lastMove.pieceId);
+      if (movedPiece) { movedPiece.x = lastMove.oldX; movedPiece.y = lastMove.oldY; }
+      if (lastMove.captured) pieces.push(lastMove.captured);
+      currentPlayer = lastMove.currentPlayerBefore;
+      deselectPiece();
+      renderPieces();
+      updateMoveLog();
+      updatePerspective();
+    }
+    
+    function getFileNumber(color, x) { return color === "red" ? (9 - x) : (x + 1); }
+    function getRankNumber(color, y) { return color === "red" ? (boardRows - y) : (y + 1); }
+    
+    function getMoveNotation(move) {
+      let notation = "";
+      if (move.pieceType === "象" || move.pieceType === "相") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = move.pieceColor === "red" ? (move.newY < move.oldY ? "进" : "退") : (move.newY > move.oldY ? "进" : "退");
+        notation = (move.pieceColor === "red" ? "相" : "象") + startFile + direction + destFile;
+      }
+      else if (move.pieceType === "馬") {
+        let startFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        let direction = move.pieceColor === "red" ? (move.newY < move.oldY ? "进" : "退") : (move.newY > move.oldY ? "进" : "退");
+        notation = "馬" + startFile + direction + destFile;
+      }
+      else if (move.oldY === move.newY) {
+        let originFile = getFileNumber(move.pieceColor, move.oldX);
+        let destFile = getFileNumber(move.pieceColor, move.newX);
+        notation = move.pieceType + originFile + "平" + destFile;
+      }
+      else {
+        let originRank = getRankNumber(move.pieceColor, move.oldY);
+        let destRank = getRankNumber(move.pieceColor, move.newY);
+        let step = Math.abs(destRank - originRank);
+        let direction = move.pieceColor === "red" ? (move.newY < move.oldY ? "进" : "退") : (move.newY > move.oldY ? "进" : "退");
+        notation = move.pieceType + getFileNumber(move.pieceColor, move.oldX) + direction + step;
+      }
+      if (move.captured) notation += "（吃" + move.captured.type + "）";
+      return notation;
+    }
+    
+    function updateMoveLog() {
+      const logDiv = document.getElementById("moveLog"); logDiv.innerHTML = "";
+      moveHistory.forEach(move => {
+        const prefix = move.pieceColor === "red" ? "【红棋】" : "【黑棋】";
+        const p = document.createElement("div");
+        p.textContent = prefix + getMoveNotation(move);
+        logDiv.appendChild(p);
+      });
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    function parseMoveText(moveText) {
+      if (moveText.length < 4) { alert("棋谱格式不正确"); return; }
+      let pieceType = moveText.charAt(0);
+      if (pieceType === "马") pieceType = "馬";
+      if (pieceType === "象" || pieceType === "相") pieceType = currentPlayer === "red" ? "相" : "象";
+      const initFile = parseInt(moveText.charAt(1), 10);
+      const moveChar = moveText.charAt(2);
+      const destNum = parseInt(moveText.charAt(3), 10);
+      const candidate = pieces.find(p => p.color === currentPlayer && p.type === pieceType && getFileNumber(currentPlayer, p.x) === initFile);
+      if (!candidate) { alert("未找到符合条件的棋子"); return; }
+      let newX = candidate.x, newY = candidate.y;
+      if (pieceType === "相" || pieceType === "象") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        newY = moveChar === "进" ? candidate.y - 2 : candidate.y + 2;
+      }
+      else if (pieceType === "馬") {
+        newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1);
+        newY = moveChar === "进" ? candidate.y - 2 : candidate.y + 2;
+      }
+      else {
+        if (moveChar === "平") { newX = currentPlayer === "red" ? (9 - destNum) : (destNum - 1); newY = candidate.y; }
+        else if (moveChar === "进") { newY = currentPlayer === "red" ? candidate.y - destNum : candidate.y + destNum; }
+        else if (moveChar === "退") { newY = currentPlayer === "red" ? candidate.y + destNum : candidate.y - destNum; }
+        else { alert("未知的移动标记：" + moveChar); return; }
+      }
+      attemptMove(candidate, newX, newY);
+    }
+    
+    function initGame() { initPieces(); drawBoard(); renderPieces(); updatePerspective(); }
+    
+    function updatePerspective() {
+      const board = document.getElementById("chessboardWrapper");
+      board.style.opacity = "0";
+      setTimeout(() => {
+        if (autoSwitchPerspective && currentPlayer === "black") { board.style.transform = "rotate(180deg)"; board.classList.add("rotated"); }
+        else { board.style.transform = "rotate(0deg)"; board.classList.remove("rotated"); }
+        board.style.opacity = "1";
+      }, 300);
+    }
+    
+    document.getElementById("chessboardWrapper").addEventListener("click", function(e) {
+      if (!selectedPiece) return;
+      const rect = this.getBoundingClientRect();
+      let x = e.clientX - rect.left, y = e.clientY - rect.top;
+      if (autoSwitchPerspective && currentPlayer === "black") { x = rect.width - x; y = rect.height - y; }
+      let col = Math.round((x - margin) / spacing), row = Math.round((y - margin) / spacing);
+      attemptMove(selectedPiece, col, row);
+    });
+    
+    document.getElementById("startButton").addEventListener("click", function() {
+      autoSwitchPerspective = document.getElementById("autoPerspective").checked;
+      showControls = document.getElementById("showControls").checked;
+      document.querySelector(".controls").style.display = showControls ? "block" : "none";
+      document.getElementById("startScreen").style.display = "none";
+      initGame();
+    });
+    
+    document.getElementById("moveSubmit").addEventListener("click", function() {
+      const moveText = document.getElementById("moveInput").value.trim();
+      if (moveText) { parseMoveText(moveText); document.getElementById("moveInput").value = ""; }
+    });
+    
+    document.getElementById("moveInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") document.getElementById("moveSubmit").click();
+    });
+    
+    document.getElementById("copyLogButton").addEventListener("click", function() {
+      const logText = document.getElementById("moveLog").innerText;
+      navigator.clipboard.writeText(logText).then(() => { alert("Log copied!"); })
+      .catch(err => { alert("Copy failed: " + err); });
+    });
+    
+    // Fix: Add event listener for undo button
+    document.getElementById("undoButton").addEventListener("click", function() {
+      undoMove();
+    });
+  </script>
+</body>
+</html>
