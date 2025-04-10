@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Final Numbered Notation Editor</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --danger-color: #ea4335;
+            --warning-color: #fbbc05;
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+            --white: #ffffff;
+            --edit-mode-color: #ff9800;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 40px;
+            text-align: center;
+            user-select: none;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: var(--dark-gray);
+        }
+
+        .btn-success {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-edit-mode {
+            background-color: var(--edit-mode-color);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Editor Controls */
+        .editor-controls {
+            padding: 10px;
+            background-color: var(--white);
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            margin-right: 5px;
+        }
+
+        .control-group select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: scroll;
+            padding: 15px;
+            background-color: var(--white);
+            position: relative;
+        }
+
+        .measure-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .measure {
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+            min-width: 200px;
+        }
+
+        .measure-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .measure-time-signature {
+            font-weight: bold;
+        }
+
+        .measure-notes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            min-height: 40px;
+        }
+
+        .note {
+            background-color: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: transform 0.1s;
+        }
+
+        .note:active {
+            transform: scale(1.1);
+        }
+
+        .note.rest {
+            background-color: #666;
+        }
+
+        .note.selected {
+            box-shadow: 0 0 0 3px var(--warning-color);
+        }
+
+        .note.playing {
+            box-shadow: 0 0 0 3px var(--danger-color);
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .note-duration {
+            position: absolute;
+            bottom: -15px;
+            font-size: 0.6rem;
+            color: var(--dark-gray);
+            width: 100%;
+            text-align: center;
+        }
+
+        .note-accidental {
+            position: absolute;
+            top: -10px;
+            font-size: 0.8rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .note-dot {
+            position: absolute;
+            right: -5px;
+            font-size: 0.6rem;
+        }
+
+        .note-octave-up {
+            position: absolute;
+            top: -8px;
+            font-size: 0.6rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .note-octave-down {
+            position: absolute;
+            bottom: -8px;
+            font-size: 0.6rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .add-measure-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin: 10px 0;
+            align-self: flex-start;
+        }
+
+        /* Bottom Toolbar */
+        .bottom-toolbar {
+            background-color: var(--white);
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            z-index: 5;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+
+        .note-input-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .note-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        .note-btn.rest {
+            background-color: #666;
+        }
+
+        .note-btn.selected {
+            box-shadow: 0 0 0 2px var(--warning-color);
+        }
+
+        .duration-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .duration-btn {
+            padding: 5px 8px;
+            min-width: 30px;
+        }
+
+        .duration-btn.selected {
+            box-shadow: 0 0 0 2px var(--warning-color);
+        }
+
+        .accidental-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .accidental-btn.selected {
+            box-shadow: 0 0 0 2px var(--warning-color);
+        }
+
+        .octave-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Drag and Drop Styles */
+        .measure.dragging {
+            opacity: 0.5;
+        }
+
+        .measure.drop-target {
+            border: 2px dashed var(--primary-color);
+        }
+
+        /* Playback Indicator */
+        .playback-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background-color: var(--danger-color);
+            z-index: 20;
+            display: none;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            padding: 5px 10px;
+            background-color: var(--dark-gray);
+            color: white;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* File Input */
+        .file-input {
+            display: none;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .btn {
+                padding: 6px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .note-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
+            
+            .bottom-toolbar {
+                padding: 8px;
+            }
+            
+            .toolbar {
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Numbered Notation Editor</h1>
+        <div class="toolbar">
+            <button id="edit-mode-btn" class="btn btn-edit-mode">Edit Mode</button>
+            <button id="play-btn" class="btn btn-success">Play</button>
+            <button id="stop-btn" class="btn btn-danger">Stop</button>
+            <button id="add-measure-btn" class="btn btn-primary">Add Measure</button>
+            <button id="save-btn" class="btn btn-primary">Save</button>
+            <button id="export-btn" class="btn btn-primary">Export</button>
+            <button id="import-btn" class="btn btn-primary">Import</button>
+            <input type="file" id="file-import" class="file-input" accept=".json,.txt">
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="editor-controls">
+            <div class="control-group">
+                <label for="time-signature">Time Signature:</label>
+                <select id="time-signature">
+                    <option value="4/4">4/4</option>
+                    <option value="3/4">3/4</option>
+                    <option value="2/4">2/4</option>
+                    <option value="6/8">6/8</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="bpm">BPM:</label>
+                <input type="number" id="bpm" min="40" max="200" value="120" style="width: 60px;">
+            </div>
+        </div>
+
+        <div class="editor-area" id="editor-area">
+            <div class="playback-indicator" id="playback-indicator"></div>
+            <div class="measure-container" id="measure-container">
+                <!-- Measures will be added here dynamically -->
+            </div>
+            <button id="add-measure-btn-bottom" class="add-measure-btn">Add Measure</button>
+        </div>
+
+        <div class="bottom-toolbar">
+            <div class="note-input-buttons">
+                <button class="note-btn" data-note="1">1</button>
+                <button class="note-btn" data-note="2">2</button>
+                <button class="note-btn" data-note="3">3</button>
+                <button class="note-btn" data-note="4">4</button>
+                <button class="note-btn" data-note="5">5</button>
+                <button class="note-btn" data-note="6">6</button>
+                <button class="note-btn" data-note="7">7</button>
+                <button class="note-btn rest" data-note="0">0</button>
+            </div>
+            <div class="accidental-buttons">
+                <button id="sharp-btn" class="btn accidental-btn" title="Sharp">#</button>
+                <button id="flat-btn" class="btn accidental-btn" title="Flat">b</button>
+                <button id="natural-btn" class="btn accidental-btn" title="Natural">♮</button>
+            </div>
+            <div class="duration-buttons">
+                <button class="duration-btn btn" data-duration="1">𝅘𝅥</button>
+                <button class="duration-btn btn" data-duration="0.5">𝅘𝅥𝅮</button>
+                <button class="duration-btn btn" data-duration="0.25">𝅘𝅥𝅯</button>
+                <button class="duration-btn btn" data-duration="2">𝅗𝅥</button>
+                <button class="duration-btn btn" data-duration="1.5">𝅗𝅥.</button>
+            </div>
+            <div class="octave-buttons">
+                <button id="octave-up-btn" class="btn" title="Octave Up">↑</button>
+                <button id="octave-down-btn" class="btn" title="Octave Down">↓</button>
+            </div>
+            <button id="add-note-btn" class="btn btn-primary">Add Note</button>
+            <button id="delete-btn" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="status-message">Ready</span>
+        <span id="selection-info">No note selected</span>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Save Notation</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="song-title">Song Title:</label>
+                <input type="text" id="song-title" placeholder="Enter song title">
+            </div>
+            <div class="form-group">
+                <label for="song-composer">Composer:</label>
+                <input type="text" id="song-composer" placeholder="Enter composer name">
+            </div>
+            <div class="form-group">
+                <label for="save-filename">Filename:</label>
+                <input type="text" id="save-filename" placeholder="Enter filename (without extension)">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-save" class="btn btn-danger">Cancel</button>
+                <button id="confirm-save" class="btn btn-success">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="export-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Export Notation</div>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="export-format">Format:</label>
+                <select id="export-format">
+                    <option value="json">JSON</option>
+                    <option value="text">Text</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="export-filename">Filename:</label>
+                <input type="text" id="export-filename" placeholder="Enter filename (without extension)">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-export" class="btn btn-danger">Cancel</button>
+                <button id="confirm-export" class="btn btn-success">Export</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const editorArea = document.getElementById('editor-area');
+            const measureContainer = document.getElementById('measure-container');
+            const addMeasureBtn = document.getElementById('add-measure-btn');
+            const addMeasureBtnBottom = document.getElementById('add-measure-btn-bottom');
+            const playBtn = document.getElementById('play-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const saveBtn = document.getElementById('save-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const importBtn = document.getElementById('import-btn');
+            const fileImportInput = document.getElementById('file-import');
+            const editModeBtn = document.getElementById('edit-mode-btn');
+            const timeSignatureSelect = document.getElementById('time-signature');
+            const bpmInput = document.getElementById('bpm');
+            const noteButtons = document.querySelectorAll('.note-btn');
+            const sharpBtn = document.getElementById('sharp-btn');
+            const flatBtn = document.getElementById('flat-btn');
+            const naturalBtn = document.getElementById('natural-btn');
+            const durationButtons = document.querySelectorAll('.duration-btn');
+            const octaveUpBtn = document.getElementById('octave-up-btn');
+            const octaveDownBtn = document.getElementById('octave-down-btn');
+            const addNoteBtn = document.getElementById('add-note-btn');
+            const deleteBtn = document.getElementById('delete-btn');
+            const saveModal = document.getElementById('save-modal');
+            const exportModal = document.getElementById('export-modal');
+            const playbackIndicator = document.getElementById('playback-indicator');
+            const statusMessage = document.getElementById('status-message');
+            const selectionInfo = document.getElementById('selection-info');
+
+            // Audio Context
+            let audioContext;
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.error('Web Audio API is not supported in this browser');
+                statusMessage.textContent = 'Audio not supported in this browser';
+            }
+
+            // App State
+            let state = {
+                measures: [],
+                currentMeasure: null,
+                selectedNote: null,
+                lastAddedNote: null,
+                currentDuration: 1, // 1 = quarter note
+                currentAccidental: null, // null, '#', or 'b'
+                currentOctave: 0, // -1, 0, or 1
+                isPlaying: false,
+                playPosition: { measure: 0, note: 0 },
+                playTimeout: null,
+                editMode: false // false = add mode, true = edit mode
+            };
+
+            // Initialize the editor with one measure
+            addMeasure();
+            updateButtonStates();
+
+            // Event Listeners
+            addMeasureBtn.addEventListener('click', addMeasure);
+            addMeasureBtnBottom.addEventListener('click', addMeasure);
+            playBtn.addEventListener('click', playComposition);
+            stopBtn.addEventListener('click', stopPlayback);
+            saveBtn.addEventListener('click', showSaveModal);
+            exportBtn.addEventListener('click', showExportModal);
+            importBtn.addEventListener('click', () => fileImportInput.click());
+            fileImportInput.addEventListener('change', handleFileImport);
+            editModeBtn.addEventListener('click', toggleEditMode);
+            
+            // Note input buttons
+            noteButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const noteValue = this.dataset.note;
+                    
+                    if (state.editMode && state.selectedNote) {
+                        // In edit mode with a selected note - change the pitch
+                        updateSelectedNote('pitch', noteValue);
+                        updateStatus(`Changed note to ${noteValue}`);
+                    } else if (!state.editMode) {
+                        // In add mode - add a new note
+                        addNoteToCurrentMeasure({
+                            pitch: noteValue,
+                            duration: state.currentDuration,
+                            accidental: state.currentAccidental,
+                            octave: state.currentOctave
+                        });
+                    }
+                });
+            });
+
+            // Accidental buttons
+            sharpBtn.addEventListener('click', function() {
+                state.currentAccidental = '#';
+                updateButtonStates();
+                
+                if (state.editMode && state.selectedNote) {
+                    updateSelectedNote('accidental', '#');
+                    updateStatus("Added sharp to selected note");
+                } else if (!state.editMode && state.lastAddedNote) {
+                    updateNote(state.lastAddedNote, 'accidental', '#');
+                    updateStatus("Added sharp to last note");
+                }
+            });
+
+            flatBtn.addEventListener('click', function() {
+                state.currentAccidental = 'b';
+                updateButtonStates();
+                
+                if (state.editMode && state.selectedNote) {
+                    updateSelectedNote('accidental', 'b');
+                    updateStatus("Added flat to selected note");
+                } else if (!state.editMode && state.lastAddedNote) {
+                    updateNote(state.lastAddedNote, 'accidental', 'b');
+                    updateStatus("Added flat to last note");
+                }
+            });
+
+            naturalBtn.addEventListener('click', function() {
+                state.currentAccidental = null;
+                updateButtonStates();
+                
+                if (state.editMode && state.selectedNote) {
+                    updateSelectedNote('accidental', null);
+                    updateStatus("Removed accidental from selected note");
+                } else if (!state.editMode && state.lastAddedNote) {
+                    updateNote(state.lastAddedNote, 'accidental', null);
+                    updateStatus("Removed accidental from last note");
+                }
+            });
+
+            // Duration buttons
+            durationButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    state.currentDuration = parseFloat(this.dataset.duration);
+                    updateButtonStates();
+                    
+                    if (state.editMode && state.selectedNote) {
+                        updateSelectedNote('duration', state.currentDuration);
+                        updateStatus(`Changed duration to ${state.currentDuration}`);
+                    } else if (!state.editMode && state.lastAddedNote) {
+                        updateNote(state.lastAddedNote, 'duration', state.currentDuration);
+                        updateStatus(`Changed last note duration to ${state.currentDuration}`);
+                    }
+                });
+            });
+
+            // Octave buttons
+            octaveUpBtn.addEventListener('click', function() {
+                if (state.currentOctave < 1) {
+                    state.currentOctave++;
+                    updateButtonStates();
+                    
+                    if (state.editMode && state.selectedNote) {
+                        updateSelectedNote('octave', state.currentOctave);
+                        updateStatus(`Increased octave to ${state.currentOctave}`);
+                    } else if (!state.editMode && state.lastAddedNote) {
+                        updateNote(state.lastAddedNote, 'octave', state.currentOctave);
+                        updateStatus(`Increased last note octave to ${state.currentOctave}`);
+                    }
+                }
+            });
+
+            octaveDownBtn.addEventListener('click', function() {
+                if (state.currentOctave > -1) {
+                    state.currentOctave--;
+                    updateButtonStates();
+                    
+                    if (state.editMode && state.selectedNote) {
+                        updateSelectedNote('octave', state.currentOctave);
+                        updateStatus(`Decreased octave to ${state.currentOctave}`);
+                    } else if (!state.editMode && state.lastAddedNote) {
+                        updateNote(state.lastAddedNote, 'octave', state.currentOctave);
+                        updateStatus(`Decreased last note octave to ${state.currentOctave}`);
+                    }
+                }
+            });
+
+            // Add note button
+            addNoteBtn.addEventListener('click', function() {
+                if (!state.editMode) {
+                    addNoteToCurrentMeasure({
+                        pitch: '1',
+                        duration: state.currentDuration,
+                        accidental: state.currentAccidental,
+                        octave: state.currentOctave
+                    });
+                } else {
+                    updateStatus("Cannot add note in edit mode - switch to add mode first");
+                }
+            });
+
+            // Delete button
+            deleteBtn.addEventListener('click', function() {
+                if (state.editMode && state.selectedNote) {
+                    deleteSelectedNote();
+                } else if (!state.editMode && state.lastAddedNote) {
+                    deleteNote(state.lastAddedNote);
+                }
+            });
+
+            // Editor area click (to deselect notes)
+            editorArea.addEventListener('click', function(e) {
+                if (e.target === editorArea || e.target === measureContainer) {
+                    if (state.editMode) {
+                        deselectNote();
+                    }
+                }
+            });
+
+            // Modal close buttons
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.modal').style.display = 'none';
+                });
+            });
+
+            // Save modal buttons
+            document.getElementById('cancel-save').addEventListener('click', function() {
+                saveModal.style.display = 'none';
+            });
+
+            document.getElementById('confirm-save').addEventListener('click', function() {
+                const title = document.getElementById('song-title').value || 'Untitled';
+                const composer = document.getElementById('song-composer').value || 'Unknown';
+                let filename = document.getElementById('save-filename').value || 'composition';
+                
+                // Ensure filename doesn't contain extension
+                filename = filename.replace(/\.(json|txt)$/i, '');
+                
+                const data = exportNotation('json');
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                saveModal.style.display = 'none';
+                updateStatus(`"${title}" saved as ${filename}.json`);
+            });
+
+            // Export modal buttons
+            document.getElementById('cancel-export').addEventListener('click', function() {
+                exportModal.style.display = 'none';
+            });
+
+            document.getElementById('confirm-export').addEventListener('click', function() {
+                const format = document.getElementById('export-format').value;
+                let filename = document.getElementById('export-filename').value || 'composition';
+                
+                // Ensure filename doesn't contain extension
+                filename = filename.replace(/\.(json|txt)$/i, '');
+                
+                const data = exportNotation(format);
+                const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                exportModal.style.display = 'none';
+                updateStatus(`Exported as ${filename}.${format}`);
+            });
+
+            // Time signature change
+            timeSignatureSelect.addEventListener('change', function() {
+                if (state.currentMeasure) {
+                    const timeSignature = this.value.split('/');
+                    state.currentMeasure.timeSignature = {
+                        beats: parseInt(timeSignature[0]),
+                        beatValue: parseInt(timeSignature[1])
+                    };
+                    
+                    // Update the display
+                    const header = state.currentMeasure.element.querySelector('.measure-time-signature');
+                    if (header) {
+                        header.textContent = `${state.currentMeasure.timeSignature.beats}/${state.currentMeasure.timeSignature.beatValue}`;
+                    }
+                    
+                    updateStatus(`Time signature changed to ${this.value}`);
+                }
+            });
+
+            // Functions
+            function toggleEditMode() {
+                state.editMode = !state.editMode;
+                editModeBtn.textContent = state.editMode ? "Add Mode" : "Edit Mode";
+                editModeBtn.classList.toggle('btn-edit-mode', state.editMode);
+                editModeBtn.classList.toggle('btn-primary', !state.editMode);
+                updateButtonStates();
+                
+                if (state.editMode) {
+                    updateStatus("Edit mode - click on notes to edit them");
+                } else {
+                    deselectNote();
+                    updateStatus("Add mode - click note buttons to add new notes");
+                }
+            }
+
+            function addMeasure() {
+                const timeSignature = timeSignatureSelect.value.split('/');
+                const beats = parseInt(timeSignature[0]);
+                const beatValue = parseInt(timeSignature[1]);
+                
+                const measure = {
+                    id: Date.now(),
+                    timeSignature: { beats, beatValue },
+                    notes: [],
+                    element: null
+                };
+                
+                state.measures.push(measure);
+                renderMeasure(measure);
+                state.currentMeasure = measure;
+                
+                // Scroll to the new measure
+                setTimeout(() => {
+                    measure.element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+                
+                updateStatus("Added new measure");
+                updateSelectionInfo();
+            }
+
+            function renderMeasure(measure) {
+                const measureEl = document.createElement('div');
+                measureEl.className = 'measure';
+                measureEl.dataset.measureId = measure.id;
+                
+                measureEl.innerHTML = `
+                    <div class="measure-header">
+                        <span class="measure-time-signature">${measure.timeSignature.beats}/${measure.timeSignature.beatValue}</span>
+                    </div>
+                    <div class="measure-notes"></div>
+                `;
+                
+                const notesContainer = measureEl.querySelector('.measure-notes');
+                
+                // Add notes if they exist
+                measure.notes.forEach(note => {
+                    const noteEl = createNoteElement(note);
+                    notesContainer.appendChild(noteEl);
+                });
+                
+                // Add click handler for the measure
+                measureEl.addEventListener('click', function(e) {
+                    if (e.target === this || e.target.classList.contains('measure-notes')) {
+                        state.currentMeasure = measure;
+                        if (state.editMode) {
+                            deselectNote();
+                        }
+                        updateStatus(`Selected measure ${state.measures.indexOf(measure) + 1}`);
+                        updateSelectionInfo();
+                    }
+                });
+                
+                // Add drag and drop handlers
+                measureEl.draggable = true;
+                measureEl.addEventListener('dragstart', handleDragStart);
+                measureEl.addEventListener('dragover', handleDragOver);
+                measureEl.addEventListener('drop', handleDrop);
+                measureEl.addEventListener('dragend', handleDragEnd);
+                
+                measureContainer.appendChild(measureEl);
+                measure.element = measureEl;
+            }
+
+            function createNoteElement(note) {
+                const noteEl = document.createElement('div');
+                noteEl.className = 'note';
+                if (note.pitch === '0') noteEl.classList.add('rest');
+                
+                noteEl.dataset.noteId = note.id;
+                noteEl.innerHTML = `
+                    ${note.pitch !== '0' ? note.pitch : ''}
+                    ${note.accidental ? `<span class="note-accidental">${note.accidental}</span>` : ''}
+                    <span class="note-duration">${getDurationSymbol(note.duration)}</span>
+                    ${note.octave > 0 ? `<span class="note-octave-up">${'.'.repeat(note.octave)}</span>` : ''}
+                    ${note.octave < 0 ? `<span class="note-octave-down">${'.'.repeat(-note.octave)}</span>` : ''}
+                `;
+                
+                noteEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    if (state.editMode) {
+                        selectNote(note, noteEl);
+                    } else {
+                        // In add mode, clicking a note selects it temporarily for playback
+                        playNote(note);
+                    }
+                });
+                
+                return noteEl;
+            }
+
+            function getDurationSymbol(duration) {
+                if (duration === 1) return '𝅘𝅥';
+                if (duration === 0.5) return '𝅘𝅥𝅮';
+                if (duration === 0.25) return '𝅘𝅥𝅯';
+                if (duration === 2) return '𝅗𝅥';
+                if (duration === 1.5) return '𝅗𝅥.';
+                return '';
+            }
+
+            function addNoteToCurrentMeasure(noteData) {
+                if (!state.currentMeasure) {
+                    // If no measure exists, create one first
+                    addMeasure();
+                }
+                
+                // Check if we have space in the current measure
+                const totalBeats = state.currentMeasure.timeSignature.beats;
+                const currentBeats = state.currentMeasure.notes.reduce((sum, n) => sum + n.duration, 0);
+                const remainingBeats = totalBeats - currentBeats;
+                
+                if (noteData.duration > remainingBeats) {
+                    // Not enough space, create a new measure and add the note there
+                    addMeasure();
+                    updateStatus("Automatically created new measure for the note");
+                }
+                
+                const note = {
+                    id: Date.now(),
+                    pitch: noteData.pitch,
+                    duration: noteData.duration,
+                    accidental: noteData.accidental,
+                    octave: noteData.octave || 0
+                };
+                
+                state.currentMeasure.notes.push(note);
+                state.lastAddedNote = note;
+                
+                // Re-render the measure
+                const notesContainer = state.currentMeasure.element.querySelector('.measure-notes');
+                const noteEl = createNoteElement(note);
+                notesContainer.appendChild(noteEl);
+                
+                // Play the note
+                playNote(note);
+                
+                updateStatus(`Added new note ${note.pitch}`);
+                updateSelectionInfo();
+            }
+
+            function selectNote(note, noteEl) {
+                if (!state.editMode) return;
+                
+                deselectNote();
+                
+                state.selectedNote = note;
+                noteEl.classList.add('selected');
+                
+                // Update UI to reflect selected note's properties
+                state.currentDuration = note.duration;
+                state.currentAccidental = note.accidental;
+                state.currentOctave = note.octave;
+                
+                // Highlight the appropriate buttons
+                updateButtonStates();
+                updateSelectionInfo();
+            }
+
+            function deselectNote() {
+                if (state.selectedNote) {
+                    document.querySelectorAll('.note.selected').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    state.selectedNote = null;
+                    updateButtonStates();
+                    updateSelectionInfo();
+                }
+            }
+
+            function updateSelectedNote(property, value) {
+                updateNote(state.selectedNote, property, value);
+            }
+
+            function updateNote(note, property, value) {
+                if (!note) return;
+                
+                note[property] = value;
+                
+                // Find the note element and update it
+                const noteEl = document.querySelector(`.note[data-note-id="${note.id}"]`);
+                if (noteEl) {
+                    const newNoteEl = createNoteElement(note);
+                    noteEl.parentNode.replaceChild(newNoteEl, noteEl);
+                    
+                    // If this was the selected note, re-select it
+                    if (state.selectedNote && state.selectedNote.id === note.id) {
+                        selectNote(note, newNoteEl);
+                    }
+                    
+                    // Play the updated note
+                    playNote(note);
+                }
+            }
+
+            function deleteSelectedNote() {
+                if (!state.selectedNote) return;
+                deleteNote(state.selectedNote);
+            }
+
+            function deleteNote(note) {
+                // Find the measure containing this note
+                const measure = state.measures.find(m => 
+                    m.notes.some(n => n.id === note.id)
+                );
+                
+                if (measure) {
+                    // Remove the note from the measure
+                    measure.notes = measure.notes.filter(n => n.id !== note.id);
+                    
+                    // Re-render the measure
+                    const notesContainer = measure.element.querySelector('.measure-notes');
+                    notesContainer.innerHTML = '';
+                    measure.notes.forEach(n => {
+                        const noteEl = createNoteElement(n);
+                        notesContainer.appendChild(noteEl);
+                    });
+                    
+                    // Update last added note if it was deleted
+                    if (state.lastAddedNote && state.lastAddedNote.id === note.id) {
+                        state.lastAddedNote = measure.notes.length > 0 
+                            ? measure.notes[measure.notes.length - 1] 
+                            : null;
+                    }
+                    
+                    // Deselect if the selected note was deleted
+                    if (state.selectedNote && state.selectedNote.id === note.id) {
+                        deselectNote();
+                    }
+                    
+                    updateStatus("Note deleted");
+                    updateSelectionInfo();
+                }
+            }
+
+            function updateButtonStates() {
+                // Update note buttons based on current mode
+                noteButtons.forEach(btn => {
+                    const noteValue = btn.dataset.note;
+                    
+                    if (state.editMode && state.selectedNote) {
+                        // In edit mode with a selected note - highlight the current note's pitch
+                        btn.classList.toggle('selected', noteValue === state.selectedNote.pitch);
+                    } else if (!state.editMode && state.lastAddedNote) {
+                        // In add mode - highlight the last added note's pitch
+                        btn.classList.toggle('selected', noteValue === state.lastAddedNote.pitch);
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+                
+                // Update duration buttons
+                durationButtons.forEach(btn => {
+                    const isSelected = parseFloat(btn.dataset.duration) === state.currentDuration;
+                    btn.classList.toggle('selected', isSelected);
+                });
+                
+                // Update accidental buttons
+                sharpBtn.classList.toggle('selected', state.currentAccidental === '#');
+                flatBtn.classList.toggle('selected', state.currentAccidental === 'b');
+                naturalBtn.classList.toggle('selected', state.currentAccidental === null);
+                
+                // Update octave buttons
+                octaveUpBtn.disabled = state.currentOctave >= 1;
+                octaveDownBtn.disabled = state.currentOctave <= -1;
+                
+                // Update mode-specific buttons
+                addNoteBtn.disabled = state.editMode;
+                deleteBtn.disabled = !state.editMode && !state.lastAddedNote;
+            }
+
+            function playNote(note) {
+                if (!audioContext || note.pitch === '0') return; // Don't play rests
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = getFrequencyForNote(note);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01);
+                
+                const duration = 0.5 * (60 / parseInt(bpmInput.value));
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+
+            function getFrequencyForNote(note) {
+                // Base frequencies for octave 0
+                const noteFrequencies = {
+                    '1': 261.63, // C
+                    '2': 293.66, // D
+                    '3': 329.63, // E
+                    '4': 349.23, // F
+                    '5': 392.00, // G
+                    '6': 440.00, // A
+                    '7': 493.88  // B
+                };
+                
+                // Adjust for accidentals
+                let frequency = noteFrequencies[note.pitch];
+                if (note.accidental === '#') frequency *= Math.pow(2, 1/12);
+                if (note.accidental === 'b') frequency /= Math.pow(2, 1/12);
+                
+                // Adjust for octave
+                frequency *= Math.pow(2, note.octave);
+                
+                return frequency;
+            }
+
+            function playComposition() {
+                if (state.isPlaying) return;
+                
+                if (state.measures.length === 0 || state.measures.every(m => m.notes.length === 0)) {
+                    updateStatus("Nothing to play - add some notes first");
+                    return;
+                }
+                
+                state.isPlaying = true;
+                state.playPosition = { measure: 0, note: 0 };
+                playBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                updateStatus("Playing composition...");
+                playNextNote();
+            }
+
+            function playNextNote() {
+                if (!state.isPlaying || state.playPosition.measure >= state.measures.length) {
+                    stopPlayback();
+                    return;
+                }
+                
+                const currentMeasure = state.measures[state.playPosition.measure];
+                
+                if (state.playPosition.note >= currentMeasure.notes.length) {
+                    // Move to next measure
+                    state.playPosition.measure++;
+                    state.playPosition.note = 0;
+                    
+                    if (state.playPosition.measure >= state.measures.length) {
+                        stopPlayback();
+                        return;
+                    }
+                    
+                    // Small delay between measures
+                    state.playTimeout = setTimeout(playNextNote, 100);
+                    return;
+                }
+                
+                const currentNote = currentMeasure.notes[state.playPosition.note];
+                
+                // Highlight the current note
+                highlightPlayingNote(currentMeasure.id, currentNote.id);
+                
+                // Play the note
+                playNote(currentNote);
+                
+                // Move to next note
+                state.playPosition.note++;
+                
+                // Calculate delay based on note duration and BPM
+                const delay = (currentNote.duration * (60 / parseInt(bpmInput.value))) * 1000;
+                state.playTimeout = setTimeout(playNextNote, delay);
+            }
+
+            function highlightPlayingNote(measureId, noteId) {
+                // Remove highlight from all notes
+                document.querySelectorAll('.note.playing').forEach(el => {
+                    el.classList.remove('playing');
+                });
+                
+                // Highlight current note if it exists
+                if (noteId) {
+                    const noteEl = document.querySelector(`.measure[data-measure-id="${measureId}"] .note[data-note-id="${noteId}"]`);
+                    if (noteEl) {
+                        noteEl.classList.add('playing');
+                        
+                        // Scroll to the note
+                        noteEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+                
+                // Update playback indicator
+                if (measureId) {
+                    const measureEl = document.querySelector(`.measure[data-measure-id="${measureId}"]`);
+                    if (measureEl) {
+                        const rect = measureEl.getBoundingClientRect();
+                        const editorRect = editorArea.getBoundingClientRect();
+                        const left = rect.left - editorRect.left;
+                        
+                        playbackIndicator.style.left = `${left}px`;
+                        playbackIndicator.style.display = 'block';
+                    }
+                }
+            }
+
+            function stopPlayback() {
+                state.isPlaying = false;
+                if (state.playTimeout) {
+                    clearTimeout(state.playTimeout);
+                    state.playTimeout = null;
+                }
+                
+                playBtn.disabled = false;
+                stopBtn.disabled = true;
+                
+                // Remove highlight from all notes
+                document.querySelectorAll('.note.playing').forEach(el => {
+                    el.classList.remove('playing');
+                });
+                
+                playbackIndicator.style.display = 'none';
+                updateStatus("Playback stopped");
+            }
+
+            function showSaveModal() {
+                document.getElementById('song-title').value = '';
+                document.getElementById('song-composer').value = '';
+                document.getElementById('save-filename').value = 'composition';
+                saveModal.style.display = 'flex';
+            }
+
+            function showExportModal() {
+                document.getElementById('export-filename').value = 'composition';
+                document.getElementById('export-format').value = 'json';
+                exportModal.style.display = 'flex';
+            }
+
+            function handleFileImport(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const format = file.name.endsWith('.json') ? 'json' : 'text';
+                        importNotation(content, format);
+                        updateStatus(`Imported ${file.name}`);
+                    } catch (err) {
+                        console.error('Error importing file:', err);
+                        updateStatus("Error importing file - check the format");
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Reset the input to allow importing the same file again
+                e.target.value = '';
+            }
+
+            function exportNotation(format) {
+                const exportData = {
+                    version: '1.0',
+                    title: 'My Composition',
+                    composer: 'Unknown',
+                    bpm: parseInt(bpmInput.value),
+                    timeSignature: timeSignatureSelect.value,
+                    measures: state.measures.map(measure => ({
+                        timeSignature: `${measure.timeSignature.beats}/${measure.timeSignature.beatValue}`,
+                        notes: measure.notes.map(note => ({
+                            pitch: note.pitch,
+                            duration: note.duration,
+                            accidental: note.accidental,
+                            octave: note.octave
+                        }))
+                    }))
+                };
+                
+                return format === 'json' 
+                    ? JSON.stringify(exportData, null, 2)
+                    : convertToTextNotation(exportData);
+            }
+
+            function convertToTextNotation(data) {
+                let text = `Title: ${data.title}\n`;
+                text += `Composer: ${data.composer}\n`;
+                text += `Time Signature: ${data.timeSignature}\n`;
+                text += `BPM: ${data.bpm}\n\n`;
+                
+                data.measures.forEach((measure, i) => {
+                    text += `Measure ${i + 1} (${measure.timeSignature}):\n`;
+                    
+                    measure.notes.forEach(note => {
+                        text += `${note.pitch}`;
+                        if (note.accidental) text += note.accidental;
+                        if (note.octave > 0) text += '.'.repeat(note.octave);
+                        if (note.octave < 0) text += '_'.repeat(-note.octave);
+                        text += `[${note.duration}] `;
+                    });
+                    
+                    text += '\n\n';
+                });
+                
+                return text;
+            }
+
+            function importNotation(data, format) {
+                try {
+                    let parsedData;
+                    
+                    if (format === 'json') {
+                        parsedData = JSON.parse(data);
+                    } else {
+                        // Simple text format parser (very basic)
+                        parsedData = parseTextNotation(data);
+                    }
+                    
+                    // Clear current state
+                    state.measures = [];
+                    measureContainer.innerHTML = '';
+                    
+                    // Set BPM if available
+                    if (parsedData.bpm) {
+                        bpmInput.value = parsedData.bpm;
+                    }
+                    
+                    // Set time signature if available
+                    if (parsedData.timeSignature) {
+                        timeSignatureSelect.value = parsedData.timeSignature;
+                    }
+                    
+                    // Create measures and notes
+                    if (parsedData.measures && parsedData.measures.length > 0) {
+                        parsedData.measures.forEach(measureData => {
+                            const timeSignature = measureData.timeSignature.split('/');
+                            const beats = parseInt(timeSignature[0]);
+                            const beatValue = parseInt(timeSignature[1]);
+                            
+                            const measure = {
+                                id: Date.now(),
+                                timeSignature: { beats, beatValue },
+                                notes: [],
+                                element: null
+                            };
+                            
+                            if (measureData.notes) {
+                                measureData.notes.forEach(noteData => {
+                                    measure.notes.push({
+                                        id: Date.now(),
+                                        pitch: noteData.pitch || '1',
+                                        duration: noteData.duration || 1,
+                                        accidental: noteData.accidental || null,
+                                        octave: noteData.octave || 0
+                                    });
+                                });
+                            }
+                            
+                            state.measures.push(measure);
+                            renderMeasure(measure);
+                        });
+                        
+                        state.currentMeasure = state.measures[0];
+                        state.lastAddedNote = state.currentMeasure.notes.length > 0 
+                            ? state.currentMeasure.notes[state.currentMeasure.notes.length - 1]
+                            : null;
+                    }
+                    
+                    updateSelectionInfo();
+                } catch (e) {
+                    console.error('Import error:', e);
+                    updateStatus("Error importing notation - check the format");
+                }
+            }
+
+            function parseTextNotation(text) {
+                // This is a very basic parser for demonstration
+                // A real implementation would need to be more robust
+                const lines = text.split('\n');
+                const result = {
+                    title: 'Imported Composition',
+                    composer: 'Unknown',
+                    bpm: 120,
+                    timeSignature: '4/4',
+                    measures: []
+                };
+                
+                let currentMeasure = {
+                    timeSignature: '4/4',
+                    notes: []
+                };
+                
+                lines.forEach(line => {
+                    // Simple pattern matching for notes like "1", "2#", "5b", "7.", "3_", etc.
+                    const noteMatches = line.matchAll(/([0-7])([#b]?)([._]*)(\[([0-9.]+)\])?/g);
+                    
+                    for (const match of noteMatches) {
+                        const pitch = match[1];
+                        const accidental = match[2] || null;
+                        const octaveDots = match[3];
+                        const duration = match[5] ? parseFloat(match[5]) : 1;
+                        
+                        let octave = 0;
+                        if (octaveDots.includes('.')) octave = octaveDots.split('.').length - 1;
+                        if (octaveDots.includes('_')) octave = -(octaveDots.split('_').length - 1);
+                        
+                        currentMeasure.notes.push({
+                            pitch,
+                            duration,
+                            accidental,
+                            octave
+                        });
+                    }
+                    
+                    // Check for measure indicators
+                    if (line.includes('Measure')) {
+                        if (currentMeasure.notes.length > 0) {
+                            result.measures.push(currentMeasure);
+                            currentMeasure = {
+                                timeSignature: '4/4',
+                                notes: []
+                            };
+                        }
+                        
+                        const timeSigMatch = line.match(/\(([0-9]+\/[0-9]+)\)/);
+                        if (timeSigMatch) {
+                            currentMeasure.timeSignature = timeSigMatch[1];
+                        }
+                    }
+                });
+                
+                if (currentMeasure.notes.length > 0) {
+                    result.measures.push(currentMeasure);
+                }
+                
+                return result;
+            }
+
+            // Drag and Drop functions for measures
+            function handleDragStart(e) {
+                this.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', this.dataset.measureId);
+                e.dataTransfer.effectAllowed = 'move';
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const draggingMeasure = document.querySelector('.measure.dragging');
+                if (draggingMeasure && draggingMeasure !== this) {
+                    this.classList.add('drop-target');
+                }
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                this.classList.remove('drop-target');
+                
+                const sourceId = e.dataTransfer.getData('text/plain');
+                const sourceMeasure = state.measures.find(m => m.id.toString() === sourceId);
+                const targetMeasure = state.measures.find(m => m.id.toString() === this.dataset.measureId);
+                
+                if (sourceMeasure && targetMeasure && sourceMeasure !== targetMeasure) {
+                    const sourceIndex = state.measures.indexOf(sourceMeasure);
+                    const targetIndex = state.measures.indexOf(targetMeasure);
+                    
+                    // Remove from old position
+                    state.measures.splice(sourceIndex, 1);
+                    // Insert at new position
+                    state.measures.splice(targetIndex, 0, sourceMeasure);
+                    
+                    // Re-render all measures
+                    measureContainer.innerHTML = '';
+                    state.measures.forEach(measure => {
+                        renderMeasure(measure);
+                    });
+                    
+                    updateStatus(`Moved measure to position ${targetIndex + 1}`);
+                }
+            }
+
+            function handleDragEnd() {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.measure.drop-target').forEach(el => {
+                    el.classList.remove('drop-target');
+                });
+            }
+
+            function updateStatus(message) {
+                statusMessage.textContent = message;
+            }
+
+            function updateSelectionInfo() {
+                if (state.editMode && state.selectedNote) {
+                    selectionInfo.textContent = `Editing: ${getNoteDescription(state.selectedNote)}`;
+                } else if (!state.editMode && state.lastAddedNote) {
+                    selectionInfo.textContent = `Last added: ${getNoteDescription(state.lastAddedNote)}`;
+                } else if (state.editMode) {
+                    selectionInfo.textContent = "Edit mode - select a note to edit";
+                } else {
+                    selectionInfo.textContent = "Add mode - click note buttons to add";
+                }
+            }
+
+            function getNoteDescription(note) {
+                if (!note) return "No note";
+                
+                let desc = `Note ${note.pitch}`;
+                if (note.accidental) desc += note.accidental;
+                if (note.octave > 0) desc += ' high';
+                if (note.octave < 0) desc += ' low';
+                desc += ` (${note.duration} beat${note.duration !== 1 ? 's' : ''})`;
+                return desc;
+            }
+        });
+    </script>
+</body>
+</html>
