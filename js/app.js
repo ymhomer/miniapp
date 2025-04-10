@@ -139,7 +139,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Handle clicks on dataApp elements
     var dataAppElements = document.querySelectorAll('[data-app]');
     for (let i = 0; i < dataAppElements.length; i++) {
         dataAppElements[i].addEventListener('click', function(e) {
@@ -151,6 +150,26 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log("Setting iframe source to:", targetUrl);
         });
     }
+
+    document.querySelectorAll('[data-app]').forEach(function(item) {
+
+        const newTabIcon = document.createElement('img');
+        newTabIcon.src = "/miniapp/icon/box-arrow-up-right.svg";
+        newTabIcon.alt = "New-Tab";
+        newTabIcon.style.marginLeft = "2px";
+        newTabIcon.style.cursor = "pointer";
+        newTabIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const app = item.getAttribute('data-app');
+            const targetUrl = projectPath + app + '/index.html';
+            window.open(targetUrl, '_blank');
+            console.log("Opening in new tab:", targetUrl);
+        });
+        
+        item.appendChild(newTabIcon);
+    });
+
 
     // Close navbar when link is clicked
     document.querySelectorAll('.close-navbar').forEach(function(element) {
