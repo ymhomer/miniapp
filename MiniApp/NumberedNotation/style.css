@@ -191,6 +191,14 @@ body {
     transition: transform 0.1s;
 }
 
+.note.octave-up {
+    background-color: #2c6cd3; /* 深蓝，比默认蓝更深 */
+}
+
+.note.octave-down {
+    background-color: #8ab4f8; /* 浅蓝，和主色有层次差 */
+}
+
 .note:active {
     transform: scale(1.1);
 }
@@ -238,16 +246,16 @@ body {
 
 .note-octave-up {
     position: absolute;
-    top: -8px;
-    font-size: 0.6rem;
+    top: -6px;
+    font-size: 0.8rem;
     width: 100%;
     text-align: center;
 }
 
 .note-octave-down {
     position: absolute;
-    bottom: -8px;
-    font-size: 0.6rem;
+    bottom: -2px;
+    font-size: 0.8rem;
     width: 100%;
     text-align: center;
 }

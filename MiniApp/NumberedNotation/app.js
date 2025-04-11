@@ -376,6 +376,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const noteEl = document.createElement('div');
         noteEl.className = 'note';
         if (note.pitch === '0') noteEl.classList.add('rest');
+
+        if (note.octave === 1) {
+            noteEl.classList.add('octave-up');
+        } else if (note.octave === -1) {
+            noteEl.classList.add('octave-down');
+        }
         
         noteEl.dataset.noteId = note.id;
         noteEl.innerHTML = `
