@@ -52,23 +52,95 @@
       border-radius: 4px;
       border: 1px solid #ccc;
     }
-    /* 隐藏不需要的按钮 */
-    #toolbar button.add-measure { display: none; }
-    /* Reset 按钮 */
+    /* Reset button */
     #toolbar button.reset-btn {
       background-color: #d9534f;
     }
     #toolbar button.reset-btn:hover {
       background-color: #c9302c;
     }
-    /* Score Library 切换按钮 */
+    /* Score Library toggle button */
     #toolbar button#toggle-library-btn {
       background-color: #007bff;
     }
     #toolbar button#toggle-library-btn:hover {
       background-color: #0056b3;
     }
-    /* Score Library 面板 */
+    /* Help button */
+    #toolbar button#help-btn {
+      background-color: #28a745;
+    }
+    #toolbar button#help-btn:hover {
+      background-color: #218838;
+    }
+    /* Help Modal */
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    #helpModal .modal-content {
+      background-color: #fff;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    #helpModal .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    #helpModal .modal-header h5 {
+      margin: 0;
+      font-size: 1.2em;
+      color: #333;
+    }
+    #helpModal .modal-close {
+      background-color: #555;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #helpModal .modal-close:hover {
+      background-color: #777;
+    }
+    #helpModal .modal-body {
+      max-height: 60vh;
+      overflow-y: auto;
+      color: #333;
+      font-size: 0.95em;
+    }
+    #helpModal .modal-body h6 {
+      margin-top: 15px;
+      font-size: 1em;
+      color: #3a3a3a;
+    }
+    #helpModal .modal-body p, #helpModal .modal-body ul {
+      margin: 10px 0;
+    }
+    #helpModal .modal-body ul {
+      padding-left: 20px;
+    }
+    #helpModal .modal-body li {
+      margin-bottom: 5px;
+    }
+    /* Score Library panel */
     #library-panel {
       background: #fff;
       border: 1px solid #ccc;
@@ -190,8 +262,10 @@
       align-items: flex-end;
       gap: 4px;
     }
-    .note, .rest, .placeholder {
-      display: inline-block;
+    .note, .rest {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
       padding: 4px 6px;
       border: 1px solid transparent;
       border-radius: 4px;
@@ -200,23 +274,67 @@
       font-size: 1.2em;
       transition: background-color 0.15s;
       cursor: pointer;
+      position: relative;
     }
     .note:hover, .rest:hover { background-color: #f0f0f0; }
     .note.selected, .rest.selected { border: 1px solid #007bff; background-color: #e7f1ff; }
+    .note .pitch-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     .note .pitch { font-weight: bold; }
     .note .octave-dot-above,
     .note .octave-dot-below {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1em;
+      display: block;
+      font-size: 0.8em;
+      line-height: 1;
+      width: 100%;
+      text-align: center;
     }
-    .note .octave-dot-above { top: -10px; }
-    .note .octave-dot-below { bottom: -10px; }
-    .note .accidental { font-size: 0.9em; vertical-align: super; margin-right: 2px; }
-    .note .dot { font-weight: bold; margin-left: 2px; }
-    .note .tie-char { margin-left: 3px; opacity: 0.8; color: #d9534f; }
+    .note .octave-dot-above { margin-bottom: 2px; }
+    .note .octave-dot-below { margin-top: 2px; }
+    .note .accidental { font-size: 0.9em; margin-right: 2px; }
+    .note .dot, .note .tie-char { font-weight: bold; margin-left: 2px; }
+    .note .duration-char {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 1px;
+    }
+    .note .duration-char span {
+      font-size: 0.6em;
+      line-height: 0.7;
+      color: #d9534f;
+      opacity: 0.9;
+      margin: 0;
+      padding: 0;
+      text-shadow: 0 0 1px rgba(0,0,0,0.1);
+    }
+    .note .duration-char span:not(:first-child) {
+      transform: translateY(-1px);
+    }
     .rest { color: #666; font-weight: bold; }
+    .rest .pitch-container { display: flexanium; align-items: center; }
+    .rest .dot { font-weight: bold; margin-left: 2px; }
+    .rest .duration-char {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 1px;
+    }
+    .rest .duration-char span {
+      font-size: 0.6em;
+      line-height: 0.7;
+      color: #d9534f;
+      opacity: 0.9;
+      margin: 0;
+      padding: 0;
+      text-shadow: 0 0 1px rgba(0,0,0,0.1);
+    }
+    .rest .duration-char span:not(:first-child) {
+      transform: translateY(-1px);
+    }
     /* Cursor */
     #cursor {
       display: inline-block;
@@ -253,8 +371,18 @@
       transition: background-color 0.15s;
     }
     #action-bar button:active { background-color: #e6e6e6; }
-    .action-group { display: flex; gap: 6px; padding: 4px; border: 1px solid #ccc; border-radius: 6px; background-color: #fafafa; }
-    .action-group span { align-self: center; font-size: 0.9em; }
+    .action-group {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #fafafa;
+    }
+    .action-group span {
+      align-self: center;
+      font-size: 0.9em;
+    }
     /* Responsive: small screens */
     @media (max-width: 600px) {
       #toolbar { flex-direction: column; align-items: stretch; }
@@ -262,6 +390,7 @@
       #editor-area { margin: 6px; padding: 6px; }
       .measure { min-width: 100px; padding: 4px; }
       .action-group { flex-wrap: wrap; }
+      #helpModal .modal-content { width: 95%; }
     }
   </style>
 </head>
@@ -272,6 +401,7 @@
     <button id="play-btn">Play</button>
     <button id="toggle-library-btn">Show Score Library</button>
     <button class="reset-btn" id="reset-btn">Reset</button>
+    <button id="help-btn">Help</button>
     <label>
       Time Sig:
       <input type="number" id="time-sig-beats" value="4" min="1">
@@ -286,6 +416,42 @@
       BPM:
       <input type="number" id="bpm-input" value="120" min="30" max="300">
     </label>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="helpModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Jianpu Editor Help</h5>
+        <button class="modal-close">Close</button>
+      </div>
+      <div class="modal-body">
+        <h6>Overview</h6>
+        <p>This editor allows you to create and edit Jianpu (numbered musical notation) scores. Use the toolbar to play, reset, or manage scores, and the bottom action bar to input notes, rests, and modifications.</p>
+        <h6>Key Mappings</h6>
+        <ul>
+          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti)</li>
+          <li><strong>0</strong>: Insert a rest</li>
+          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor</li>
+          <li><strong>Arrow Left/Right</strong>: Move cursor between notes or measures</li>
+          <li><strong>Arrow Up/Down</strong>: Increase/decrease octave (when a note is selected)</li>
+          <li><strong>#</strong>: Add sharp to selected note</li>
+          <li><strong>b</strong>: Add flat to selected note</li>
+          <li><strong>.</strong>: Toggle dotted note (extends duration by 1.5x)</li>
+          <li><strong>-</strong>: Add tie to selected note (extends duration)</li>
+          <li><strong>_</strong>: Shorten duration (e.g., quarter to eighth, up to 32nd note)</li>
+          <li><strong>Enter</strong>: Add a new measure</li>
+        </ul>
+        <h6>Usage Tips</h6>
+        <ul>
+          <li>Click a note to select it, then use the action bar or keys to modify it.</li>
+          <li>Use underscores (_) to shorten note duration, compactly stacked vertically below the note (e.g., three _ for a 32nd note).</li>
+          <li>Use dashes (-) for ties, appearing after the note (e.g., 1-).</li>
+          <li>Monitor the beat info in each measure to ensure correct timing.</li>
+          <li>Use the Score Library to import/export scores as JSON files.</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- Score Library Panel -->
@@ -332,8 +498,9 @@
     </div>
     <div class="action-group">
       <span>Duration:</span>
-      <button data-value="dot">. (Dot)</button>
-      <button data-value="tie">- (Extend)</button>
+      <button data-value="dot">Dot (.)</button>
+      <button data-value="tie">Tie (-)</button>
+      <button data-value="shorten">Shorten (_)</button>
     </div>
     <div class="action-group">
       <span>Edit:</span>
@@ -342,7 +509,7 @@
     </div>
   </div>
 
-  <!-- 隐藏的文件输入 -->
+  <!-- Hidden file input -->
   <input type="file" id="import-file" class="hidden" accept=".json, .txt" multiple style="display: none;">
 
   <script>
@@ -403,53 +570,76 @@
     const resetBtn = document.getElementById('reset-btn');
     const libraryImportBtn = document.getElementById('library-import-btn');
     const libraryExportBtn = document.getElementById('library-export-btn');
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('helpModal');
+    const helpModalClose = helpModal.querySelector('.modal-close');
 
     // Global state
     let score = {
       timeSignature: { beats: 4, beatType: 4 },
       bpm: 120,
-      measures: []  // Each measure contains a notes array
+      measures: []
     };
-    // Score Library,存放多个导入的乐谱对象 {name, data}
     let scoreLibrary = [];
     let cursorPosition = { measureIndex: 0, noteIndex: 0 };
     let selectedElement = null;
     let nextId = 0;
+
     function getNewId() { return `elem-${nextId++}`; }
     function getBeatValue(beatType) { return 4 / beatType; }
+
     function calculateMeasureBeats(measureIndex) {
       if (!score.measures[measureIndex]) return 0;
       let totalBeats = 0;
       const beatValue = getBeatValue(score.timeSignature.beatType);
       score.measures[measureIndex].notes.forEach(note => {
-        let duration = note.duration * beatValue;
-        if (note.dotted) { duration *= 1.5; }
+        let duration = note.durationBase * beatValue;
+        if (note.dotted) duration *= 1.5;
+        if (note.tieCount > 0) duration += note.durationBase * note.tieCount * beatValue;
         totalBeats += duration;
       });
       return totalBeats;
     }
-    // Render note element，tie 改为数字显示多个连音符
+
+    // Render note element
     function renderNoteElement(noteData) {
       const noteEl = document.createElement('span');
       noteEl.id = noteData.id;
       noteEl.dataset.measureIndex = cursorPosition.measureIndex;
       noteEl.dataset.noteId = noteData.id;
       noteEl.tabIndex = 0;
-      Object.keys(noteData).forEach(key => { if (typeof noteData[key] !== 'object') { noteEl.dataset[key] = noteData[key]; } });
+      Object.keys(noteData).forEach(key => {
+        if (typeof noteData[key] !== 'object') noteEl.dataset[key] = noteData[key];
+      });
       if (noteData.type === 'note') {
         noteEl.className = 'note';
-        let content = '';
-        if (noteData.accidental) { content += `<span class="accidental">${noteData.accidental}</span>`; }
-        if (noteData.octave > 0) { content += `<span class="octave-dot-above">${'·'.repeat(noteData.octave)}</span>`; }
+        let content = '<span class="pitch-container">';
+        if (noteData.octave > 0) content += `<span class="octave-dot-above">${'·'.repeat(noteData.octave)}</span>`;
+        if (noteData.accidental) content += `<span class="accidental">${noteData.accidental}</span>`;
         content += `<span class="pitch">${noteData.pitch}</span>`;
-        if (noteData.tie && noteData.tie > 0) { content += `<span class="tie-char">${'-'.repeat(noteData.tie)}</span>`; }
-        if (noteData.octave < 0) { content += `<span class="octave-dot-below">${'·'.repeat(Math.abs(noteData.octave))}</span>`; }
-        if (noteData.dotted) { content += `<span class="dot">.</span>`; }
+        if (noteData.dotted) content += `<span class="dot">.</span>`;
+        if (noteData.tieCount > 0) content += `<span class="tie-char">${'-'.repeat(noteData.tieCount)}</span>`;
+        if (noteData.octave < 0) content += `<span class="octave-dot-below">${'·'.repeat(Math.abs(noteData.octave))}</span>`;
+        content += '</span>';
+        if (noteData.durationBase < 1) {
+          const underscoreCount = Math.log2(1 / noteData.durationBase);
+          content += '<span class="duration-char">';
+          for (let i = 0; i < underscoreCount; i++) content += '<span>_</span>';
+          content += '</span>';
+        }
         noteEl.innerHTML = content;
       } else if (noteData.type === 'rest') {
         noteEl.className = 'rest';
-        noteEl.innerHTML = '0';
-        if (noteData.dotted) { noteEl.innerHTML += `<span class="dot">.</span>`; }
+        let content = '<span class="pitch-container">0';
+        if (noteData.dotted) content += `<span class="dot">.</span>`;
+        content += '</span>';
+        if (noteData.durationBase < 1) {
+          const underscoreCount = Math.log2(1 / noteData.durationBase);
+          content += '<span class="duration-char">';
+          for (let i = 0; i < underscoreCount; i++) content += '<span>_</span>';
+          content += '</span>';
+        }
+        noteEl.innerHTML = content;
       }
       noteEl.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -459,12 +649,18 @@
         playFeedback(noteEl);
       });
       let pressTimer;
-      noteEl.addEventListener('touchstart', (e) => { pressTimer = setTimeout(() => { selectElement(noteEl); }, 800); });
+      noteEl.addEventListener('touchstart', (e) => {
+        pressTimer = setTimeout(() => selectElement(noteEl), 800);
+      });
       noteEl.addEventListener('touchend', () => clearTimeout(pressTimer));
       noteEl.addEventListener('touchmove', () => clearTimeout(pressTimer));
-      noteEl.addEventListener('contextmenu', (e) => { e.preventDefault(); selectElement(noteEl); });
+      noteEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        selectElement(noteEl);
+      });
       return noteEl;
     }
+
     function renderMeasure(measureData, measureIndex) {
       const measureEl = document.createElement('div');
       measureEl.className = 'measure';
@@ -474,7 +670,7 @@
       headerEl.className = 'measure-header';
       const timeSigEl = document.createElement('span');
       timeSigEl.className = 'time-signature';
-      if (measureIndex === 0) { timeSigEl.textContent = `${score.timeSignature.beats}/${score.timeSignature.beatType}`; }
+      if (measureIndex === 0) timeSigEl.textContent = `${score.timeSignature.beats}/${score.timeSignature.beatType}`;
       const beatInfoEl = document.createElement('span');
       beatInfoEl.className = 'beat-info';
       headerEl.appendChild(timeSigEl);
@@ -482,21 +678,9 @@
       measureEl.appendChild(headerEl);
       const notesContainer = document.createElement('div');
       notesContainer.className = 'notes-container';
-      measureData.notes.forEach(noteData => { notesContainer.appendChild(renderNoteElement(noteData)); });
-      const placeholder = document.createElement('span');
-      placeholder.className = 'placeholder';
-      placeholder.innerHTML = '&nbsp;';
-      placeholder.style.minWidth = '10px';
-      placeholder.style.display = 'inline-block';
-      placeholder.dataset.measureIndex = measureIndex;
-      placeholder.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const mIndex = parseInt(event.target.dataset.measureIndex);
-        const noteCount = score.measures[mIndex].notes.length;
-        moveCursorTo(mIndex, noteCount);
-        deselectElement();
+      measureData.notes.forEach(noteData => {
+        notesContainer.appendChild(renderNoteElement(noteData));
       });
-      notesContainer.appendChild(placeholder);
       measureEl.appendChild(notesContainer);
       measureEl.addEventListener('click', (event) => {
         if (event.target === measureEl || event.target === notesContainer) {
@@ -509,30 +693,40 @@
       updateMeasureBeatInfo(measureEl, measureIndex);
       return measureEl;
     }
+
     function updateMeasureBeatInfo(measureElement, measureIndex) {
       const beatInfoEl = measureElement.querySelector('.beat-info');
       if (!beatInfoEl) return;
       const currentBeats = calculateMeasureBeats(measureIndex);
       const targetBeats = score.timeSignature.beats;
       beatInfoEl.textContent = `${currentBeats.toFixed(2)} / ${targetBeats}`;
-      if (Math.abs(currentBeats - targetBeats) > 0.01) { beatInfoEl.classList.add('error'); }
-      else { beatInfoEl.classList.remove('error'); }
+      if (Math.abs(currentBeats - targetBeats) > 0.01) beatInfoEl.classList.add('error');
+      else beatInfoEl.classList.remove('error');
     }
+
     function renderScore() {
       scoreContent.innerHTML = '';
-      score.measures.forEach((measureData, index) => { scoreContent.appendChild(renderMeasure(measureData, index)); });
+      score.measures.forEach((measureData, index) => {
+        scoreContent.appendChild(renderMeasure(measureData, index));
+      });
       updateCursorPosition();
     }
+
     // Cursor management
     function moveCursorTo(measureIndex, noteIndex) {
       measureIndex = Math.max(0, Math.min(measureIndex, score.measures.length - 1));
-      if (score.measures.length === 0) { measureIndex = -1; noteIndex = 0; }
-      else if (measureIndex >= 0) { noteIndex = Math.max(0, Math.min(noteIndex, score.measures[measureIndex].notes.length)); }
+      if (score.measures.length === 0) {
+        measureIndex = -1;
+        noteIndex = 0;
+      } else if (measureIndex >= 0) {
+        noteIndex = Math.max(0, Math.min(noteIndex, score.measures[measureIndex].notes.length));
+      }
       cursorPosition.measureIndex = measureIndex;
       cursorPosition.noteIndex = noteIndex;
       updateCursorPosition();
       deselectElement();
     }
+
     function updateCursorPosition() {
       if (cursorPosition.measureIndex < 0 || score.measures.length === 0) {
         cursor.style.left = `10px`;
@@ -541,34 +735,55 @@
         return;
       }
       const measureElement = scoreContent.children[cursorPosition.measureIndex];
-      if (!measureElement) { cursor.style.display = 'none'; return; }
+      if (!measureElement) {
+        cursor.style.display = 'none';
+        return;
+      }
       const notesContainer = measureElement.querySelector('.notes-container');
-      if (!notesContainer) { cursor.style.display = 'none'; return; }
+      if (!notesContainer) {
+        cursor.style.display = 'none';
+        return;
+      }
       let targetElement;
-      if (cursorPosition.noteIndex < notesContainer.children.length - 1) { 
-        targetElement = notesContainer.children[cursorPosition.noteIndex]; 
+      if (cursorPosition.noteIndex < notesContainer.children.length) {
+        targetElement = notesContainer.children[cursorPosition.noteIndex];
       } else {
-        targetElement = notesContainer.children[notesContainer.children.length - 1];
+        targetElement = notesContainer.children[notesContainer.children.length - 1] || notesContainer;
       }
       if (targetElement) {
         const rect = targetElement.getBoundingClientRect();
         const containerRect = scoreContent.getBoundingClientRect();
         let left = rect.left - containerRect.left + editorArea.scrollLeft;
+        if (cursorPosition.noteIndex >= notesContainer.children.length) {
+          left += rect.width;
+        }
         let top = rect.top - containerRect.top + (rect.height / 2) - (cursor.offsetHeight / 2) + 5;
         cursor.style.left = `${left}px`;
         cursor.style.top = `${top}px`;
         cursor.style.display = 'inline-block';
-      } else { cursor.style.display = 'none'; }
+      } else {
+        cursor.style.display = 'none';
+      }
     }
+
     // Selection management
     function selectElement(element) {
       deselectElement();
-      if (element) { selectedElement = element; selectedElement.classList.add('selected'); selectedElement.focus(); }
+      if (element) {
+        selectedElement = element;
+        selectedElement.classList.add('selected');
+        selectedElement.focus();
+      }
     }
+
     function deselectElement() {
-      if (selectedElement) { selectedElement.classList.remove('selected'); selectedElement.blur(); }
+      if (selectedElement) {
+        selectedElement.classList.remove('selected');
+        selectedElement.blur();
+      }
       selectedElement = null;
     }
+
     function getNoteDataFromElement(element) {
       if (!element || !element.dataset || !element.dataset.noteId) return null;
       const measureIndex = parseInt(element.dataset.measureIndex);
@@ -576,9 +791,12 @@
       if (isNaN(measureIndex) || !noteId || !score.measures[measureIndex]) return null;
       return score.measures[measureIndex].notes.find(n => n.id === noteId);
     }
-    // Insert note：如果当前 measure 满，则自动添加新 measure
+
+    // Insert note
     function insertNote(noteData) {
-      if (calculateMeasureBeats(cursorPosition.measureIndex) >= score.timeSignature.beats - 0.001) { addMeasure(); }
+      if (calculateMeasureBeats(cursorPosition.measureIndex) >= score.timeSignature.beats - 0.001) {
+        addMeasure();
+      }
       const measure = score.measures[cursorPosition.measureIndex];
       if (!measure) return;
       const fullNoteData = {
@@ -586,19 +804,23 @@
         type: 'note',
         pitch: 1,
         octave: 0,
-        duration: 1,
+        durationBase: 1,
+        tieCount: 0,
         accidental: null,
         dotted: false,
-        tie: 0,  // tie 数量初始为 0
         ...noteData
       };
       measure.notes.splice(cursorPosition.noteIndex, 0, fullNoteData);
       cursorPosition.noteIndex++;
       renderScore();
       const newElement = document.getElementById(fullNoteData.id);
-      if (newElement) { selectElement(newElement); playFeedback(newElement); }
+      if (newElement) {
+        selectElement(newElement);
+        playFeedback(newElement);
+      }
     }
-    // Delete: 如果当前 measure 内无内容，则删除该 measure（至少保留 1 个）
+
+    // Delete
     function deleteNoteAtCursor() {
       if (cursorPosition.measureIndex < 0 || score.measures.length === 0) return;
       const measure = score.measures[cursorPosition.measureIndex];
@@ -616,9 +838,9 @@
       let deleteIndex = -1;
       if (selectedElement) {
         const selectedData = getNoteDataFromElement(selectedElement);
-        if (selectedData) { deleteIndex = measure.notes.findIndex(n => n.id === selectedData.id); }
+        if (selectedData) deleteIndex = measure.notes.findIndex(n => n.id === selectedData.id);
       }
-      if (deleteIndex === -1 && cursorPosition.noteIndex > 0) { deleteIndex = cursorPosition.noteIndex - 1; }
+      if (deleteIndex === -1 && cursorPosition.noteIndex > 0) deleteIndex = cursorPosition.noteIndex - 1;
       if (deleteIndex !== -1) {
         measure.notes.splice(deleteIndex, 1);
         cursorPosition.noteIndex = Math.max(0, deleteIndex);
@@ -626,6 +848,7 @@
       }
       deselectElement();
     }
+
     function deleteNoteAtElement(element) {
       const data = getNoteDataFromElement(element);
       if (!data) return;
@@ -641,6 +864,7 @@
         deselectElement();
       }
     }
+
     // Modify selected note
     function modifySelectedNote(property, value) {
       if (!selectedElement) return;
@@ -655,12 +879,21 @@
           break;
         case 'type':
           data.type = value;
-          if (value === 'rest') { data.pitch = 0; data.octave = 0; data.accidental = null; }
-          else { data.pitch = data.pitch || 1; }
+          if (value === 'rest') {
+            data.pitch = 0;
+            data.octave = 0;
+            data.accidental = null;
+            data.tieCount = 0;
+          } else {
+            data.pitch = data.pitch || 1;
+          }
           break;
         case 'accidental':
           if (data.type === 'note') {
-            if (value === '#' && (data.pitch === 3 || data.pitch === 7)) { console.warn("Cannot raise E(3) or B(7)"); return; }
+            if (value === '#' && (data.pitch === 3 || data.pitch === 7)) {
+              console.warn("Cannot raise E(3) or B(7)");
+              return;
+            }
             data.accidental = (data.accidental === value) ? null : value;
           }
           break;
@@ -672,19 +905,37 @@
             data.octave = Math.max(-2, Math.min(2, data.octave));
           }
           break;
-        case 'dotted':
-          if (data.type === 'rest' || data.type === 'note') { data.dotted = !data.dotted; }
-          else { console.warn("Cannot dot this element type"); return; }
+        case 'shorten':
+          if (data.type === 'rest' || data.type === 'note') {
+            data.durationBase = Math.max(0.125, data.durationBase / 2);
+            if (data.type === 'rest') data.tieCount = 0;
+          }
           break;
         case 'tie':
-          if (data.type === 'note') { data.duration += 1; data.tie = (data.tie || 0) + 1; }
-          else { console.warn("Cannot apply tie '-' to rests"); return; }
+          if (data.type === 'note') data.tieCount++;
+          else {
+            console.warn("Cannot apply tie '-' to rests");
+            return;
+          }
+          break;
+        case 'dotted':
+          if (data.type === 'rest' || data.type === 'note') data.dotted = !data.dotted;
+          else {
+            console.warn("Cannot dot this element type");
+            return;
+          }
           break;
         default:
           needsRender = false;
       }
-      if (needsRender) { renderScore(); const reselected = document.getElementById(data.id); if (reselected) selectElement(reselected); playFeedback(selectedElement); }
+      if (needsRender) {
+        renderScore();
+        const reselected = document.getElementById(data.id);
+        if (reselected) selectElement(reselected);
+        playFeedback(selectedElement);
+      }
     }
+
     // Add a new measure
     function addMeasure() {
       const newMeasure = { id: getNewId(), notes: [] };
@@ -693,7 +944,8 @@
       cursorPosition.noteIndex = 0;
       renderScore();
     }
-    // Reset the editor (清空所有内容)
+
+    // Reset the editor
     function resetEditor() {
       if (confirm("Are you sure you want to reset the editor? All content will be lost.")) {
         score = { timeSignature: { beats: 4, beatType: 4 }, bpm: 120, measures: [] };
@@ -702,17 +954,22 @@
         moveCursorTo(0, 0);
       }
     }
+
     // Event listeners for bottom action bar and keyboard
     actionBar.addEventListener('click', (event) => {
       if (event.target.tagName === 'BUTTON') {
         const action = event.target.dataset.value;
         initAudio();
         if (!action) return;
-        if (['1','2','3','4','5','6','7'].includes(action)) { insertNote({ type: 'note', pitch: parseInt(action) }); }
-        else if (action === '0') { insertNote({ type: 'rest', pitch: 0 }); }
-        else if (action === 'add-note-cursor') { insertNote({ type: 'note', pitch: 1 }); }
-        else if (action === 'delete') { deleteNoteAtCursor(); }
-        else if (selectedElement) {
+        if (['1','2','3','4','5','6','7'].includes(action)) {
+          insertNote({ type: 'note', pitch: parseInt(action) });
+        } else if (action === '0') {
+          insertNote({ type: 'rest', pitch: 0 });
+        } else if (action === 'add-note-cursor') {
+          insertNote({ type: 'note', pitch: 1 });
+        } else if (action === 'delete') {
+          deleteNoteAtCursor();
+        } else if (selectedElement) {
           if (action === '#') modifySelectedNote('accidental', '#');
           else if (action === 'b') modifySelectedNote('accidental', 'b');
           else if (action === 'clear-accid') modifySelectedNote('accidental', null);
@@ -721,49 +978,86 @@
           else if (action === 'octave-clear') modifySelectedNote('octave', 'clear');
           else if (action === 'dot') modifySelectedNote('dotted', true);
           else if (action === 'tie') modifySelectedNote('tie', true);
-        } else { console.log("Select a note first for this action:", action); }
+          else if (action === 'shorten') modifySelectedNote('shorten', true);
+        } else {
+          console.log("Select a note first for this action:", action);
+        }
       }
     });
+
     document.addEventListener('keydown', (event) => {
       if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') return;
       initAudio();
       const key = event.key;
       let handled = true;
-      if (key >= '1' && key <= '7') { insertNote({ type: 'note', pitch: parseInt(key) }); }
-      else if (key === '0') { insertNote({ type: 'rest', pitch: 0 }); }
-      else if (key === 'Backspace' || key === 'Delete') { deleteNoteAtCursor(); }
-      else if (key === 'ArrowLeft') {
-        if (cursorPosition.noteIndex > 0) { moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex - 1); }
-        else if (cursorPosition.measureIndex > 0) {
+      if (key >= '1' && key <= '7') {
+        insertNote({ type: 'note', pitch: parseInt(key) });
+      } else if (key === '0') {
+        insertNote({ type: 'rest', pitch: 0 });
+      } else if (key === 'Backspace' || key === 'Delete') {
+        deleteNoteAtCursor();
+      } else if (key === 'ArrowLeft') {
+        if (cursorPosition.noteIndex > 0) {
+          moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex - 1);
+        } else if (cursorPosition.measureIndex > 0) {
           const prevMeasureIndex = cursorPosition.measureIndex - 1;
           moveCursorTo(prevMeasureIndex, score.measures[prevMeasureIndex].notes.length);
         }
       } else if (key === 'ArrowRight') {
         const currentMeasure = score.measures[cursorPosition.measureIndex];
         if (!currentMeasure) return;
-        if (cursorPosition.noteIndex < currentMeasure.notes.length) { moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex + 1); }
-        else if (cursorPosition.measureIndex < score.measures.length - 1) { moveCursorTo(cursorPosition.measureIndex + 1, 0); }
-      } else if (key === 'ArrowUp' && selectedElement) { modifySelectedNote('octave', '+1'); }
-      else if (key === 'ArrowDown' && selectedElement) { modifySelectedNote('octave', '-1'); }
-      else if (key === '#' && selectedElement) { modifySelectedNote('accidental', '#'); }
-      else if (key === 'b' && selectedElement) { modifySelectedNote('accidental', 'b'); }
-      else if (key === '.' && selectedElement) { modifySelectedNote('dotted', true); }
-      else if (key === '-' && selectedElement) { modifySelectedNote('tie', true); }
-      else if (key === 'Enter') { addMeasure(); }
-      else { handled = false; }
-      if (handled) { event.preventDefault(); }
+        if (cursorPosition.noteIndex < currentMeasure.notes.length) {
+          moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex + 1);
+        } else if (cursorPosition.measureIndex < score.measures.length - 1) {
+          moveCursorTo(cursorPosition.measureIndex + 1, 0);
+        }
+      } else if (key === 'ArrowUp' && selectedElement) {
+        modifySelectedNote('octave', '+1');
+      } else if (key === 'ArrowDown' && selectedElement) {
+        modifySelectedNote('octave', '-1');
+      } else if (key === '#' && selectedElement) {
+        modifySelectedNote('accidental', '#');
+      } else if (key === 'b' && selectedElement) {
+        modifySelectedNote('accidental', 'b');
+      } else if (key === '.' && selectedElement) {
+        modifySelectedNote('dotted', true);
+      } else if (key === '-' && selectedElement) {
+        modifySelectedNote('tie', true);
+      } else if (key === '_' && selectedElement) {
+        modifySelectedNote('shorten', true);
+      } else if (key === 'Enter') {
+        addMeasure();
+      } else {
+        handled = false;
+      }
+      if (handled) event.preventDefault();
     });
+
     // Reset button
     resetBtn.addEventListener('click', resetEditor);
-    // ---------------------------------------------------------
+
+    // Help modal
+    helpBtn.addEventListener('click', () => {
+      helpModal.style.display = 'flex';
+    });
+    helpModalClose.addEventListener('click', () => {
+      helpModal.style.display = 'none';
+    });
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) helpModal.style.display = 'none';
+    });
+
     // Score Library Panel Functions
-    function generateScoreDataForExport() { return JSON.parse(JSON.stringify(score)); }
+    function generateScoreDataForExport() {
+      return JSON.parse(JSON.stringify(score));
+    }
+
     // Export the current score as JSON
     libraryExportBtn.addEventListener('click', () => {
       const scoreData = generateScoreDataForExport();
       const jsonString = JSON.stringify(scoreData, null, 2);
       let fileName = prompt("Please enter file name for export (without extension):", "jianpu_score");
-      if (!fileName) { fileName = "jianpu_score"; }
+      if (!fileName) fileName = "jianpu_score";
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -774,17 +1068,18 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
-    // Import Scores: trigger file input via panel button
+
+    // Import Scores
     libraryImportBtn.addEventListener('click', () => {
       importFileEl.click();
     });
+
     // Handle file input change for importing multiple files
     importFileEl.addEventListener('change', (event) => {
       const files = event.target.files;
       if (!files || files.length === 0) return;
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        // 使用局部变量 file 以确保正确传入 readAsText
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
@@ -808,6 +1103,7 @@
       }
       event.target.value = "";
     });
+
     // Update the library list UI
     function updateLibraryList() {
       libraryList.innerHTML = "";
@@ -818,7 +1114,6 @@
         loadBtn.textContent = "Load Score";
         loadBtn.className = "load-btn";
         loadBtn.addEventListener('click', () => {
-          // 重置 ID，防止冲突
           nextId = 0;
           item.data.measures.forEach(measure => {
             measure.id = getNewId();
@@ -846,6 +1141,7 @@
         libraryList.appendChild(li);
       });
     }
+
     // Toggle Score Library panel
     toggleLibraryBtn.addEventListener('click', () => {
       if (libraryPanel.style.display === "block") {
@@ -856,11 +1152,12 @@
         toggleLibraryBtn.textContent = "Hide Score Library";
       }
     });
+
     closeLibraryBtn.addEventListener('click', () => {
       libraryPanel.style.display = "none";
       toggleLibraryBtn.textContent = "Show Score Library";
     });
-    // ---------------------------------------------------------
+
     // Playback
     playBtn.addEventListener('click', () => {
       initAudio();
@@ -874,10 +1171,11 @@
         measure.notes.forEach((note) => {
           const noteElement = document.getElementById(note.id);
           const noteStartTime = currentTime;
-          let durationInBeats = note.duration * beatValue;
-          if (note.dotted) { durationInBeats *= 1.5; }
+          let durationInBeats = note.durationBase * beatValue;
+          if (note.dotted) durationInBeats *= 1.5;
+          if (note.tieCount > 0) durationInBeats += note.durationBase * note.tieCount * beatValue;
           const durationSeconds = durationInBeats * secondsPerBeat;
-          if (note.type === 'note') { playTone(note.pitch, note.octave, durationSeconds, noteStartTime); }
+          if (note.type === 'note') playTone(note.pitch, note.octave, durationSeconds, noteStartTime);
           if (noteElement) {
             const delay = Math.max(0, (noteStartTime - audioCtx.currentTime) * 1000);
             setTimeout(() => {
@@ -894,42 +1192,29 @@
         console.log("Playback finished.");
       }, Math.max(0, (currentTime - audioCtx.currentTime) * 1000));
     });
+
     const additionalStyle = document.createElement('style');
     additionalStyle.innerHTML = `.note.playing, .rest.playing { background-color: yellow !important; }`;
     document.head.appendChild(additionalStyle);
-    // Local Storage (暂不使用)
-    function loadFromLocalStorage() {
-      const savedData = localStorage.getItem('jianpuEditorScore');
-      if (savedData) {
-        try {
-          const loadedScore = JSON.parse(savedData);
-          if (loadedScore && loadedScore.timeSignature && loadedScore.measures) {
-            nextId = 0;
-            loadedScore.measures.forEach(measure => { measure.id = getNewId(); measure.notes.forEach(note => note.id = getNewId()); });
-            score = loadedScore;
-            timeSigBeatsInput.value = score.timeSignature.beats;
-            timeSigBeatTypeSelect.value = score.timeSignature.beatType;
-            bpmInput.value = score.bpm;
-            console.log("Score loaded from local storage.");
-          } else { console.warn("Invalid data in local storage."); initializeEmptyScore(); }
-        } catch (e) { console.error("Error parsing local storage data:", e); initializeEmptyScore(); }
-      } else { initializeEmptyScore(); }
-      renderScore();
-      moveCursorTo(0, 0);
-    }
+
+    // Initialize score
     function initializeEmptyScore() {
       console.log("Initializing new empty score.");
       score = { timeSignature: { beats: 4, beatType: 4 }, bpm: 120, measures: [] };
       addMeasure();
       moveCursorTo(0, 0);
     }
+
     document.addEventListener('DOMContentLoaded', () => {
-      loadFromLocalStorage();
-      if (score.measures.length === 0) { addMeasure(); moveCursorTo(0, 0); }
+      initializeEmptyScore();
+      renderScore();
     });
-    editorArea.addEventListener('touchstart', (e) => { if (e.touches.length > 1) { } }, { passive: false });
+
+    editorArea.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 1) {}
+    }, { passive: false });
+
     editorArea.addEventListener('scroll', () => {});
   </script>
-
 </body>
 </html>
