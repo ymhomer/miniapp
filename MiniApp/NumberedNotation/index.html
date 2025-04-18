@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Jianpu Editor</title>
+  <title>Numbered Musical Notation</title>
   <style>
     /* Global style */
     body {
@@ -13,6 +13,24 @@
       flex-direction: column;
       height: 100vh;
       background-color: #f7f7f7;
+    }
+    /* Toolbar Title */
+    #toolbar-title {
+      display: none;
+      font-size: 1.2em;
+      padding: 10px;
+      background-color: #3a3a3a;
+      color: #fff;
+      text-align: center;
+      cursor: pointer;
+      margin: 0;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      transition: background-color 0.2s;
+      z-index: 10;
+    }
+    #toolbar-title:hover {
+      background-color: #4a4a4a;
     }
     /* Top Toolbar */
     #toolbar {
@@ -59,11 +77,11 @@
     #toolbar button.reset-btn:hover {
       background-color: #c9302c;
     }
-    /* Score Library toggle button */
-    #toolbar button#toggle-library-btn {
+    /* Library button */
+    #toolbar button#library-btn {
       background-color: #007bff;
     }
-    #toolbar button#toggle-library-btn:hover {
+    #toolbar button#library-btn:hover {
       background-color: #0056b3;
     }
     /* Help button */
@@ -73,8 +91,8 @@
     #toolbar button#help-btn:hover {
       background-color: #218838;
     }
-    /* Help Modal */
-    #helpModal {
+    /* Modals (Help and Library) */
+    #helpModal, #libraryModal {
       display: none;
       position: fixed;
       top: 0;
@@ -86,7 +104,7 @@
       justify-content: center;
       align-items: center;
     }
-    #helpModal .modal-content {
+    #helpModal .modal-content, #libraryModal .modal-content {
       background-color: #fff;
       border-radius: 8px;
       width: 90%;
@@ -95,7 +113,7 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       position: relative;
     }
-    #helpModal .modal-header {
+    #helpModal .modal-header, #libraryModal .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -103,12 +121,12 @@
       padding-bottom: 10px;
       margin-bottom: 10px;
     }
-    #helpModal .modal-header h5 {
+    #helpModal .modal-header h5, #libraryModal .modal-header h5 {
       margin: 0;
       font-size: 1.2em;
       color: #333;
     }
-    #helpModal .modal-close {
+    #helpModal .modal-close, #libraryModal .modal-close {
       background-color: #555;
       color: #fff;
       border: none;
@@ -117,49 +135,39 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    #helpModal .modal-close:hover {
+    #helpModal .modal-close:hover, #libraryModal .modal-close:hover {
       background-color: #777;
     }
-    #helpModal .modal-body {
+    #helpModal .modal-body, #libraryModal .modal-body {
       max-height: 60vh;
       overflow-y: auto;
       color: #333;
       font-size: 0.95em;
     }
-    #helpModal .modal-body h6 {
+    #helpModal .modal-body h6, #libraryModal .modal-body h6 {
       margin-top: 15px;
       font-size: 1em;
       color: #3a3a3a;
     }
-    #helpModal .modal-body p, #helpModal .modal-body ul {
+    #helpModal .modal-body p, #helpModal .modal-body ul,
+    #libraryModal .modal-body p, #libraryModal .modal-body ul {
       margin: 10px 0;
     }
-    #helpModal .modal-body ul {
+    #helpModal .modal-body ul, #libraryModal .modal-body ul {
       padding-left: 20px;
     }
-    #helpModal .modal-body li {
+    #helpModal .modal-body li, #libraryModal .modal-body li {
       margin-bottom: 5px;
     }
-    /* Score Library panel */
-    #library-panel {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 10px;
-      max-height: 250px;
-      overflow-y: auto;
-      margin: 10px;
-      display: none;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    #library-panel h3 {
+    /* Library Modal Specific */
+    #libraryModal .modal-body h3 {
       margin: 0 0 6px 0;
       font-size: 1.1em;
     }
-    #library-panel #library-actions {
+    #libraryModal #library-actions {
       margin-bottom: 8px;
     }
-    #library-panel #library-actions button {
+    #libraryModal #library-actions button {
       margin-right: 8px;
       padding: 4px 8px;
       border: none;
@@ -167,55 +175,46 @@
       cursor: pointer;
       transition: background-color 0.15s;
     }
-    #library-panel #library-actions button#import-btn {
-      background-color: #28a745;
+    #libraryModal #library-actions button#import-btn {
+ epidemiology: #28a745;
       color: #fff;
     }
-    #library-panel #library-actions button#export-btn {
+    #libraryModal #library-actions button#export-btn {
       background-color: #17a2b8;
       color: #fff;
     }
-    #library-panel #library-actions button:hover {
+    #libraryModal #library-actions button:hover {
       opacity: 0.9;
     }
-    #library-panel ul {
+    #libraryModal ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-    #library-panel li {
+    #libraryModal li {
       padding: 4px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px dashed #ccc;
     }
-    #library-panel li:last-child {
+    #libraryModal li:last-child {
       border-bottom: none;
     }
-    #library-panel li button {
+    #libraryModal li button {
       font-size: 0.85em;
       padding: 2px 6px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-    #library-panel li button.load-btn {
+    #libraryModal li button.load-btn {
       background-color: #007bff;
       color: #fff;
     }
-    #library-panel li button.delete-btn {
+    #libraryModal li button.delete-btn {
       background-color: #d9534f;
       color: #fff;
-    }
-    #library-panel button#close-library-btn {
-      margin-top: 8px;
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
     }
     /* Editor Area */
     #editor-area {
@@ -315,7 +314,7 @@
       transform: translateY(-1px);
     }
     .rest { color: #666; font-weight: bold; }
-    .rest .pitch-container { display: flexanium; align-items: center; }
+    .rest .pitch-container { display: flex; align-items: center; }
     .rest .dot { font-weight: bold; margin-left: 2px; }
     .rest .duration-char {
       display: flex;
@@ -371,6 +370,18 @@
       transition: background-color 0.15s;
     }
     #action-bar button:active { background-color: #e6e6e6; }
+    #action-bar button sup {
+      font-size: 0.6em;
+      vertical-align: super;
+      background-color: rgba(200, 200, 200, 0.3);
+      padding: 1px 2px;
+      border-radius: 2px;
+      transform: translateY(2px);
+    }
+    #action-bar button i {
+      margin-right: 2px;
+      vertical-align: middle;
+    }
     .action-group {
       display: flex;
       gap: 6px;
@@ -385,21 +396,41 @@
     }
     /* Responsive: small screens */
     @media (max-width: 600px) {
-      #toolbar { flex-direction: column; align-items: stretch; }
+      #toolbar-title {
+        display: block;
+        role: button;
+      }
+      #toolbar {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      #toolbar.open {
+        max-height: 200px;
+        overflow: auto;
+      }
       #action-bar { flex-direction: column; }
       #editor-area { margin: 6px; padding: 6px; }
       .measure { min-width: 100px; padding: 4px; }
       .action-group { flex-wrap: wrap; }
-      #helpModal .modal-content { width: 95%; }
+      #helpModal .modal-content, #libraryModal .modal-content { width: 95%; }
+    }
+    /* Responsive: large screens */
+    @media (min-width: 601px) {
+      #toolbar-title { display: none; }
+      #toolbar { max-height: none; overflow: visible; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Toolbar -->
+  <!-- Toolbar Title -->
+  <h1 id="toolbar-title" aria-expanded="false" aria-controls="toolbar" role="button">Numbered Musical Notation ▼</h1>
+
+  <!-- Toolbar -->
   <div id="toolbar">
     <button id="play-btn">Play</button>
-    <button id="toggle-library-btn">Show Score Library</button>
+    <button id="library-btn">Score Library</button>
     <button class="reset-btn" id="reset-btn">Reset</button>
     <button id="help-btn">Help</button>
     <label>
@@ -430,9 +461,9 @@
         <p>This editor allows you to create and edit Jianpu (numbered musical notation) scores. Use the toolbar to play, reset, or manage scores, and the bottom action bar to input notes, rests, and modifications.</p>
         <h6>Key Mappings</h6>
         <ul>
-          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti)</li>
-          <li><strong>0</strong>: Insert a rest</li>
-          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor</li>
+          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti, as shown in the Notes group)</li>
+          <li><strong>0</strong>: Insert a rest (0 with Rest superscript)</li>
+          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor (or use the 🗑️<sup>Del</sup> button)</li>
           <li><strong>Arrow Left/Right</strong>: Move cursor between notes or measures</li>
           <li><strong>Arrow Up/Down</strong>: Increase/decrease octave (when a note is selected)</li>
           <li><strong>#</strong>: Add sharp to selected note</li>
@@ -447,22 +478,34 @@
           <li>Click a note to select it, then use the action bar or keys to modify it.</li>
           <li>Use underscores (_) to shorten note duration, compactly stacked vertically below the note (e.g., three _ for a 32nd note).</li>
           <li>Use dashes (-) for ties, appearing after the note (e.g., 1-).</li>
+          <li>Use the Notes group buttons (e.g., 1<sup>Do</sup>, 0<sup>Rest</sup>, 🗑️<sup>Del</sup>) to add or delete notes/rests.</li>
+          <li>Use the Accid group (e.g., #<sup>Sharp</sup>, ♭<sup>Flat</sup>, ↺<sup>Reset</sup>) to modify accidentals.</li>
+          <li>Use the Octave group (e.g., ↑<sup>Up</sup>, ↓<sup>Down</sup>, ↺<sup>Reset</sup>) to adjust octave.</li>
+          <li>Use the Duration group (e.g., .<sup>Dot</sup>, -<sup>Tie</sup>, _<sup>Short</sup>) to modify note duration.</li>
           <li>Monitor the beat info in each measure to ensure correct timing.</li>
-          <li>Use the Score Library to import/export scores as JSON files.</li>
+          <li>Access the Score Library via a modal dialog to import/export scores as JSON files.</li>
+          <li>On small screens, tap the "Numbered Musical Notation ▼" title to show/hide the toolbar controls.</li>
         </ul>
       </div>
     </div>
   </div>
 
-  <!-- Score Library Panel -->
-  <div id="library-panel">
-    <h3>Score Library</h3>
-    <div id="library-actions">
-      <button id="library-import-btn" title="Import Scores">Import Scores</button>
-      <button id="library-export-btn" title="Export Current Score">Export Current Score</button>
+  <!-- Library Modal -->
+  <div id="libraryModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Score Library</h5>
+        <button class="modal-close">Close</button>
+      </div>
+      <div class="modal-body">
+        <h3>Score Library</h3>
+        <div id="library-actions">
+          <button id="library-import-btn" title="Import Scores">Import Scores</button>
+          <button id="library-export-btn" title="Export Current Score">Export Current Score</button>
+        </div>
+        <ul id="library-list"></ul>
+      </div>
     </div>
-    <ul id="library-list"></ul>
-    <button id="close-library-btn">Close Library</button>
   </div>
 
   <!-- Editor Area -->
@@ -475,37 +518,33 @@
   <div id="action-bar">
     <div class="action-group">
       <span>Notes:</span>
-      <button data-value="1">1</button>
-      <button data-value="2">2</button>
-      <button data-value="3">3</button>
-      <button data-value="4">4</button>
-      <button data-value="5">5</button>
-      <button data-value="6">6</button>
-      <button data-value="7">7</button>
-      <button data-value="0">0 (Rest)</button>
+      <button data-value="1">1<sup>Do</sup></button>
+      <button data-value="2">2<sup>Re</sup></button>
+      <button data-value="3">3<sup>Mi</sup></button>
+      <button data-value="4">4<sup>Fa</sup></button>
+      <button data-value="5">5<sup>So</sup></button>
+      <button data-value="6">6<sup>La</sup></button>
+      <button data-value="7">7<sup>Ti</sup></button>
+      <button data-value="0">0<sup>Rest</sup></button>
+      <button data-value="delete">🗑️<sup>Del</sup></button>
     </div>
     <div class="action-group">
       <span>Accid:</span>
-      <button data-value="#">#</button>
-      <button data-value="b">b</button>
-      <button data-value="clear-accid">Clear</button>
+      <button data-value="#">#<sup>Sharp</sup></button>
+      <button data-value="b">♭<sup>Flat</sup></button>
+      <button data-value="clear-accid">↺<sup>Reset</sup></button>
     </div>
     <div class="action-group">
       <span>Octave:</span>
-      <button data-value="octave-up">↑ (·)</button>
-      <button data-value="octave-down">↓ (.)</button>
-      <button data-value="octave-clear">Clear</button>
+      <button data-value="octave-up">↑<sup>Up</sup></button>
+      <button data-value="octave-down">↓<sup>Down</sup></button>
+      <button data-value="octave-clear">↺<sup>Reset</sup></button>
     </div>
     <div class="action-group">
       <span>Duration:</span>
-      <button data-value="dot">Dot (.)</button>
-      <button data-value="tie">Tie (-)</button>
-      <button data-value="shorten">Shorten (_)</button>
-    </div>
-    <div class="action-group">
-      <span>Edit:</span>
-      <button data-value="delete">Delete</button>
-      <button data-value="add-note-cursor">Add Note</button>
+      <button data-value="dot">.<sup>Dot</sup></button>
+      <button data-value="tie">-<sup>Tie</sup></button>
+      <button data-value="shorten">_<sup>Short</sup></button>
     </div>
   </div>
 
@@ -515,6 +554,8 @@
   <script>
     /* Basic Web Audio functions */
     let audioCtx;
+    let isPlaying = false;
+    let playbackTimeouts = [];
     function initAudio() {
       if (!audioCtx) {
         try {
@@ -550,6 +591,18 @@
         playTone(pitch, octave, 0.3, audioCtx.currentTime);
       }
     }
+    function stopPlayback() {
+      playbackTimeouts.forEach(clearTimeout);
+      playbackTimeouts = [];
+      if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+      }
+      document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
+      isPlaying = false;
+      document.getElementById('play-btn').textContent = 'Play';
+      console.log("Playback stopped.");
+    }
   </script>
 
   <script>
@@ -563,16 +616,18 @@
     const bpmInput = document.getElementById('bpm-input');
     const playBtn = document.getElementById('play-btn');
     const importFileEl = document.getElementById('import-file');
-    const libraryPanel = document.getElementById('library-panel');
+    const libraryBtn = document.getElementById('library-btn');
     const libraryList = document.getElementById('library-list');
-    const toggleLibraryBtn = document.getElementById('toggle-library-btn');
-    const closeLibraryBtn = document.getElementById('close-library-btn');
     const resetBtn = document.getElementById('reset-btn');
     const libraryImportBtn = document.getElementById('library-import-btn');
     const libraryExportBtn = document.getElementById('library-export-btn');
     const helpBtn = document.getElementById('help-btn');
     const helpModal = document.getElementById('helpModal');
     const helpModalClose = helpModal.querySelector('.modal-close');
+    const libraryModal = document.getElementById('libraryModal');
+    const libraryModalClose = libraryModal.querySelector('.modal-close');
+    const toolbarTitle = document.getElementById('toolbar-title');
+    const toolbar = document.getElementById('toolbar');
 
     // Global state
     let score = {
@@ -965,8 +1020,6 @@
           insertNote({ type: 'note', pitch: parseInt(action) });
         } else if (action === '0') {
           insertNote({ type: 'rest', pitch: 0 });
-        } else if (action === 'add-note-cursor') {
-          insertNote({ type: 'note', pitch: 1 });
         } else if (action === 'delete') {
           deleteNoteAtCursor();
         } else if (selectedElement) {
@@ -1047,7 +1100,19 @@
       if (e.target === helpModal) helpModal.style.display = 'none';
     });
 
-    // Score Library Panel Functions
+    // Library modal
+    libraryBtn.addEventListener('click', () => {
+      libraryModal.style.display = 'flex';
+      updateLibraryList();
+    });
+    libraryModalClose.addEventListener('click', () => {
+      libraryModal.style.display = 'none';
+    });
+    libraryModal.addEventListener('click', (e) => {
+      if (e.target === libraryModal) libraryModal.style.display = 'none';
+    });
+
+    // Score Library Functions
     function generateScoreDataForExport() {
       return JSON.parse(JSON.stringify(score));
     }
@@ -1126,6 +1191,7 @@
           renderScore();
           moveCursorTo(0, 0);
           alert(`Score "${item.name}" loaded into editor.`);
+          libraryModal.style.display = 'none';
         });
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = "Delete";
@@ -1142,55 +1208,48 @@
       });
     }
 
-    // Toggle Score Library panel
-    toggleLibraryBtn.addEventListener('click', () => {
-      if (libraryPanel.style.display === "block") {
-        libraryPanel.style.display = "none";
-        toggleLibraryBtn.textContent = "Show Score Library";
-      } else {
-        libraryPanel.style.display = "block";
-        toggleLibraryBtn.textContent = "Hide Score Library";
-      }
-    });
-
-    closeLibraryBtn.addEventListener('click', () => {
-      libraryPanel.style.display = "none";
-      toggleLibraryBtn.textContent = "Show Score Library";
-    });
-
     // Playback
     playBtn.addEventListener('click', () => {
-      initAudio();
-      if (!audioCtx) return;
-      console.log("Starting playback...");
-      let currentTime = audioCtx.currentTime + 0.1;
-      const secondsPerBeat = 60.0 / score.bpm;
-      const beatValue = getBeatValue(score.timeSignature.beatType);
-      document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-      score.measures.forEach((measure) => {
-        measure.notes.forEach((note) => {
-          const noteElement = document.getElementById(note.id);
-          const noteStartTime = currentTime;
-          let durationInBeats = note.durationBase * beatValue;
-          if (note.dotted) durationInBeats *= 1.5;
-          if (note.tieCount > 0) durationInBeats += note.durationBase * note.tieCount * beatValue;
-          const durationSeconds = durationInBeats * secondsPerBeat;
-          if (note.type === 'note') playTone(note.pitch, note.octave, durationSeconds, noteStartTime);
-          if (noteElement) {
-            const delay = Math.max(0, (noteStartTime - audioCtx.currentTime) * 1000);
-            setTimeout(() => {
-              document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-              noteElement.classList.add('playing');
-              noteElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }, delay);
-          }
-          currentTime += durationSeconds;
-        });
-      });
-      setTimeout(() => {
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        playbackTimeouts.forEach(clearTimeout);
+        playbackTimeouts = [];
+        initAudio();
+        if (!audioCtx) return;
+        console.log("Starting playback...");
+        isPlaying = true;
+        playBtn.textContent = 'Stop';
+        let currentTime = audioCtx.currentTime + 0.1;
+        const secondsPerBeat = 60.0 / score.bpm;
+        const beatValue = getBeatValue(score.timeSignature.beatType);
         document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-        console.log("Playback finished.");
-      }, Math.max(0, (currentTime - audioCtx.currentTime) * 1000));
+        score.measures.forEach((measure) => {
+          measure.notes.forEach((note) => {
+            const noteElement = document.getElementById(note.id);
+            const noteStartTime = currentTime;
+            let durationInBeats = note.durationBase * beatValue;
+            if (note.dotted) durationInBeats *= 1.5;
+            if (note.tieCount > 0) durationInBeats += note.durationBase * note.tieCount * beatValue;
+            const durationSeconds = durationInBeats * secondsPerBeat;
+            if (note.type === 'note') playTone(note.pitch, note.octave, durationSeconds, noteStartTime);
+            if (noteElement) {
+              const delay = Math.max(0, (noteStartTime - audioCtx.currentTime) * 1000);
+              playbackTimeouts.push(setTimeout(() => {
+                if (!isPlaying) return;
+                document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
+                noteElement.classList.add('playing');
+                noteElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }, delay));
+            }
+            currentTime += durationSeconds;
+          });
+        });
+        playbackTimeouts.push(setTimeout(() => {
+          if (!isPlaying) return;
+          stopPlayback();
+        }, Math.max(0, (currentTime - audioCtx.currentTime) * 1000)));
+      }
     });
 
     const additionalStyle = document.createElement('style');
@@ -1208,6 +1267,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       initializeEmptyScore();
       renderScore();
+      if (toolbarTitle && toolbar) {
+        const toggleToolbar = () => {
+          console.log("Toolbar title toggled");
+          toolbar.classList.toggle('open');
+          toolbarTitle.setAttribute('aria-expanded', toolbar.classList.contains('open'));
+        };
+        toolbarTitle.addEventListener('click', toggleToolbar);
+        toolbarTitle.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          toggleToolbar();
+        });
+      }
     });
 
     editorArea.addEventListener('touchstart', (e) => {
