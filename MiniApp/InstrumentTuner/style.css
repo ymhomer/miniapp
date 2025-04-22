@@ -1,0 +1,275 @@
+:root {
+    --case-bg: #e0e0e0; /* Light gray for the machine case */
+    --display-bg: #d3d3d3; /* Slightly darker for recessed areas */
+    --frame-border-light: #ffffff;
+    --frame-border-dark: #a0a0a0;
+    --text-color: #222222;
+    --secondary-text: #555555;
+    --accent-color: #005a9e; /* Darker blue */
+    --in-tune-color: #00cc00; /* Brighter green for LED feel */
+    --in-tune-dark: #008800;
+    --flat-sharp-color: #ff8c00; /* Dark orange */
+    --pointer-color: #333;
+    --mechanical-font: 'Orbitron', 'Courier New', Courier, monospace; /* Example */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Center the machine vertically */
+    min-height: 100vh;
+    background-color: #c0c0c0; /* Background around the machine */
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--text-color);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Outer Machine Case - Raised Effect */
+.tuner-machine-case {
+    background-color: var(--case-bg);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--frame-border-dark);
+    /* Multiple shadows for 3D */
+    box-shadow:
+        -3px -3px 7px var(--frame-border-light), /* Top-left highlight */
+        3px 3px 7px var(--frame-border-dark);   /* Bottom-right shadow */
+    width: 100%;
+    max-width: 380px; /* Adjusted max-width */
+    text-align: center;
+}
+
+.machine-header h1 {
+    font-size: 1.4em;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.machine-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Space between frames */
+}
+
+/* General Frame Styling */
+.control-frame {
+    background-color: var(--case-bg); /* Match case background */
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--frame-border-dark);
+     /* Raised effect for control frames */
+    box-shadow:
+        -2px -2px 5px var(--frame-border-light),
+        2px 2px 5px var(--frame-border-dark);
+}
+
+.control-frame label {
+    display: block;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+/* Instrument Selector */
+.instrument-selector-frame {
+   /* Specific styling if needed */
+}
+
+.instrument-switcher {
+    display: inline-flex; /* Align items inline */
+    align-items: center;
+    justify-content: space-between; /* Space out text and arrow */
+    background-color: var(--display-bg); /* Recessed look */
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid var(--frame-border-dark);
+    box-shadow: inset 1px 1px 3px var(--frame-border-dark), inset -1px -1px 3px var(--frame-border-light); /* Inset shadow */
+    min-width: 150px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-weight: 600;
+}
+
+.instrument-switcher:hover {
+    background-color: #c8c8c8;
+}
+
+.instrument-switcher:active {
+     box-shadow: inset 2px 2px 4px var(--frame-border-dark); /* Deeper inset on click */
+}
+
+#instrument-display {
+    margin-right: 10px; /* Space between text and arrow */
+}
+
+.switcher-arrow {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Rectangular Meter Frame - Recessed */
+.tuner-meter-frame {
+    background-color: var(--display-bg); /* Darker bg for recessed look */
+    border-radius: 4px;
+    /* Inset Shadow for recessed effect */
+    box-shadow:
+        inset 2px 2px 5px var(--frame-border-dark),
+        inset -2px -2px 5px var(--frame-border-light);
+    padding: 10px;
+    border: 1px solid var(--frame-border-dark); /* Inner border */
+    transition: box-shadow 0.1s linear; /* For flashing */
+}
+
+/* Flashing Animation */
+@keyframes flashGreen {
+    0% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 0px 0px var(--in-tune-color); }
+    50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 10px 3px var(--in-tune-color); } /* Glow effect */
+    100% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 0px 0px var(--in-tune-color); }
+}
+
+.tuner-meter-frame.flash-green {
+    animation: flashGreen 0.4s ease-out;
+}
+
+.meter-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px; /* Space above pointer area */
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.03); /* Slight background for header */
+    border-radius: 3px;
+}
+
+.meter-info-left, .meter-info-right {
+    font-family: var(--mechanical-font);
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.meter-info-left span, .meter-info-right span {
+    display: block; /* Hz/Cents on separate lines */
+    line-height: 1.3;
+}
+
+#meter-note {
+    font-size: 1.4em; /* Larger note display */
+    font-weight: bold;
+}
+
+.meter-body {
+    height: 60px; /* Adjust height for pointer rotation */
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle background for pointer area */
+    border-radius: 3px;
+    overflow: hidden; /* Ensure pointer stays inside */
+}
+
+/* Pointer Styling */
+#pointer {
+    width: 3px;
+    height: 95%; /* Relative to meter-body height */
+    background-color: var(--pointer-color);
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform-origin: bottom center;
+    transform: translateX(-50%) rotate(0deg);
+    /* SLOWER transition for smoother perceived movement */
+    transition: transform 0.3s ease-out, background-color 0.2s ease-out;
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 0 3px rgba(0,0,0,0.4);
+}
+
+#pointer.in-tune {
+    background-color: var(--in-tune-color); /* Green pointer */
+}
+
+/* String Status Frame */
+.string-status-frame {
+   /* Specific styling if needed */
+}
+
+.string-status-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px; /* Spacing between string indicators */
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* 3D String Indicators */
+.string-note {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--frame-border-dark);
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 1em;
+    color: var(--secondary-text);
+    background-color: var(--display-bg); /* Start darker */
+    /* 3D "Button" Effect */
+    box-shadow:
+        inset 1px 1px 2px var(--frame-border-dark), /* Inner shadow */
+        inset -1px -1px 2px var(--frame-border-light),
+        1px 1px 2px rgba(0,0,0,0.2); /* Outer shadow */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+    position: relative; /* For potential ::before elements if needed */
+}
+
+/* Tuned State for String Indicator */
+.string-note.tuned {
+    background-color: var(--in-tune-color); /* Bright green background */
+    color: white;
+    font-weight: bold;
+    /* Enhance 3D effect when 'on' */
+    box-shadow:
+        inset 1px 1px 2px var(--in-tune-dark), /* Darker green inner */
+        inset -1px -1px 2px #88ff88, /* Lighter green inner */
+        0 0 8px var(--in-tune-color); /* Green glow */
+    border-color: var(--in-tune-dark);
+}
+
+/* Flashing Animation for String Indicator */
+@keyframes flashString {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.string-note.flash-tune {
+    /* Apply flash animation but keep the .tuned styles */
+    animation: flashString 0.3s ease-in-out;
+}
+
+
+/* Status Message */
+.status-message {
+    margin-top: 20px;
+    font-size: 1em;
+    font-weight: 600;
+    min-height: 1.3em;
+    color: var(--secondary-text);
+    transition: color 0.3s ease;
+}
+
+.status-message.in-tune { color: var(--in-tune-color); font-weight: bold; }
+.status-message.sharp, .status-message.flat { color: var(--flat-sharp-color); }
+
+.machine-footer {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid var(--frame-border-dark);
+    font-size: 0.75em;
+    color: var(--secondary-text);
+    opacity: 0.8;
+}
