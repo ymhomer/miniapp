@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Numbered Musical Notation</title>
+  <title>Numbered Musical Notation & Chord Editor</title>
   <style>
-    /* Global style */
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -14,7 +13,6 @@
       height: 100vh;
       background-color: #f7f7f7;
     }
-    /* Toolbar Title */
     #toolbar-title {
       display: none;
       font-size: 1.2em;
@@ -32,7 +30,6 @@
     #toolbar-title:hover {
       background-color: #4a4a4a;
     }
-    /* Top Toolbar */
     #toolbar {
       background-color: #3a3a3a;
       color: #fff;
@@ -64,35 +61,31 @@
       gap: 4px;
       font-size: 0.9em;
     }
-    #toolbar input[type=number],
-    #toolbar select {
-      padding: 2px 4px;
+    #toolbar select, #toolbar input[type=number] {
+      padding: 4px;
       border-radius: 4px;
       border: 1px solid #ccc;
-      width: 60px;
+      width: 80px;
+      font-size: 0.9em;
     }
-    /* Reset button */
     #toolbar button.reset-btn {
       background-color: #d9534f;
     }
     #toolbar button.reset-btn:hover {
       background-color: #c9302c;
     }
-    /* Library button */
     #toolbar button#library-btn {
       background-color: #007bff;
     }
     #toolbar button#library-btn:hover {
       background-color: #0056b3;
     }
-    /* Help button */
     #toolbar button#help-btn {
       background-color: #28a745;
     }
     #toolbar button#help-btn:hover {
       background-color: #218838;
     }
-    /* Modals (Help and Library) */
     #helpModal, #libraryModal {
       display: none;
       position: fixed;
@@ -150,74 +143,6 @@
       font-size: 1em;
       color: #3a3a3a;
     }
-    #helpModal .modal-body p, #helpModal .modal-body ul,
-    #libraryModal .modal-body p, #libraryModal .modal-body ul {
-      margin: 10px 0;
-    }
-    #helpModal .modal-body ul, #libraryModal .modal-body ul {
-      padding-left: 20px;
-    }
-    #helpModal .modal-body li, #libraryModal .modal-body li {
-      margin-bottom: 5px;
-    }
-    /* Library Modal Specific */
-    #libraryModal .modal-body h3 {
-      margin: 0 0 6px 0;
-      font-size: 1.1em;
-    }
-    #libraryModal #library-actions {
-      margin-bottom: 8px;
-    }
-    #libraryModal #library-actions button {
-      margin-right: 8px;
-      padding: 4px 8px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.15s;
-    }
-    #libraryModal #library-actions button#import-btn {
-      background-color: #28a745;
-      color: #fff;
-    }
-    #libraryModal #library-actions button#export-btn {
-      background-color: #17a2b8;
-      color: #fff;
-    }
-    #libraryModal #library-actions button:hover {
-      opacity: 0.9;
-    }
-    #libraryModal ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    #libraryModal li {
-      padding: 4px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px dashed #ccc;
-    }
-    #libraryModal li:last-child {
-      border-bottom: none;
-    }
-    #libraryModal li button {
-      font-size: 0.85em;
-      padding: 2px 6px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #libraryModal li button.load-btn {
-      background-color: #007bff;
-      color: #fff;
-    }
-    #libraryModal li button.delete-btn {
-      background-color: #d9534f;
-      color: #fff;
-    }
-    /* Editor Area */
     #editor-area {
       flex-grow: 1;
       overflow-y: auto;
@@ -239,7 +164,7 @@
       flex-direction: column;
       border: 1px solid #aaa;
       padding: 8px;
-      min-height: 80px;
+      min-height: 100px;
       min-width: 150px;
       background-color: #fff;
       box-sizing: border-box;
@@ -267,14 +192,8 @@
       gap: 4px;
       align-items: center;
     }
-    .time-signature input[type=number] {
+    .time-signature input[type=number], .time-signature select {
       width: 30px;
-      padding: 1px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 0.8em;
-    }
-    .time-signature select {
       padding: 1px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -287,7 +206,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
-      gap: 4px;
+      gap: 6px;
     }
     .note, .rest {
       display: inline-flex;
@@ -296,23 +215,22 @@
       padding: 4px 6px;
       border: 1px solid transparent;
       border-radius: 4px;
-      min-width: 1em;
+      min-width: 1.5em;
       text-align: center;
-      font-size: 1.2em;
+      font-size: 1.1em;
       transition: background-color 0.15s;
       cursor: pointer;
       position: relative;
     }
     .note:hover, .rest:hover { background-color: #f0f0f0; }
     .note.selected, .rest.selected { border: 1px solid #007bff; background-color: #e7f1ff; }
-    .note .pitch-container {
+    .note .pitch-container, .rest .pitch-container {
       display: flex;
       align-items: center;
       justify-content: center;
     }
     .note .pitch { font-weight: bold; }
-    .note .octave-dot-above,
-    .note .octave-dot-below {
+    .note .octave-dot-above, .note .octave-dot-below {
       display: block;
       font-size: 0.8em;
       line-height: 1;
@@ -334,12 +252,6 @@
       line-height: 0.7;
       color: #d9534f;
       opacity: 0.9;
-      margin: 0;
-      padding: 0;
-      text-shadow: 0 0 1px rgba(0,0,0,0.1);
-    }
-    .note .duration-char span:not(:first-child) {
-      transform: translateY(-1px);
     }
     .rest { color: #666; font-weight: bold; }
     .rest .pitch-container { display: flex; align-items: center; }
@@ -355,14 +267,18 @@
       line-height: 0.7;
       color: #d9534f;
       opacity: 0.9;
-      margin: 0;
-      padding: 0;
-      text-shadow: 0 0 1px rgba(0,0,0,0.1);
     }
-    .rest .duration-char span:not(:first-child) {
-      transform: translateY(-1px);
+    .chord-above {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9em;
+      color: #2a6496;
+      font-weight: bold;
     }
-    /* Cursor */
+    .chord-above .chord-type { font-size: 0.8em; vertical-align: super; }
+    .chord-above .strum { font-size: 0.9em; margin-left: 2px; }
     #cursor {
       display: inline-block;
       width: 2px;
@@ -373,23 +289,44 @@
       animation: blink 1s step-end infinite;
     }
     @keyframes blink { 50% { opacity: 0; } }
-    /* Bottom Action Bar */
     #action-bar {
       background-color: #f2f2f2;
       padding: 8px 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
       flex-shrink: 0;
       border-top: 1px solid #ddd;
       border-top-left-radius: 8px;
       border-top-right-radius: 8px;
       box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      justify-items: center;
+    }
+    .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #fafafa;
+      width: 100%;
+      justify-content: center;
+    }
+    .action-group span, .action-group label {
+      align-self: center;
+      font-size: 0.9em;
+      margin-right: 4px;
+    }
+    #action-bar select {
+      padding: 4px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 0.9em;
     }
     #action-bar button {
       padding: 6px 10px;
-      font-size: 1em;
+      font-size: 0.9em;
       cursor: pointer;
       border: none;
       border-radius: 6px;
@@ -407,23 +344,6 @@
       transform: translateY(2px);
       pointer-events: none;
     }
-    #action-bar button i {
-      margin-right: 2px;
-      vertical-align: middle;
-    }
-    .action-group {
-      display: flex;
-      gap: 6px;
-      padding: 4px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background-color: #fafafa;
-    }
-    .action-group span {
-      align-self: center;
-      font-size: 0.9em;
-    }
-    /* Responsive: small screens */
     @media (max-width: 600px) {
       #toolbar-title {
         display: block;
@@ -435,17 +355,17 @@
         transition: max-height 0.3s ease;
       }
       #toolbar.open {
-        max-height: 200px;
+        max-height: 300px;
         overflow: auto;
       }
-      #action-bar { flex-direction: column; }
+      #action-bar {
+        grid-template-columns: 1fr;
+      }
       #editor-area { margin: 6px; padding: 6px; }
-      .measure { min-width: 100px; padding: 4px; }
-      .action-group { flex-wrap: wrap; }
+      .measure { min-width: 120px; padding: 4px; }
+      .action-group { flex-direction: column; align-items: center; }
       #helpModal .modal-content, #libraryModal .modal-content { width: 95%; }
-      .time-signature input[type=number], .time-signature select { width: 25px; font-size: 0.7em; }
     }
-    /* Responsive: large screens */
     @media (min-width: 601px) {
       #toolbar-title { display: none; }
       #toolbar { max-height: none; overflow: visible; }
@@ -453,11 +373,7 @@
   </style>
 </head>
 <body>
-
-  <!-- Toolbar Title -->
-  <h1 id="toolbar-title" aria-expanded="false" aria-controls="toolbar" role="button">Numbered Musical Notation ▼</h1>
-
-  <!-- Toolbar -->
+  <h1 id="toolbar-title" aria-expanded="false" aria-controls="toolbar" role="button">Music Notation Editor ▼</h1>
   <div id="toolbar">
     <button id="play-btn">Play</button>
     <button id="library-btn">Score Library</button>
@@ -476,53 +392,53 @@
       <input type="number" id="bpm-input" value="120" min="30" max="300">
     </label>
   </div>
-
-  <!-- Help Modal -->
   <div id="helpModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h5>Jianpu Editor Help</h5>
+        <h5>Music Notation Editor Help</h5>
         <button class="modal-close">Close</button>
       </div>
       <div class="modal-body">
         <h6>Overview</h6>
-        <p>This editor allows you to create and edit Jianpu (numbered musical notation) scores. Use the toolbar to play, reset, or manage scores, and the bottom action bar to input notes, rests, and modifications.</p>
-        <h6>Key Mappings</h6>
+        <p>This editor supports Jianpu (numbered musical notation) with chords for ukulele and guitar displayed above notes. Use the Mode selector to switch between inserting notes or adding chords.</p>
+        <h6>Jianpu Mode Key Mappings</h6>
         <ul>
-          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti, as shown in the Notes group) at the cursor position.</li>
-          <li><strong>0</strong>: Insert a rest (0 with Rest superscript) at the cursor position.</li>
-          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor (or use the 🗑️<sup>Del</sup> button).</li>
+          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti).</li>
+          <li><strong>0</strong>: Insert a rest.</li>
+          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor.</li>
           <li><strong>Arrow Left/Right</strong>: Move cursor between notes.</li>
           <li><strong>Home/End</strong>: Move cursor to start/end of measure.</li>
-          <li><strong>Arrow Up/Down</strong>: Increase/decrease octave of the note before the cursor or selected note.</li>
-          <li><strong>#</strong>: Add sharp to the note before the cursor or selected note.</li>
-          <li><strong>b</strong>: Add flat to the note before the cursor or selected note.</li>
-          <li><strong>.</strong>: Toggle dotted note (extends duration by 1.5x) for the note before the cursor or selected note.</li>
-          <li><strong>-</strong>: Add tie to the note before the cursor or selected note (extends duration).</li>
-          <li><strong>_</strong>: Shorten duration (e.g., quarter to eighth, up to 32nd note) for the note before the cursor or selected note.</li>
+          <li><strong>Arrow Up/Down</strong>: Increase/decrease octave.</li>
+          <li><strong>#/b</strong>: Add sharp/flat.</li>
+          <li><strong>.</strong>: Toggle dotted note.</li>
+          <li><strong>-</strong>: Add tie.</li>
+          <li><strong>_</strong>: Shorten duration.</li>
+          <li><strong>Enter</strong>: Add a new measure.</li>
+        </ul>
+        <h6>Chord Mode (Ukulele/Guitar) Key Mappings</h6>
+        <ul>
+          <li><strong>C, D, E, F, G, A, B</strong>: Add a major chord above the selected note (e.g., C for C major).</li>
+          <li><strong>m</strong>: Toggle minor chord (e.g., Cm).</li>
+          <li><strong>7</strong>: Toggle dominant 7th chord (e.g., C7).</li>
+          <li><strong>M</strong>: Toggle major 7th chord (e.g., Cmaj7).</li>
+          <li><strong>n</strong>: Toggle minor 7th chord (e.g., Cm7).</li>
+          <li><strong>u/d</strong>: Set upstroke/downstroke.</li>
+          <li><strong>Backspace/Delete</strong>: Remove the chord from the selected note.</li>
+          <li><strong>Arrow Left/Right</strong>: Move cursor between notes.</li>
           <li><strong>Enter</strong>: Add a new measure.</li>
         </ul>
         <h6>Usage Tips</h6>
         <ul>
-          <li>Click a note or measure to set the cursor position for inserting, deleting, or modifying.</li>
-          <li>Accidental, Octave, and Duration modifications apply to the note before the cursor if no note is selected, or to the selected note if one is clicked.</li>
-          <li>Use underscores (_) to shorten note duration, stacked vertically (e.g., three _ for a 32nd note).</li>
-          <li>Use dashes (-) for ties, appearing after the note (e.g., 1-).</li>
-          <li>Use the Notes group buttons (e.g., 1<sup>Do</sup>, 0<sup>Rest</sup>, 🗑️<sup>Del</sup>) to add or delete notes/rests.</li>
-          <li>Use the Accid group (e.g., #<sup>Sharp</sup>, ♭<sup>Flat</sup>, ↺<sup>Reset</sup>) to modify accidentals.</li>
-          <li>Use the Octave group (e.g., ↑<sup>Up</sup>, ↓<sup>Down</sup>, ↺<sup>Reset</sup>) to adjust octave.</li>
-          <li>Use the Duration group (e.g., .<sup>Dot</sup>, -<sup>Tie</sup>, _<sup>Short</sup>) to modify note duration.</li>
-          <li>Click a measure's time signature (e.g., 4/4) to edit beats and beat type.</li>
-          <li>Set the Base Note in the toolbar to define duration calculations (e.g., Quarter note as base).</li>
-          <li>Monitor the beat info in each measure to ensure correct timing.</li>
-          <li>Access the Score Library to import/export scores as JSON files.</li>
-          <li>On small screens, tap the "Numbered Musical Notation ▼" title to show/hide the toolbar.</li>
+          <li>Switch to Ukulele/Guitar mode to add chords above specific notes. Move the cursor to a note and press a chord key (e.g., C).</li>
+          <li>Chords appear in blue above notes and play simultaneously during playback.</li>
+          <li>Click a note or measure to set the cursor position.</li>
+          <li>Edit time signatures by clicking (e.g., 4/4).</li>
+          <li>Use the Score Library to import/export scores.</li>
+          <li>On small screens, tap the title to show/hide the toolbar.</li>
         </ul>
       </div>
     </div>
   </div>
-
-  <!-- Library Modal -->
   <div id="libraryModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -532,59 +448,37 @@
       <div class="modal-body">
         <h3>Score Library</h3>
         <div id="library-actions">
-          <button id="library-import-btn" title="Import Scores">Import Scores</button>
-          <button id="library-export-btn" title="Export Current Score">Export Current Score</button>
+          <button id="library-import-btn">Import Scores</button>
+          <button id="library-export-btn">Export Current Score</button>
         </div>
         <ul id="library-list"></ul>
       </div>
     </div>
   </div>
-
-  <!-- Editor Area -->
   <div id="editor-area">
     <div id="score-content"></div>
     <span id="cursor" style="left: 10px;"></span>
   </div>
-
-  <!-- Bottom Action Bar -->
   <div id="action-bar">
-    <div class="action-group">
-      <span>Notes:</span>
-      <button data-value="1">1<sup>Do</sup></button>
-      <button data-value="2">2<sup>Re</sup></button>
-      <button data-value="3">3<sup>Mi</sup></button>
-      <button data-value="4">4<sup>Fa</sup></button>
-      <button data-value="5">5<sup>So</sup></button>
-      <button data-value="6">6<sup>La</sup></button>
-      <button data-value="7">7<sup>Ti</sup></button>
-      <button data-value="0">0<sup>Rest</sup></button>
-      <button data-value="delete">🗑️<sup>Del</sup></button>
+    <div class="action-group" id="mode-group">
+      <label>Mode: <select id="mode-select">
+        <option value="jianpu">Jianpu</option>
+        <option value="ukulele">Ukulele</option>
+        <option value="guitar">Guitar</option>
+      </select></label>
     </div>
-    <div class="action-group">
-      <span>Accid:</span>
-      <button data-value="#">#<sup>Sharp</sup></button>
-      <button data-value="b">♭<sup>Flat</sup></button>
-      <button data-value="clear-accid">↺<sup>Reset</sup></button>
+    <div class="action-group" id="notes-group">
+      <span id="notes-label">Notes:</span>
     </div>
-    <div class="action-group">
-      <span>Octave:</span>
-      <button data-value="octave-up">↑<sup>Up</sup></button>
-      <button data-value="octave-down">↓<sup>Down</sup></button>
-      <button data-value="octave-clear">↺<sup>Reset</sup></button>
+    <div class="action-group" id="modifiers-group">
+      <span>Modifiers:</span>
     </div>
-    <div class="action-group">
-      <span>Duration:</span>
-      <button data-value="dot">.<sup>Dot</sup></button>
-      <button data-value="tie">-<sup>Tie</sup></button>
-      <button data-value="shorten">_<sup>Short</sup></button>
+    <div class="action-group" id="strum-group">
+      <span>Strum:</span>
     </div>
   </div>
-
-  <!-- Hidden file input -->
-  <input type="file" id="import-file" class="hidden" accept=".json, .txt" multiple style="display: none;">
-
+  <input type="file" id="import-file" class="hidden" accept=".json" multiple style="display: none;">
   <script>
-    /* Basic Web Audio functions */
     let audioCtx;
     let isPlaying = false;
     let playbackTimeouts = [];
@@ -598,29 +492,68 @@
         }
       }
     }
-    function playTone(pitchVal, octave, durationSeconds, startTime) {
+    function playTone(frequency, durationSeconds, startTime, volume = 0.5) {
       if (!audioCtx) return;
-      const noteFrequencies = { 1: 261.63, 2: 293.66, 3: 329.63, 4: 349.23, 5: 392.00, 6: 440.00, 7: 493.88 };
-      let baseFreq = noteFrequencies[pitchVal];
-      if (!baseFreq) return;
-      let freq = baseFreq * Math.pow(2, octave);
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(freq, startTime);
-      gainNode.gain.setValueAtTime(0.5, startTime);
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+      gainNode.gain.setValueAtTime(volume, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + durationSeconds);
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
       oscillator.start(startTime);
       oscillator.stop(startTime + durationSeconds);
     }
-    function playFeedback(noteElement) {
+    function playChord(root, chordType, strum, mode, durationSeconds, startTime) {
+      if (!audioCtx) return;
+      const ukuleleVoicings = {
+        'C:major': [0, 0, 0, 3], 'C:minor': [0, 3, 3, 3], 'C:maj7': [0, 0, 0, 2], 'C:m7': [3, 3, 3, 3], 'C:7': [1, 0, 0, 3],
+        'D:major': [2, 2, 2, 0], 'D:minor': [2, 2, 1, 0], 'D:maj7': [2, 2, 2, 4], 'D:m7': [2, 2, 1, 3], 'D:7': [2, 2, 2, 3],
+        'E:major': [1, 4, 0, 2], 'E:minor': [0, 4, 0, 2], 'E:maj7': [1, 4, 0, 1], 'E:m7': [0, 4, 0, 0], 'E:7': [1, 4, 0, 0],
+        'F:major': [2, 0, 1, 0], 'F:minor': [1, 0, 1, 0], 'F:maj7': [2, 0, 1, 3], 'F:m7': [1, 0, 1, 3], 'F:7': [2, 3, 1, 0],
+        'G:major': [0, 2, 3, 2], 'G:minor': [0, 2, 3, 1], 'G:maj7': [0, 2, 2, 2], 'G:m7': [0, 2, 1, 1], 'G:7': [0, 2, 1, 2],
+        'A:major': [2, 1, 0, 0], 'A:minor': [2, 0, 0, 0], 'A:maj7': [2, 1, 0, 4], 'A:m7': [2, 0, 0, 3], 'A:7': [2, 1, 0, 3],
+        'B:major': [4, 3, 2, 2], 'B:minor': [4, 2, 2, 2], 'B:maj7': [4, 3, 2, 1], 'B:m7': [4, 2, 2, 1], 'B:7': [4, 3, 2, 0]
+      };
+      const guitarVoicings = {
+        'C:major': [3, 3, 2, 0, 1, 0], 'C:minor': [3, 3, 1, 0, 1, 0], 'C:maj7': [3, 3, 2, 0, 0, 0], 'C:m7': [3, 3, 1, 0, 1, 0], 'C:7': [3, 3, 2, 3, 1, 0],
+        'D:major': [2, 3, 2, 0, 0, 0], 'D:minor': [1, 3, 2, 0, 0, 0], 'D:maj7': [2, 2, 2, 0, 0, 0], 'D:m7': [1, 3, 1, 0, 0, 0], 'D:7': [2, 3, 2, 0, 0, 0],
+        'E:major': [0, 2, 2, 1, 0, 0], 'E:minor': [0, 2, 2, 0, 0, 0], 'E:maj7': [0, 2, 1, 1, 0, 0], 'E:m7': [0, 2, 2, 0, 3, 0], 'E:7': [0, 2, 2, 1, 3, 0],
+        'F:major': [1, 3, 3, 2, 1, 1], 'F:minor': [1, 3, 3, 1, 1, 1], 'F:maj7': [1, 3, 3, 2, 1, 0], 'F:m7': [1, 3, 3, 1, 1, 0], 'F:7': [1, 3, 3, 1, 1, 0],
+        'G:major': [3, 2, 0, 0, 0, 3], 'G:minor': [3, 3, 0, 0, 0, 3], 'G:maj7': [3, 2, 0, 0, 0, 2], 'G:m7': [3, 3, 0, 0, 0, 1], 'G:7': [3, 2, 0, 0, 0, 1],
+        'A:major': [0, 0, 2, 2, 2, 0], 'A:minor': [0, 0, 2, 2, 1, 0], 'A:maj7': [0, 0, 2, 1, 2, 0], 'A:m7': [0, 0, 2, 0, 1, 0], 'A:7': [0, 0, 2, 0, 2, 0],
+        'B:major': [2, 2, 4, 4, 4, 2], 'B:minor': [2, 2, 4, 4, 3, 2], 'B:maj7': [2, 2, 4, 3, 4, 2], 'B:m7': [2, 2, 4, 2, 3, 2], 'B:7': [2, 2, 4, 2, 4, 2]
+      };
+      const voicings = mode === 'ukulele' ? ukuleleVoicings : guitarVoicings;
+      const tuning = mode === 'ukulele' ? [196.00, 261.63, 329.63, 440.00] : [82.41, 110.00, 146.83, 196.00, 246.94, 329.63];
+      const chordKey = `${root}:${chordType}`;
+      const fretPositions = voicings[chordKey] || voicings[`${root}:major`];
+      const strumDelay = strum === 'up' ? -0.02 : 0.02;
+      fretPositions.forEach((fret, i) => {
+        if (fret !== null && tuning[i]) {
+          const freq = tuning[i] * Math.pow(2, fret / 12);
+          const delay = strum === 'up' ? (fretPositions.length - i - 1) * strumDelay : i * strumDelay;
+          playTone(freq, durationSeconds, startTime + delay, 0.3 / fretPositions.length);
+        }
+      });
+    }
+    function playFeedback(element) {
       initAudio();
-      const pitch = parseInt(noteElement?.dataset.pitch || '1');
-      const octave = parseInt(noteElement?.dataset.octave || '0');
-      if (pitch > 0) {
-        playTone(pitch, octave, 0.3, audioCtx.currentTime);
+      if (!element.dataset) return;
+      if (element.classList.contains('note')) {
+        const pitch = parseInt(element.dataset.pitch || '1');
+        const octave = parseInt(element.dataset.octave || '0');
+        if (pitch > 0) {
+          const noteFrequencies = { 1: 261.63, 2: 293.66, 3: 329.63, 4: 349.23, 5: 392.00, 6: 440.00, 7: 493.88 };
+          let freq = noteFrequencies[pitch] * Math.pow(2, octave);
+          playTone(freq, 0.3, audioCtx.currentTime);
+        }
+        if (element.dataset.chordRoot) {
+          playChord(element.dataset.chordRoot, element.dataset.chordType, element.dataset.chordStrum, document.getElementById('mode-select').value, 0.3, audioCtx.currentTime);
+        }
+      } else if (element.classList.contains('rest') && element.dataset.chordRoot) {
+        playChord(element.dataset.chordRoot, element.dataset.chordType, element.dataset.chordStrum, document.getElementById('mode-select').value, 0.3, audioCtx.currentTime);
       }
     }
     function stopPlayback() {
@@ -633,12 +566,9 @@
       document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
       isPlaying = false;
       document.getElementById('play-btn').textContent = 'Play';
-      console.log("Playback stopped.");
     }
   </script>
-
   <script>
-    // DOM elements
     const editorArea = document.getElementById('editor-area');
     const scoreContent = document.getElementById('score-content');
     const actionBar = document.getElementById('action-bar');
@@ -659,8 +589,7 @@
     const libraryModalClose = libraryModal.querySelector('.modal-close');
     const toolbarTitle = document.getElementById('toolbar-title');
     const toolbar = document.getElementById('toolbar');
-
-    // Global state
+    const modeSelect = document.getElementById('mode-select');
     let score = {
       baseNoteType: 4,
       bpm: 120,
@@ -670,27 +599,73 @@
     let cursorPosition = { measureIndex: 0, noteIndex: 0 };
     let selectedElement = null;
     let nextId = 0;
-
+    let currentMode = 'jianpu';
     function getNewId() { return `elem-${nextId++}`; }
     function getBeatValue(beatType, baseNoteType) {
       return (4 / beatType) / (4 / baseNoteType);
     }
-
     function calculateMeasureBeats(measureIndex) {
       if (!score.measures[measureIndex]) return 0;
       let totalBeats = 0;
       const measure = score.measures[measureIndex];
       const beatValue = getBeatValue(measure.timeSignature.beatType, score.baseNoteType);
       measure.notes.forEach(note => {
-        let duration = note.durationBase * beatValue;
+        let duration = note.durationBase || 1;
         if (note.dotted) duration *= 1.5;
-        if (note.tieCount > 0) duration += note.durationBase * note.tieCount * beatValue;
-        totalBeats += duration;
+        if (note.tieCount > 0) duration += (note.durationBase || 1) * note.tieCount;
+        totalBeats += duration * beatValue;
       });
       return totalBeats;
     }
-
-    // Render note element
+    function updateActionBar() {
+      const notesGroup = document.getElementById('notes-group');
+      const modifiersGroup = document.getElementById('modifiers-group');
+      const strumGroup = document.getElementById('strum-group');
+      notesGroup.innerHTML = '<span id="notes-label">Notes:</span>';
+      modifiersGroup.innerHTML = '<span>Modifiers:</span>';
+      strumGroup.innerHTML = '<span>Strum:</span>';
+      if (currentMode === 'jianpu') {
+        document.getElementById('notes-label').textContent = 'Notes:';
+        ['1<sup>Do</sup>', '2<sup>Re</sup>', '3<sup>Mi</sup>', '4<sup>Fa</sup>', '5<sup>So</sup>', '6<sup>La</sup>', '7<sup>Ti</sup>', '0<sup>Rest</sup>', '🗑️<sup>Del</sup>'].forEach((label, i) => {
+          const btn = document.createElement('button');
+          btn.innerHTML = label;
+          btn.dataset.value = i < 8 ? i + 1 : i === 8 ? '0' : 'delete';
+          notesGroup.appendChild(btn);
+        });
+        ['#<sup>Sharp</sup>', '♭<sup>Flat</sup>', '↺<sup>Reset</sup>'].forEach((label, i) => {
+          const btn = document.createElement('button');
+          btn.innerHTML = label;
+          btn.dataset.value = i === 0 ? '#' : i === 1 ? 'b' : 'clear-accid';
+          modifiersGroup.appendChild(btn);
+        });
+        ['↑<sup>Up</sup>', '↓<sup>Down</sup>', '↺<sup>Reset</sup>', '.<sup>Dot</sup>', '-<sup>Tie</sup>', '_<sup>Short</sup>'].forEach((label, i) => {
+          const btn = document.createElement('button');
+          btn.innerHTML = label;
+          btn.dataset.value = i === 0 ? 'octave-up' : i === 1 ? 'octave-down' : i === 2 ? 'octave-clear' : i === 3 ? 'dot' : i === 4 ? 'tie' : 'shorten';
+          strumGroup.appendChild(btn);
+        });
+      } else {
+        document.getElementById('notes-label').textContent = 'Chords:';
+        ['C', 'D', 'E', 'F', 'G', 'A', 'B', '🗑️<sup>Del</sup>'].forEach((label, i) => {
+          const btn = document.createElement('button');
+          btn.innerHTML = label;
+          btn.dataset.value = i < 7 ? label : 'delete';
+          notesGroup.appendChild(btn);
+        });
+        ['m<sup>Minor</sup>', '7<sup>Dom7</sup>', 'M<sup>Maj7</sup>', 'n<sup>m7</sup>'].forEach((label, i) => {
+          const btn = document.createElement('button');
+          btn.innerHTML = label;
+          btn.dataset.value = i === 0 ? 'minor' : i === 1 ? '7' : i === 2 ? 'maj7' : 'm7';
+          modifiersGroup.appendChild(btn);
+        });
+        ['↑<sup>Up</sup>', '↓<sup>Down</sup>'].forEach((label, i) => {
+          const btn = document.createElement('button');
+          btn.innerHTML = label;
+          btn.dataset.value = i === 0 ? 'up' : 'down';
+          strumGroup.appendChild(btn);
+        });
+      }
+    }
     function renderNoteElement(noteData, measureIndex) {
       const noteEl = document.createElement('span');
       noteEl.id = noteData.id;
@@ -700,6 +675,11 @@
       Object.keys(noteData).forEach(key => {
         if (typeof noteData[key] !== 'object') noteEl.dataset[key] = noteData[key];
       });
+      if (noteData.chord) {
+        noteEl.dataset.chordRoot = noteData.chord.root;
+        noteEl.dataset.chordType = noteData.chord.chordType;
+        noteEl.dataset.chordStrum = noteData.chord.strum;
+      }
       if (noteData.type === 'note') {
         noteEl.className = 'note';
         let content = '<span class="pitch-container">';
@@ -716,6 +696,12 @@
           for (let i = 0; i < underscoreCount; i++) content += '<span>_</span>';
           content += '</span>';
         }
+        if (noteData.chord) {
+          content += `<span class="chord-above">${noteData.chord.root}`;
+          if (noteData.chord.chordType !== 'major') content += `<span class="chord-type">${noteData.chord.chordType === 'minor' ? 'm' : noteData.chord.chordType}</span>`;
+          if (noteData.chord.strum) content += `<span class="strum">${noteData.chord.strum === 'up' ? '↑' : '↓'}</span>`;
+          content += '</span>';
+        }
         noteEl.innerHTML = content;
       } else if (noteData.type === 'rest') {
         noteEl.className = 'rest';
@@ -726,6 +712,12 @@
           const underscoreCount = Math.log2(1 / noteData.durationBase);
           content += '<span class="duration-char">';
           for (let i = 0; i < underscoreCount; i++) content += '<span>_</span>';
+          content += '</span>';
+        }
+        if (noteData.chord) {
+          content += `<span class="chord-above">${noteData.chord.root}`;
+          if (noteData.chord.chordType !== 'major') content += `<span class="chord-type">${noteData.chord.chordType === 'minor' ? 'm' : noteData.chord.chordType}</span>`;
+          if (noteData.chord.strum) content += `<span class="strum">${noteData.chord.strum === 'up' ? '↑' : '↓'}</span>`;
           content += '</span>';
         }
         noteEl.innerHTML = content;
@@ -749,7 +741,6 @@
       });
       return noteEl;
     }
-
     function renderMeasure(measureData, measureIndex) {
       const measureEl = document.createElement('div');
       measureEl.className = 'measure';
@@ -813,7 +804,6 @@
       updateMeasureBeatInfo(measureEl, measureIndex);
       return measureEl;
     }
-
     function updateMeasureBeatInfo(measureElement, measureIndex) {
       const beatInfoEl = measureElement.querySelector('.beat-info');
       if (!beatInfoEl) return;
@@ -823,7 +813,6 @@
       if (Math.abs(currentBeats - targetBeats) > 0.01) beatInfoEl.classList.add('error');
       else beatInfoEl.classList.remove('error');
     }
-
     function renderScore() {
       scoreContent.innerHTML = '';
       score.measures.forEach((measureData, index) => {
@@ -831,8 +820,6 @@
       });
       updateCursorPosition();
     }
-
-    // Cursor management
     function moveCursorTo(measureIndex, noteIndex) {
       measureIndex = Math.max(0, Math.min(measureIndex, score.measures.length - 1));
       if (score.measures.length === 0) {
@@ -846,7 +833,6 @@
       updateCursorPosition();
       deselectElement();
     }
-
     function updateCursorPosition() {
       if (cursorPosition.measureIndex < 0 || score.measures.length === 0) {
         cursor.style.left = `10px`;
@@ -875,9 +861,7 @@
         const rect = targetElement.getBoundingClientRect();
         const containerRect = scoreContent.getBoundingClientRect();
         let left = rect.left - containerRect.left + editorArea.scrollLeft;
-        if (isEndOfMeasure) {
-          left += rect.width;
-        }
+        if (isEndOfMeasure && currentMode === 'jianpu') left += rect.width;
         let top = rect.top - containerRect.top + (rect.height / 2) - (cursor.offsetHeight / 2) + 5;
         cursor.style.left = `${left}px`;
         cursor.style.top = `${top}px`;
@@ -887,8 +871,6 @@
         cursor.style.display = 'none';
       }
     }
-
-    // Selection management
     function selectElement(element) {
       deselectElement();
       if (element) {
@@ -897,7 +879,6 @@
         selectedElement.focus();
       }
     }
-
     function deselectElement() {
       if (selectedElement) {
         selectedElement.classList.remove('selected');
@@ -905,7 +886,6 @@
       }
       selectedElement = null;
     }
-
     function getNoteDataFromElement(element) {
       if (!element || !element.dataset || !element.dataset.noteId) return null;
       const measureIndex = parseInt(element.dataset.measureIndex);
@@ -913,16 +893,12 @@
       if (isNaN(measureIndex) || !noteId || !score.measures[measureIndex]) return null;
       return score.measures[measureIndex].notes.find(n => n.id === noteId);
     }
-
-    // Get note at cursor position
     function getNoteDataAtCursor() {
       if (cursorPosition.measureIndex < 0 || score.measures.length === 0) return null;
       const measure = score.measures[cursorPosition.measureIndex];
-      if (!measure || cursorPosition.noteIndex <= 0) return null;
-      return measure.notes[cursorPosition.noteIndex - 1];
+      if (!measure || cursorPosition.noteIndex >= measure.notes.length) return null;
+      return measure.notes[cursorPosition.noteIndex];
     }
-
-    // Insert note
     function insertNote(noteData) {
       if (calculateMeasureBeats(cursorPosition.measureIndex) >= score.measures[cursorPosition.measureIndex].timeSignature.beats - 0.001) {
         addMeasure();
@@ -949,8 +925,6 @@
         playFeedback(newElement);
       }
     }
-
-    // Delete
     function deleteNoteAtCursor() {
       if (cursorPosition.measureIndex < 0 || score.measures.length === 0) return;
       const measure = score.measures[cursorPosition.measureIndex];
@@ -961,7 +935,6 @@
           cursorPosition.measureIndex = Math.max(0, cursorPosition.measureIndex - 1);
           cursorPosition.noteIndex = score.measures[cursorPosition.measureIndex].notes.length;
           renderScore();
-          return;
         }
         return;
       }
@@ -973,120 +946,86 @@
       }
       deselectElement();
     }
-
-    function deleteNoteAtElement(element) {
-      const data = getNoteDataFromElement(element);
-      if (!data) return;
-      const measureIndex = parseInt(element.dataset.measureIndex);
-      const measure = score.measures[measureIndex];
-      const noteIndex = measure.notes.findIndex(n => n.id === data.id);
-      if (noteIndex !== -1) {
-        measure.notes.splice(noteIndex, 1);
-        if (cursorPosition.measureIndex === measureIndex && cursorPosition.noteIndex > noteIndex) {
-          cursorPosition.noteIndex--;
-        }
-        renderScore();
-        deselectElement();
-      }
-    }
-
-    // Modify note at cursor or selected note
     function modifyNoteAtCursor(property, value) {
       let targetNote = null;
       let targetElement = selectedElement;
       let measureIndex = cursorPosition.measureIndex;
-      let noteIndex = cursorPosition.noteIndex - 1;
-
-      // Prefer selected note if available
+      let noteIndex = cursorPosition.noteIndex;
       if (selectedElement) {
         targetNote = getNoteDataFromElement(selectedElement);
         measureIndex = parseInt(selectedElement.dataset.measureIndex);
         noteIndex = score.measures[measureIndex].notes.findIndex(n => n.id === targetNote.id);
       } else {
-        // Otherwise, use note before cursor
         targetNote = getNoteDataAtCursor();
         targetElement = targetNote ? document.getElementById(targetNote.id) : null;
       }
-
-      if (!targetNote) {
-        console.log("No note to modify at cursor or selected.");
-        return;
-      }
-
+      if (!targetNote) return;
       const measure = score.measures[measureIndex];
       let needsRender = true;
-      switch (property) {
-        case 'pitch':
-          if (targetNote.type === 'note') targetNote.pitch = parseInt(value);
-          break;
-        case 'type':
-          targetNote.type = value;
-          if (value === 'rest') {
-            targetNote.pitch = 0;
-            targetNote.octave = 0;
-            targetNote.accidental = null;
-            targetNote.tieCount = 0;
-          } else {
-            targetNote.pitch = targetNote.pitch || 1;
-          }
-          break;
-        case 'accidental':
-          if (targetNote.type === 'note') {
-            if (value === '#' && (targetNote.pitch === 3 || targetNote.pitch === 7)) {
-              console.warn("Cannot raise E(3) or B(7)");
-              return;
+      if (currentMode === 'jianpu') {
+        switch (property) {
+          case 'pitch':
+            targetNote.pitch = parseInt(value);
+            break;
+          case 'type':
+            targetNote.type = value;
+            if (value === 'rest') {
+              targetNote.pitch = 0;
+              targetNote.octave = 0;
+              targetNote.accidental = null;
+              targetNote.tieCount = 0;
+            } else {
+              targetNote.pitch = targetNote.pitch || 1;
             }
-            targetNote.accidental = (targetNote.accidental === value) ? null : value;
-          }
-          break;
-        case 'octave':
-          if (targetNote.type === 'note') {
-            if (value === '+1') targetNote.octave++;
-            else if (value === '-1') targetNote.octave--;
-            else if (value === 'clear') targetNote.octave = 0;
-            targetNote.octave = Math.max(-2, Math.min(2, targetNote.octave));
-          }
-          break;
-        case 'shorten':
-          if (targetNote.type === 'rest' || targetNote.type === 'note') {
+            break;
+          case 'accidental':
+            if (targetNote.type === 'note') {
+              if (value === '#' && (targetNote.pitch === 3 || targetNote.pitch === 7)) return;
+              targetNote.accidental = (targetNote.accidental === value) ? null : value;
+            }
+            break;
+          case 'octave':
+            if (targetNote.type === 'note') {
+              if (value === '+1') targetNote.octave++;
+              else if (value === '-1') targetNote.octave--;
+              else if (value === 'clear') targetNote.octave = 0;
+              targetNote.octave = Math.max(-2, Math.min(2, targetNote.octave));
+            }
+            break;
+          case 'shorten':
             targetNote.durationBase = Math.max(0.125, targetNote.durationBase / 2);
             if (targetNote.type === 'rest') targetNote.tieCount = 0;
-          }
-          break;
-        case 'tie':
-          if (targetNote.type === 'note') targetNote.tieCount++;
-          else {
-            console.warn("Cannot apply tie '-' to rests");
-            return;
-          }
-          break;
-        case 'dotted':
-          if (targetNote.type === 'rest' || targetNote.type === 'note') targetNote.dotted = !targetNote.dotted;
-          else {
-            console.warn("Cannot dot this element type");
-            return;
-          }
-          break;
-        default:
-          needsRender = false;
+            break;
+          case 'tie':
+            if (targetNote.type === 'note') targetNote.tieCount++;
+            break;
+          case 'dotted':
+            targetNote.dotted = !targetNote.dotted;
+            break;
+          default:
+            needsRender = false;
+        }
+      } else {
+        switch (property) {
+          case 'chord':
+            targetNote.chord = value ? { root: value.root, chordType: value.chordType, strum: value.strum } : null;
+            break;
+          default:
+            needsRender = false;
+        }
       }
       if (needsRender) {
-        // Check if measure is overfilled
         if (calculateMeasureBeats(measureIndex) > measure.timeSignature.beats + 0.001) {
           addMeasure();
-          // Move cursor to new measure
           cursorPosition.measureIndex++;
           cursorPosition.noteIndex = 0;
         }
         renderScore();
-        // Re-select the modified note
         const reselected = document.getElementById(targetNote.id);
         if (reselected) selectElement(reselected);
         playFeedback(reselected);
       }
     }
-
-    // Add a new measure
     function addMeasure() {
       const newMeasure = {
         id: getNewId(),
@@ -1098,140 +1037,164 @@
       cursorPosition.noteIndex = 0;
       renderScore();
     }
-
-    // Reset the editor
     function resetEditor() {
-      if (confirm("Are you sure you want to reset the editor? All content will be lost.")) {
+      if (confirm("Reset editor? All content will be lost.")) {
         score = { baseNoteType: 4, bpm: 120, measures: [] };
         nextId = 0;
         addMeasure();
         moveCursorTo(0, 0);
         baseNoteTypeSelect.value = '4';
+        bpmInput.value = '120';
+        renderScore();
       }
     }
-
-    // Event listeners for bottom action bar and keyboard
     actionBar.addEventListener('click', (event) => {
       const button = event.target.closest('button');
       if (!button) return;
       const action = button.dataset.value;
       if (!action) return;
       initAudio();
-      if (['1','2','3','4','5','6','7'].includes(action)) {
-        insertNote({ type: 'note', pitch: parseInt(action) });
-      } else if (action === '0') {
-        insertNote({ type: 'rest', pitch: 0 });
-      } else if (action === 'delete') {
-        deleteNoteAtCursor();
+      if (currentMode === 'jianpu') {
+        if (['1','2','3','4','5','6','7'].includes(action)) {
+          insertNote({ type: 'note', pitch: parseInt(action) });
+        } else if (action === '0') {
+          insertNote({ type: 'rest', pitch: 0 });
+        } else if (action === 'delete') {
+          deleteNoteAtCursor();
+        } else {
+          if (action === '#') modifyNoteAtCursor('accidental', '#');
+          else if (action === 'b') modifyNoteAtCursor('accidental', 'b');
+          else if (action === 'clear-accid') modifyNoteAtCursor('accidental', null);
+          else if (action === 'octave-up') modifyNoteAtCursor('octave', '+1');
+          else if (action === 'octave-down') modifyNoteAtCursor('octave', '-1');
+          else if (action === 'octave-clear') modifyNoteAtCursor('octave', 'clear');
+          else if (action === 'dot') modifyNoteAtCursor('dotted', true);
+          else if (action === 'tie') modifyNoteAtCursor('tie', true);
+          else if (action === 'shorten') modifyNoteAtCursor('shorten', true);
+        }
       } else {
-        if (action === '#') modifyNoteAtCursor('accidental', '#');
-        else if (action === 'b') modifyNoteAtCursor('accidental', 'b');
-        else if (action === 'clear-accid') modifyNoteAtCursor('accidental', null);
-        else if (action === 'octave-up') modifyNoteAtCursor('octave', '+1');
-        else if (action === 'octave-down') modifyNoteAtCursor('octave', '-1');
-        else if (action === 'octave-clear') modifyNoteAtCursor('octave', 'clear');
-        else if (action === 'dot') modifyNoteAtCursor('dotted', true);
-        else if (action === 'tie') modifyNoteAtCursor('tie', true);
-        else if (action === 'shorten') modifyNoteAtCursor('shorten', true);
+        if (['C','D','E','F','G','A','B'].includes(action)) {
+          modifyNoteAtCursor('chord', { root: action, chordType: 'major', strum: 'down' });
+        } else if (action === 'delete') {
+          modifyNoteAtCursor('chord', null);
+        } else {
+          if (action === 'minor') modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: 'minor' });
+          else if (action === '7') modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: '7' });
+          else if (action === 'maj7') modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: 'maj7' });
+          else if (action === 'm7') modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: 'm7' });
+          else if (action === 'up') modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, strum: 'up' });
+          else if (action === 'down') modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, strum: 'down' });
+        }
       }
     });
-
     document.addEventListener('keydown', (event) => {
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') return;
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') return;
       initAudio();
-      const key = event.key;
+      const key = event.key.toUpperCase();
       let handled = true;
-      if (key >= '1' && key <= '7') {
-        insertNote({ type: 'note', pitch: parseInt(key) });
-      } else if (key === '0') {
-        insertNote({ type: 'rest', pitch: 0 });
-      } else if (key === 'Backspace' || key === 'Delete') {
-        deleteNoteAtCursor();
-      } else if (key === 'ArrowLeft') {
-        if (cursorPosition.noteIndex > 0) {
-          moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex - 1);
-        } else if (cursorPosition.measureIndex > 0) {
-          const prevMeasureIndex = cursorPosition.measureIndex - 1;
-          moveCursorTo(prevMeasureIndex, score.measures[prevMeasureIndex].notes.length);
+      if (currentMode === 'jianpu') {
+        if (key >= '1' && key <= '7') {
+          insertNote({ type: 'note', pitch: parseInt(key) });
+        } else if (key === '0') {
+          insertNote({ type: 'rest', pitch: 0 });
+        } else if (key === 'BACKSPACE' || key === 'DELETE') {
+          deleteNoteAtCursor();
+        } else if (key === 'ARROWLEFT') {
+          if (cursorPosition.noteIndex > 0) {
+            moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex - 1);
+          } else if (cursorPosition.measureIndex > 0) {
+            const prevMeasureIndex = cursorPosition.measureIndex - 1;
+            moveCursorTo(prevMeasureIndex, score.measures[prevMeasureIndex].notes.length - 1);
+          }
+        } else if (key === 'ARROWRIGHT') {
+          const currentMeasure = score.measures[cursorPosition.measureIndex];
+          if (!currentMeasure) return;
+          if (cursorPosition.noteIndex < currentMeasure.notes.length - 1) {
+            moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex + 1);
+          } else if (cursorPosition.measureIndex < score.measures.length - 1) {
+            moveCursorTo(cursorPosition.measureIndex + 1, 0);
+          } else if (cursorPosition.noteIndex < currentMeasure.notes.length) {
+            moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex + 1);
+          }
+        } else if (key === 'HOME') {
+          moveCursorTo(cursorPosition.measureIndex, 0);
+        } else if (key === 'END') {
+          moveCursorTo(cursorPosition.measureIndex, score.measures[cursorPosition.measureIndex].notes.length);
+        } else if (key === 'ARROWUP') {
+          modifyNoteAtCursor('octave', '+1');
+        } else if (key === 'ARROWDOWN') {
+          modifyNoteAtCursor('octave', '-1');
+        } else if (key === '#') {
+          modifyNoteAtCursor('accidental', '#');
+        } else if (key === 'B') {
+          modifyNoteAtCursor('accidental', 'b');
+        } else if (key === '.') {
+          modifyNoteAtCursor('dotted', true);
+        } else if (key === '-') {
+          modifyNoteAtCursor('tie', true);
+        } else if (key === '_') {
+          modifyNoteAtCursor('shorten', true);
+        } else if (key === 'ENTER') {
+          addMeasure();
+        } else {
+          handled = false;
         }
-      } else if (key === 'ArrowRight') {
-        const currentMeasure = score.measures[cursorPosition.measureIndex];
-        if (!currentMeasure) return;
-        if (cursorPosition.noteIndex < currentMeasure.notes.length) {
-          moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex + 1);
-        } else if (cursorPosition.measureIndex < score.measures.length - 1) {
-          moveCursorTo(cursorPosition.measureIndex + 1, 0);
-        }
-      } else if (key === 'Home') {
-        moveCursorTo(cursorPosition.measureIndex, 0);
-      } else if (key === 'End') {
-        const currentMeasure = score.measures[cursorPosition.measureIndex];
-        moveCursorTo(cursorPosition.measureIndex, currentMeasure.notes.length);
-      } else if (key === 'ArrowUp') {
-        modifyNoteAtCursor('octave', '+1');
-      } else if (key === 'ArrowDown') {
-        modifyNoteAtCursor('octave', '-1');
-      } else if (key === '#') {
-        modifyNoteAtCursor('accidental', '#');
-      } else if (key === 'b') {
-        modifyNoteAtCursor('accidental', 'b');
-      } else if (key === '.') {
-        modifyNoteAtCursor('dotted', true);
-      } else if (key === '-') {
-        modifyNoteAtCursor('tie', true);
-      } else if (key === '_') {
-        modifyNoteAtCursor('shorten', true);
-      } else if (key === 'Enter') {
-        addMeasure();
       } else {
-        handled = false;
+        if (['C','D','E','F','G','A','B'].includes(key)) {
+          modifyNoteAtCursor('chord', { root: key, chordType: 'major', strum: 'down' });
+        } else if (key === 'BACKSPACE' || key === 'DELETE') {
+          modifyNoteAtCursor('chord', null);
+        } else if (key === 'ARROWLEFT') {
+          if (cursorPosition.noteIndex > 0) moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex - 1);
+          else if (cursorPosition.measureIndex > 0) moveCursorTo(cursorPosition.measureIndex - 1, score.measures[cursorPosition.measureIndex - 1].notes.length - 1);
+        } else if (key === 'ARROWRIGHT') {
+          const currentMeasure = score.measures[cursorPosition.measureIndex];
+          if (!currentMeasure) return;
+          if (cursorPosition.noteIndex < currentMeasure.notes.length - 1) moveCursorTo(cursorPosition.measureIndex, cursorPosition.noteIndex + 1);
+          else if (cursorPosition.measureIndex < score.measures.length - 1) moveCursorTo(cursorPosition.measureIndex + 1, 0);
+        } else if (key === 'M') {
+          modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: 'minor' });
+        } else if (key === '7') {
+          modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: '7' });
+        } else if (key === 'M' && event.shiftKey) {
+          modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: 'maj7' });
+        } else if (key === 'N') {
+          modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, chordType: 'm7' });
+        } else if (key === 'U') {
+          modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, strum: 'up' });
+        } else if (key === 'D') {
+          modifyNoteAtCursor('chord', { ...getNoteDataAtCursor()?.chord, strum: 'down' });
+        } else if (key === 'ENTER') {
+          addMeasure();
+        } else {
+          handled = false;
+        }
       }
       if (handled) event.preventDefault();
     });
-
-    // Base note type change
+    modeSelect.addEventListener('change', () => {
+      currentMode = modeSelect.value;
+      updateActionBar();
+      renderScore();
+    });
     baseNoteTypeSelect.addEventListener('change', () => {
       score.baseNoteType = parseInt(baseNoteTypeSelect.value);
       renderScore();
     });
-
-    // Reset button
     resetBtn.addEventListener('click', resetEditor);
-
-    // Help modal
-    helpBtn.addEventListener('click', () => {
-      helpModal.style.display = 'flex';
-    });
-    helpModalClose.addEventListener('click', () => {
-      helpModal.style.display = 'none';
-    });
-    helpModal.addEventListener('click', (e) => {
-      if (e.target === helpModal) helpModal.style.display = 'none';
-    });
-
-    // Library modal
+    helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
+    helpModalClose.addEventListener('click', () => { helpModal.style.display = 'none'; });
+    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
     libraryBtn.addEventListener('click', () => {
       libraryModal.style.display = 'flex';
       updateLibraryList();
     });
-    libraryModalClose.addEventListener('click', () => {
-      libraryModal.style.display = 'none';
-    });
-    libraryModal.addEventListener('click', (e) => {
-      if (e.target === libraryModal) libraryModal.style.display = 'none';
-    });
-
-    // Score Library Functions
-    function generateScoreDataForExport() {
-      return JSON.parse(JSON.stringify(score));
-    }
-
-    // Export the current score as JSON
+    libraryModalClose.addEventListener('click', () => { libraryModal.style.display = 'none'; });
+    libraryModal.addEventListener('click', (e) => { if (e.target === libraryModal) libraryModal.style.display = 'none'; });
     libraryExportBtn.addEventListener('click', () => {
-      const scoreData = generateScoreDataForExport();
-      const jsonString = JSON.stringify(scoreData, null, 2);
-      let fileName = prompt("Please enter file name for export (without extension):", "jianpu_score");
-      if (!fileName) fileName = "jianpu_score";
+      const jsonString = JSON.stringify(score, null, 2);
+      let fileName = prompt("Enter file name for export (without extension):", "music_score");
+      if (!fileName) fileName = "music_score";
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1242,13 +1205,7 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
-
-    // Import Scores
-    libraryImportBtn.addEventListener('click', () => {
-      importFileEl.click();
-    });
-
-    // Handle file input change for importing multiple files
+    libraryImportBtn.addEventListener('click', () => { importFileEl.click(); });
     importFileEl.addEventListener('change', (event) => {
       const files = event.target.files;
       if (!files || files.length === 0) return;
@@ -1258,27 +1215,20 @@
         reader.onload = (e) => {
           try {
             const importedData = JSON.parse(e.target.result);
-            if (importedData && importedData.baseNoteType && importedData.measures && importedData.measures.every(m => m.timeSignature)) {
+            if (importedData && importedData.baseNoteType && importedData.measures) {
               scoreLibrary.push({ name: file.name, data: importedData });
               updateLibraryList();
             } else {
               alert(`File "${file.name}" is not a valid score format.`);
             }
           } catch (err) {
-            console.error("Error parsing JSON file:", err);
             alert(`Error loading file "${file.name}": ${err.message}`);
           }
-        };
-        reader.onerror = (err) => {
-          console.error("File reading error:", err);
-          alert(`Error reading file "${file.name}".`);
         };
         reader.readAsText(file);
       }
       event.target.value = "";
     });
-
-    // Update the library list UI
     function updateLibraryList() {
       libraryList.innerHTML = "";
       scoreLibrary.forEach((item, index) => {
@@ -1294,18 +1244,21 @@
             measure.notes.forEach(note => note.id = getNewId());
           });
           score = JSON.parse(JSON.stringify(item.data));
+          currentMode = 'jianpu';
+          modeSelect.value = currentMode;
           baseNoteTypeSelect.value = score.baseNoteType;
           bpmInput.value = score.bpm;
+          updateActionBar();
           renderScore();
           moveCursorTo(0, 0);
-          alert(`Score "${item.name}" loaded into editor.`);
+          alert(`Score "${item.name}" loaded.`);
           libraryModal.style.display = 'none';
         });
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = "Delete";
         deleteBtn.className = "delete-btn";
         deleteBtn.addEventListener('click', () => {
-          if (confirm(`Delete score "${item.name}" from library?`)) {
+          if (confirm(`Delete score "${item.name}"?`)) {
             scoreLibrary.splice(index, 1);
             updateLibraryList();
           }
@@ -1315,8 +1268,6 @@
         libraryList.appendChild(li);
       });
     }
-
-    // Playback
     playBtn.addEventListener('click', () => {
       if (isPlaying) {
         stopPlayback();
@@ -1325,7 +1276,6 @@
         playbackTimeouts = [];
         initAudio();
         if (!audioCtx) return;
-        console.log("Starting playback...");
         isPlaying = true;
         playBtn.textContent = 'Stop';
         let currentTime = audioCtx.currentTime + 0.1;
@@ -1336,11 +1286,18 @@
           measure.notes.forEach((note) => {
             const noteElement = document.getElementById(note.id);
             const noteStartTime = currentTime;
-            let durationInBeats = note.durationBase * beatValue;
+            let durationInBeats = (note.durationBase || 1) * beatValue;
             if (note.dotted) durationInBeats *= 1.5;
-            if (note.tieCount > 0) durationInBeats += note.durationBase * note.tieCount * beatValue;
+            if (note.tieCount > 0) durationInBeats += (note.durationBase || 1) * note.tieCount * beatValue;
             const durationSeconds = durationInBeats * secondsPerBeat;
-            if (note.type === 'note') playTone(note.pitch, note.octave, durationSeconds, noteStartTime);
+            if (note.type === 'note') {
+              const noteFrequencies = { 1: 261.63, 2: 293.66, 3: 329.63, 4: 349.23, 5: 392.00, 6: 440.00, 7: 493.88 };
+              let freq = noteFrequencies[note.pitch] * Math.pow(2, note.octave);
+              playTone(freq, durationSeconds, noteStartTime);
+            }
+            if (note.chord) {
+              playChord(note.chord.root, note.chord.chordType, note.chord.strum, modeSelect.value, durationSeconds, noteStartTime);
+            }
             if (noteElement) {
               const delay = Math.max(0, (noteStartTime - audioCtx.currentTime) * 1000);
               playbackTimeouts.push(setTimeout(() => {
@@ -1354,30 +1311,24 @@
           });
         });
         playbackTimeouts.push(setTimeout(() => {
-          if (!isPlaying) return;
-          stopPlayback();
+          if (!isPlaying) stopPlayback();
         }, Math.max(0, (currentTime - audioCtx.currentTime) * 1000)));
       }
     });
-
     const additionalStyle = document.createElement('style');
     additionalStyle.innerHTML = `.note.playing, .rest.playing { background-color: yellow !important; }`;
     document.head.appendChild(additionalStyle);
-
-    // Initialize score
     function initializeEmptyScore() {
-      console.log("Initializing new empty score.");
       score = { baseNoteType: 4, bpm: 120, measures: [] };
       addMeasure();
       moveCursorTo(0, 0);
+      updateActionBar();
     }
-
     document.addEventListener('DOMContentLoaded', () => {
       initializeEmptyScore();
       renderScore();
       if (toolbarTitle && toolbar) {
         const toggleToolbar = () => {
-          console.log("Toolbar title toggled");
           toolbar.classList.toggle('open');
           toolbarTitle.setAttribute('aria-expanded', toolbar.classList.contains('open'));
         };
@@ -1388,12 +1339,6 @@
         });
       }
     });
-
-    editorArea.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 1) {}
-    }, { passive: false });
-
-    editorArea.addEventListener('scroll', () => {});
   </script>
 </body>
 </html>
