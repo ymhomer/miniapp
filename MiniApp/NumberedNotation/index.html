@@ -69,6 +69,7 @@
       padding: 2px 4px;
       border-radius: 4px;
       border: 1px solid #ccc;
+      width: 60px;
     }
     /* Reset button */
     #toolbar button.reset-btn {
@@ -250,8 +251,35 @@
       font-size: 0.8em;
       color: #555;
       margin-bottom: 6px;
+      align-items: center;
     }
-    .time-signature { font-weight: bold; }
+    .time-signature {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .time-signature:hover {
+      background-color: #e0e0e0;
+    }
+    .time-signature.editing {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .time-signature input[type=number] {
+      width: 30px;
+      padding: 1px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.8em;
+    }
+    .time-signature select {
+      padding: 1px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.8em;
+    }
     .beat-info { color: #888; }
     .beat-info.error { color: #d9534f; font-weight: bold; }
     .notes-container {
@@ -339,7 +367,7 @@
       display: inline-block;
       width: 2px;
       height: 1.5em;
-      background-color: #333;
+      background-color: #007bff;
       position: absolute;
       pointer-events: none;
       animation: blink 1s step-end infinite;
@@ -377,7 +405,7 @@
       padding: 1px 2px;
       border-radius: 2px;
       transform: translateY(2px);
-      pointer-events: none; /* Prevent sup from capturing clicks */
+      pointer-events: none;
     }
     #action-bar button i {
       margin-right: 2px;
@@ -415,6 +443,7 @@
       .measure { min-width: 100px; padding: 4px; }
       .action-group { flex-wrap: wrap; }
       #helpModal .modal-content, #libraryModal .modal-content { width: 95%; }
+      .time-signature input[type=number], .time-signature select { width: 25px; font-size: 0.7em; }
     }
     /* Responsive: large screens */
     @media (min-width: 601px) {
@@ -435,13 +464,11 @@
     <button class="reset-btn" id="reset-btn">Reset</button>
     <button id="help-btn">Help</button>
     <label>
-      Time Sig:
-      <input type="number" id="time-sig-beats" value="4" min="1">
-      /
-      <select id="time-sig-beat-type">
-        <option value="4">4</option>
-        <option value="8">8</option>
-        <option value="2">2</option>
+      Base Note:
+      <select id="base-note-type">
+        <option value="4">Quarter</option>
+        <option value="8">Eighth</option>
+        <option value="2">Half</option>
       </select>
     </label>
     <label>
@@ -462,30 +489,34 @@
         <p>This editor allows you to create and edit Jianpu (numbered musical notation) scores. Use the toolbar to play, reset, or manage scores, and the bottom action bar to input notes, rests, and modifications.</p>
         <h6>Key Mappings</h6>
         <ul>
-          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti, as shown in the Notes group)</li>
-          <li><strong>0</strong>: Insert a rest (0 with Rest superscript)</li>
-          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor (or use the 🗑️<sup>Del</sup> button)</li>
-          <li><strong>Arrow Left/Right</strong>: Move cursor between notes or measures</li>
-          <li><strong>Arrow Up/Down</strong>: Increase/decrease octave (when a note is selected)</li>
-          <li><strong>#</strong>: Add sharp to selected note</li>
-          <li><strong>b</strong>: Add flat to selected note</li>
-          <li><strong>.</strong>: Toggle dotted note (extends duration by 1.5x)</li>
-          <li><strong>-</strong>: Add tie to selected note (extends duration)</li>
-          <li><strong>_</strong>: Shorten duration (e.g., quarter to eighth, up to 32nd note)</li>
-          <li><strong>Enter</strong>: Add a new measure</li>
+          <li><strong>1–7</strong>: Insert a note (1=Do, 2=Re, ..., 7=Ti, as shown in the Notes group) at the cursor position.</li>
+          <li><strong>0</strong>: Insert a rest (0 with Rest superscript) at the cursor position.</li>
+          <li><strong>Backspace/Delete</strong>: Delete the note before the cursor (or use the 🗑️<sup>Del</sup> button).</li>
+          <li><strong>Arrow Left/Right</strong>: Move cursor between notes.</li>
+          <li><strong>Home/End</strong>: Move cursor to start/end of measure.</li>
+          <li><strong>Arrow Up/Down</strong>: Increase/decrease octave of the note before the cursor or selected note.</li>
+          <li><strong>#</strong>: Add sharp to the note before the cursor or selected note.</li>
+          <li><strong>b</strong>: Add flat to the note before the cursor or selected note.</li>
+          <li><strong>.</strong>: Toggle dotted note (extends duration by 1.5x) for the note before the cursor or selected note.</li>
+          <li><strong>-</strong>: Add tie to the note before the cursor or selected note (extends duration).</li>
+          <li><strong>_</strong>: Shorten duration (e.g., quarter to eighth, up to 32nd note) for the note before the cursor or selected note.</li>
+          <li><strong>Enter</strong>: Add a new measure.</li>
         </ul>
         <h6>Usage Tips</h6>
         <ul>
-          <li>Click a note to select it, then use the action bar or keys to modify it.</li>
-          <li>Use underscores (_) to shorten note duration, compactly stacked vertically below the note (e.g., three _ for a 32nd note).</li>
+          <li>Click a note or measure to set the cursor position for inserting, deleting, or modifying.</li>
+          <li>Accidental, Octave, and Duration modifications apply to the note before the cursor if no note is selected, or to the selected note if one is clicked.</li>
+          <li>Use underscores (_) to shorten note duration, stacked vertically (e.g., three _ for a 32nd note).</li>
           <li>Use dashes (-) for ties, appearing after the note (e.g., 1-).</li>
           <li>Use the Notes group buttons (e.g., 1<sup>Do</sup>, 0<sup>Rest</sup>, 🗑️<sup>Del</sup>) to add or delete notes/rests.</li>
           <li>Use the Accid group (e.g., #<sup>Sharp</sup>, ♭<sup>Flat</sup>, ↺<sup>Reset</sup>) to modify accidentals.</li>
           <li>Use the Octave group (e.g., ↑<sup>Up</sup>, ↓<sup>Down</sup>, ↺<sup>Reset</sup>) to adjust octave.</li>
           <li>Use the Duration group (e.g., .<sup>Dot</sup>, -<sup>Tie</sup>, _<sup>Short</sup>) to modify note duration.</li>
+          <li>Click a measure's time signature (e.g., 4/4) to edit beats and beat type.</li>
+          <li>Set the Base Note in the toolbar to define duration calculations (e.g., Quarter note as base).</li>
           <li>Monitor the beat info in each measure to ensure correct timing.</li>
-          <li>Access the Score Library via a modal dialog to import/export scores as JSON files.</li>
-          <li>On small screens, tap the "Numbered Musical Notation ▼" title to show/hide the toolbar controls.</li>
+          <li>Access the Score Library to import/export scores as JSON files.</li>
+          <li>On small screens, tap the "Numbered Musical Notation ▼" title to show/hide the toolbar.</li>
         </ul>
       </div>
     </div>
@@ -612,8 +643,7 @@
     const scoreContent = document.getElementById('score-content');
     const actionBar = document.getElementById('action-bar');
     const cursor = document.getElementById('cursor');
-    const timeSigBeatsInput = document.getElementById('time-sig-beats');
-    const timeSigBeatTypeSelect = document.getElementById('time-sig-beat-type');
+    const baseNoteTypeSelect = document.getElementById('base-note-type');
     const bpmInput = document.getElementById('bpm-input');
     const playBtn = document.getElementById('play-btn');
     const importFileEl = document.getElementById('import-file');
@@ -632,7 +662,7 @@
 
     // Global state
     let score = {
-      timeSignature: { beats: 4, beatType: 4 },
+      baseNoteType: 4,
       bpm: 120,
       measures: []
     };
@@ -642,13 +672,16 @@
     let nextId = 0;
 
     function getNewId() { return `elem-${nextId++}`; }
-    function getBeatValue(beatType) { return 4 / beatType; }
+    function getBeatValue(beatType, baseNoteType) {
+      return (4 / beatType) / (4 / baseNoteType);
+    }
 
     function calculateMeasureBeats(measureIndex) {
       if (!score.measures[measureIndex]) return 0;
       let totalBeats = 0;
-      const beatValue = getBeatValue(score.timeSignature.beatType);
-      score.measures[measureIndex].notes.forEach(note => {
+      const measure = score.measures[measureIndex];
+      const beatValue = getBeatValue(measure.timeSignature.beatType, score.baseNoteType);
+      measure.notes.forEach(note => {
         let duration = note.durationBase * beatValue;
         if (note.dotted) duration *= 1.5;
         if (note.tieCount > 0) duration += note.durationBase * note.tieCount * beatValue;
@@ -658,10 +691,10 @@
     }
 
     // Render note element
-    function renderNoteElement(noteData) {
+    function renderNoteElement(noteData, measureIndex) {
       const noteEl = document.createElement('span');
       noteEl.id = noteData.id;
-      noteEl.dataset.measureIndex = cursorPosition.measureIndex;
+      noteEl.dataset.measureIndex = measureIndex;
       noteEl.dataset.noteId = noteData.id;
       noteEl.tabIndex = 0;
       Object.keys(noteData).forEach(key => {
@@ -700,8 +733,8 @@
       noteEl.addEventListener('click', (event) => {
         event.stopPropagation();
         selectElement(noteEl);
-        const noteIndex = score.measures[noteEl.dataset.measureIndex].notes.findIndex(n => n.id === noteData.id);
-        moveCursorTo(parseInt(noteEl.dataset.measureIndex), noteIndex);
+        const noteIndex = score.measures[measureIndex].notes.findIndex(n => n.id === noteData.id);
+        moveCursorTo(measureIndex, noteIndex);
         playFeedback(noteEl);
       });
       let pressTimer;
@@ -726,7 +759,38 @@
       headerEl.className = 'measure-header';
       const timeSigEl = document.createElement('span');
       timeSigEl.className = 'time-signature';
-      if (measureIndex === 0) timeSigEl.textContent = `${score.timeSignature.beats}/${score.timeSignature.beatType}`;
+      timeSigEl.textContent = `${measureData.timeSignature.beats}/${measureData.timeSignature.beatType}`;
+      timeSigEl.dataset.beats = measureData.timeSignature.beats;
+      timeSigEl.dataset.beatType = measureData.timeSignature.beatType;
+      timeSigEl.addEventListener('click', () => {
+        if (timeSigEl.classList.contains('editing')) return;
+        timeSigEl.classList.add('editing');
+        timeSigEl.innerHTML = `
+          <input type="number" class="beats" value="${measureData.timeSignature.beats}" min="1" step="1">
+          /
+          <select class="beat-type">
+            <option value="4" ${measureData.timeSignature.beatType === 4 ? 'selected' : ''}>4</option>
+            <option value="8" ${measureData.timeSignature.beatType === 8 ? 'selected' : ''}>8</option>
+            <option value="2" ${measureData.timeSignature.beatType === 2 ? 'selected' : ''}>2</option>
+          </select>
+        `;
+        const beatsInput = timeSigEl.querySelector('.beats');
+        const beatTypeSelect = timeSigEl.querySelector('.beat-type');
+        const saveTimeSig = () => {
+          const newBeats = parseInt(beatsInput.value) || 1;
+          const newBeatType = parseInt(beatTypeSelect.value);
+          score.measures[measureIndex].timeSignature = { beats: Math.max(1, newBeats), beatType: newBeatType };
+          timeSigEl.classList.remove('editing');
+          timeSigEl.textContent = `${newBeats}/${newBeatType}`;
+          timeSigEl.dataset.beats = newBeats;
+          timeSigEl.dataset.beatType = newBeatType;
+          updateMeasureBeatInfo(measureEl, measureIndex);
+        };
+        beatsInput.addEventListener('blur', saveTimeSig);
+        beatTypeSelect.addEventListener('blur', saveTimeSig);
+        beatsInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveTimeSig(); });
+        beatsInput.focus();
+      });
       const beatInfoEl = document.createElement('span');
       beatInfoEl.className = 'beat-info';
       headerEl.appendChild(timeSigEl);
@@ -735,7 +799,7 @@
       const notesContainer = document.createElement('div');
       notesContainer.className = 'notes-container';
       measureData.notes.forEach(noteData => {
-        notesContainer.appendChild(renderNoteElement(noteData));
+        notesContainer.appendChild(renderNoteElement(noteData, measureIndex));
       });
       measureEl.appendChild(notesContainer);
       measureEl.addEventListener('click', (event) => {
@@ -754,7 +818,7 @@
       const beatInfoEl = measureElement.querySelector('.beat-info');
       if (!beatInfoEl) return;
       const currentBeats = calculateMeasureBeats(measureIndex);
-      const targetBeats = score.timeSignature.beats;
+      const targetBeats = score.measures[measureIndex].timeSignature.beats;
       beatInfoEl.textContent = `${currentBeats.toFixed(2)} / ${targetBeats}`;
       if (Math.abs(currentBeats - targetBeats) > 0.01) beatInfoEl.classList.add('error');
       else beatInfoEl.classList.remove('error');
@@ -801,7 +865,8 @@
         return;
       }
       let targetElement;
-      if (cursorPosition.noteIndex < notesContainer.children.length) {
+      let isEndOfMeasure = cursorPosition.noteIndex >= notesContainer.children.length;
+      if (!isEndOfMeasure) {
         targetElement = notesContainer.children[cursorPosition.noteIndex];
       } else {
         targetElement = notesContainer.children[notesContainer.children.length - 1] || notesContainer;
@@ -810,13 +875,14 @@
         const rect = targetElement.getBoundingClientRect();
         const containerRect = scoreContent.getBoundingClientRect();
         let left = rect.left - containerRect.left + editorArea.scrollLeft;
-        if (cursorPosition.noteIndex >= notesContainer.children.length) {
+        if (isEndOfMeasure) {
           left += rect.width;
         }
         let top = rect.top - containerRect.top + (rect.height / 2) - (cursor.offsetHeight / 2) + 5;
         cursor.style.left = `${left}px`;
         cursor.style.top = `${top}px`;
         cursor.style.display = 'inline-block';
+        editorArea.scrollTo({ top: editorArea.scrollTop + rect.top - containerRect.top - 50, behavior: 'smooth' });
       } else {
         cursor.style.display = 'none';
       }
@@ -848,9 +914,17 @@
       return score.measures[measureIndex].notes.find(n => n.id === noteId);
     }
 
+    // Get note at cursor position
+    function getNoteDataAtCursor() {
+      if (cursorPosition.measureIndex < 0 || score.measures.length === 0) return null;
+      const measure = score.measures[cursorPosition.measureIndex];
+      if (!measure || cursorPosition.noteIndex <= 0) return null;
+      return measure.notes[cursorPosition.noteIndex - 1];
+    }
+
     // Insert note
     function insertNote(noteData) {
-      if (calculateMeasureBeats(cursorPosition.measureIndex) >= score.timeSignature.beats - 0.001) {
+      if (calculateMeasureBeats(cursorPosition.measureIndex) >= score.measures[cursorPosition.measureIndex].timeSignature.beats - 0.001) {
         addMeasure();
       }
       const measure = score.measures[cursorPosition.measureIndex];
@@ -891,15 +965,10 @@
         }
         return;
       }
-      let deleteIndex = -1;
-      if (selectedElement) {
-        const selectedData = getNoteDataFromElement(selectedElement);
-        if (selectedData) deleteIndex = measure.notes.findIndex(n => n.id === selectedData.id);
-      }
-      if (deleteIndex === -1 && cursorPosition.noteIndex > 0) deleteIndex = cursorPosition.noteIndex - 1;
-      if (deleteIndex !== -1) {
+      let deleteIndex = cursorPosition.noteIndex - 1;
+      if (deleteIndex >= 0) {
         measure.notes.splice(deleteIndex, 1);
-        cursorPosition.noteIndex = Math.max(0, deleteIndex);
+        cursorPosition.noteIndex = deleteIndex;
         renderScore();
       }
       deselectElement();
@@ -921,61 +990,78 @@
       }
     }
 
-    // Modify selected note
-    function modifySelectedNote(property, value) {
-      if (!selectedElement) return;
-      const data = getNoteDataFromElement(selectedElement);
-      if (!data) return;
-      const measureIndex = parseInt(selectedElement.dataset.measureIndex);
+    // Modify note at cursor or selected note
+    function modifyNoteAtCursor(property, value) {
+      let targetNote = null;
+      let targetElement = selectedElement;
+      let measureIndex = cursorPosition.measureIndex;
+      let noteIndex = cursorPosition.noteIndex - 1;
+
+      // Prefer selected note if available
+      if (selectedElement) {
+        targetNote = getNoteDataFromElement(selectedElement);
+        measureIndex = parseInt(selectedElement.dataset.measureIndex);
+        noteIndex = score.measures[measureIndex].notes.findIndex(n => n.id === targetNote.id);
+      } else {
+        // Otherwise, use note before cursor
+        targetNote = getNoteDataAtCursor();
+        targetElement = targetNote ? document.getElementById(targetNote.id) : null;
+      }
+
+      if (!targetNote) {
+        console.log("No note to modify at cursor or selected.");
+        return;
+      }
+
       const measure = score.measures[measureIndex];
       let needsRender = true;
       switch (property) {
         case 'pitch':
-          if (data.type === 'note') data.pitch = parseInt(value);
+          if (targetNote.type === 'note') targetNote.pitch = parseInt(value);
           break;
         case 'type':
-          data.type = value;
+          targetNote.type = value;
           if (value === 'rest') {
-            data.pitch = 0;
-            data.octave = 0;
-            data.accidental = null;
-            data.tieCount = 0;
+            targetNote.pitch = 0;
+            targetNote.octave = 0;
+            targetNote.accidental = null;
+            targetNote.tieCount = 0;
           } else {
-            data.pitch = data.pitch || 1;
+            targetNote.pitch = targetNote.pitch || 1;
           }
           break;
         case 'accidental':
-          if (data.type === 'note') {
-            if (value === '#' && (data.pitch === 3 || data.pitch === 7)) {
+          if (targetNote.type === 'note') {
+            if (value === '#' && (targetNote.pitch === 3 || targetNote.pitch === 7)) {
               console.warn("Cannot raise E(3) or B(7)");
               return;
             }
-            data.accidental = (data.accidental === value) ? null : value;
+            targetNote.accidental = (targetNote.accidental === value) ? null : value;
           }
           break;
         case 'octave':
-          if (data.type === 'note') {
-            if (value === '+1') data.octave++;
-            else if (value === '-1') data.octave--;
-            else if (value === 'clear') data.octave = 0;
-            data.octave = Math.max(-2, Math.min(2, data.octave));
+          if (targetNote.type === 'note') {
+            if (value === '+1') targetNote.octave++;
+            else if (value === '-1') targetNote.octave--;
+            else if (value === 'clear') targetNote.octave = 0;
+            targetNote.octave = Math.max(-2, Math.min(2, targetNote.octave));
           }
           break;
         case 'shorten':
-          if (data.type === 'rest' || data.type === 'note') {
-            data.durationBase = Math.max(0.125, data.durationBase / 2);
-            if (data.type === 'rest') data.tieCount = 0;
+          if (targetNote.type === 'rest' || targetNote.type === 'note') {
+            targetNote.durationBase = Math.max(0.125, targetNote.durationBase / 2);
+            if (targetNote.type === 'rest') targetNote.tieCount = 0;
           }
           break;
         case 'tie':
-          if (data.type === 'note') data.tieCount++;
+          if (targetNote.type === 'note') targetNote.tieCount++;
           else {
             console.warn("Cannot apply tie '-' to rests");
             return;
           }
           break;
         case 'dotted':
-          if (data.type === 'rest' || data.type === 'note') data.dotted = !data.dotted;
+          if (targetNote.type === 'rest' || targetNote.type === 'note') targetNote.dotted = !targetNote.dotted;
           else {
             console.warn("Cannot dot this element type");
             return;
@@ -985,18 +1071,30 @@
           needsRender = false;
       }
       if (needsRender) {
+        // Check if measure is overfilled
+        if (calculateMeasureBeats(measureIndex) > measure.timeSignature.beats + 0.001) {
+          addMeasure();
+          // Move cursor to new measure
+          cursorPosition.measureIndex++;
+          cursorPosition.noteIndex = 0;
+        }
         renderScore();
-        const reselected = document.getElementById(data.id);
+        // Re-select the modified note
+        const reselected = document.getElementById(targetNote.id);
         if (reselected) selectElement(reselected);
-        playFeedback(selectedElement);
+        playFeedback(reselected);
       }
     }
 
     // Add a new measure
     function addMeasure() {
-      const newMeasure = { id: getNewId(), notes: [] };
-      score.measures.push(newMeasure);
-      cursorPosition.measureIndex = score.measures.length - 1;
+      const newMeasure = {
+        id: getNewId(),
+        timeSignature: { beats: 4, beatType: 4 },
+        notes: []
+      };
+      score.measures.splice(cursorPosition.measureIndex + 1, 0, newMeasure);
+      cursorPosition.measureIndex++;
       cursorPosition.noteIndex = 0;
       renderScore();
     }
@@ -1004,10 +1102,11 @@
     // Reset the editor
     function resetEditor() {
       if (confirm("Are you sure you want to reset the editor? All content will be lost.")) {
-        score = { timeSignature: { beats: 4, beatType: 4 }, bpm: 120, measures: [] };
+        score = { baseNoteType: 4, bpm: 120, measures: [] };
         nextId = 0;
         addMeasure();
         moveCursorTo(0, 0);
+        baseNoteTypeSelect.value = '4';
       }
     }
 
@@ -1024,18 +1123,16 @@
         insertNote({ type: 'rest', pitch: 0 });
       } else if (action === 'delete') {
         deleteNoteAtCursor();
-      } else if (selectedElement) {
-        if (action === '#') modifySelectedNote('accidental', '#');
-        else if (action === 'b') modifySelectedNote('accidental', 'b');
-        else if (action === 'clear-accid') modifySelectedNote('accidental', null);
-        else if (action === 'octave-up') modifySelectedNote('octave', '+1');
-        else if (action === 'octave-down') modifySelectedNote('octave', '-1');
-        else if (action === 'octave-clear') modifySelectedNote('octave', 'clear');
-        else if (action === 'dot') modifySelectedNote('dotted', true);
-        else if (action === 'tie') modifySelectedNote('tie', true);
-        else if (action === 'shorten') modifySelectedNote('shorten', true);
       } else {
-        console.log("Select a note first for this action:", action);
+        if (action === '#') modifyNoteAtCursor('accidental', '#');
+        else if (action === 'b') modifyNoteAtCursor('accidental', 'b');
+        else if (action === 'clear-accid') modifyNoteAtCursor('accidental', null);
+        else if (action === 'octave-up') modifyNoteAtCursor('octave', '+1');
+        else if (action === 'octave-down') modifyNoteAtCursor('octave', '-1');
+        else if (action === 'octave-clear') modifyNoteAtCursor('octave', 'clear');
+        else if (action === 'dot') modifyNoteAtCursor('dotted', true);
+        else if (action === 'tie') modifyNoteAtCursor('tie', true);
+        else if (action === 'shorten') modifyNoteAtCursor('shorten', true);
       }
     });
 
@@ -1065,26 +1162,37 @@
         } else if (cursorPosition.measureIndex < score.measures.length - 1) {
           moveCursorTo(cursorPosition.measureIndex + 1, 0);
         }
-      } else if (key === 'ArrowUp' && selectedElement) {
-        modifySelectedNote('octave', '+1');
-      } else if (key === 'ArrowDown' && selectedElement) {
-        modifySelectedNote('octave', '-1');
-      } else if (key === '#' && selectedElement) {
-        modifySelectedNote('accidental', '#');
-      } else if (key === 'b' && selectedElement) {
-        modifySelectedNote('accidental', 'b');
-      } else if (key === '.' && selectedElement) {
-        modifySelectedNote('dotted', true);
-      } else if (key === '-' && selectedElement) {
-        modifySelectedNote('tie', true);
-      } else if (key === '_' && selectedElement) {
-        modifySelectedNote('shorten', true);
+      } else if (key === 'Home') {
+        moveCursorTo(cursorPosition.measureIndex, 0);
+      } else if (key === 'End') {
+        const currentMeasure = score.measures[cursorPosition.measureIndex];
+        moveCursorTo(cursorPosition.measureIndex, currentMeasure.notes.length);
+      } else if (key === 'ArrowUp') {
+        modifyNoteAtCursor('octave', '+1');
+      } else if (key === 'ArrowDown') {
+        modifyNoteAtCursor('octave', '-1');
+      } else if (key === '#') {
+        modifyNoteAtCursor('accidental', '#');
+      } else if (key === 'b') {
+        modifyNoteAtCursor('accidental', 'b');
+      } else if (key === '.') {
+        modifyNoteAtCursor('dotted', true);
+      } else if (key === '-') {
+        modifyNoteAtCursor('tie', true);
+      } else if (key === '_') {
+        modifyNoteAtCursor('shorten', true);
       } else if (key === 'Enter') {
         addMeasure();
       } else {
         handled = false;
       }
       if (handled) event.preventDefault();
+    });
+
+    // Base note type change
+    baseNoteTypeSelect.addEventListener('change', () => {
+      score.baseNoteType = parseInt(baseNoteTypeSelect.value);
+      renderScore();
     });
 
     // Reset button
@@ -1150,7 +1258,7 @@
         reader.onload = (e) => {
           try {
             const importedData = JSON.parse(e.target.result);
-            if (importedData && importedData.timeSignature && importedData.measures) {
+            if (importedData && importedData.baseNoteType && importedData.measures && importedData.measures.every(m => m.timeSignature)) {
               scoreLibrary.push({ name: file.name, data: importedData });
               updateLibraryList();
             } else {
@@ -1186,8 +1294,7 @@
             measure.notes.forEach(note => note.id = getNewId());
           });
           score = JSON.parse(JSON.stringify(item.data));
-          timeSigBeatsInput.value = score.timeSignature.beats;
-          timeSigBeatTypeSelect.value = score.timeSignature.beatType;
+          baseNoteTypeSelect.value = score.baseNoteType;
           bpmInput.value = score.bpm;
           renderScore();
           moveCursorTo(0, 0);
@@ -1223,9 +1330,9 @@
         playBtn.textContent = 'Stop';
         let currentTime = audioCtx.currentTime + 0.1;
         const secondsPerBeat = 60.0 / score.bpm;
-        const beatValue = getBeatValue(score.timeSignature.beatType);
         document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
         score.measures.forEach((measure) => {
+          const beatValue = getBeatValue(measure.timeSignature.beatType, score.baseNoteType);
           measure.notes.forEach((note) => {
             const noteElement = document.getElementById(note.id);
             const noteStartTime = currentTime;
@@ -1260,7 +1367,7 @@
     // Initialize score
     function initializeEmptyScore() {
       console.log("Initializing new empty score.");
-      score = { timeSignature: { beats: 4, beatType: 4 }, bpm: 120, measures: [] };
+      score = { baseNoteType: 4, bpm: 120, measures: [] };
       addMeasure();
       moveCursorTo(0, 0);
     }
