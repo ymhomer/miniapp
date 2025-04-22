@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrument Tuner Machine</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <div class="tuner-machine-case">
+        <header class="machine-header">
+            <h1>TUNER</h1>
+        </header>
+
+        <main class="machine-body">
+
+            <div class="control-frame instrument-selector-frame">
+                <label>INSTRUMENT</label>
+                <div id="instrument-switcher" class="instrument-switcher" role="button" tabindex="0" aria-label="Switch instrument">
+                    <span id="instrument-display">Guitar</span>
+                    <span class="switcher-arrow">❯</span> </div>
+                <select id="instrument-select-hidden" style="display: none;">
+                     <option value="guitar" selected>Guitar</option>
+                    <option value="ukulele">Ukulele</option>
+                </select>
+            </div>
+
+            <div class="control-frame tuner-meter-frame">
+                <div class="meter-header">
+                    <div class="meter-info-left">
+                        <span id="meter-hz">-- Hz</span>
+                        <span id="meter-cents">-- cents</span>
+                    </div>
+                    <div class="meter-info-right">
+                        <span id="meter-note">--</span>
+                    </div>
+                </div>
+                <div class="meter-body">
+                    <div id="pointer"></div>
+                </div>
+            </div>
+
+            <div class="control-frame string-status-frame">
+                 <label>STRING STATUS</label>
+                <div id="string-status" class="string-status-container">
+                    </div>
+            </div>
+
+             <div id="status" class="status-message">Initializing...</div>
+
+        </main>
+
+        <footer class="machine-footer">
+            <p><small>Requires microphone access.</small></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
