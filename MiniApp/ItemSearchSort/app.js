@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    let searchHistory = [];
     document.getElementById('units-list').addEventListener('input', updateUnitsTable);
     document.getElementById('search-button').addEventListener('click', searchUnit);
     document.getElementById('search-unit').addEventListener('keydown', function(event) {
@@ -61,17 +62,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (unitDuplicated) {
             updateSearchStatus('Duplicate unit found.', 'status-duplicate', 'duplicate');
+            document.getElementById('last-searched').textContent = `Last searched: ${searchUnit}`;
         } else if (unitFound) {
             updateSearchStatus('Unit found successfully.', 'status-success', 'success');
+            document.getElementById('last-searched').textContent = `Last searched: ${searchUnit}`;
             moveFoundUnitsToTop(unitFoundRow);
         } else {
             updateSearchStatus('Unit not in the list.', 'status-not-found', 'not-found');
+            document.getElementById('last-searched').textContent = `Last searched: ${searchUnit}`;
         }
 
         updateFoundUnitsCount();
+        if (!unitDuplicated) {
+            searchHistory.push({ unitID: searchUnit, status: unitFound ? 'Found' : 'Not Found', time: new Date().toLocaleString() });
+            updateHistoryTable();
+        }
         checkAllUnitsFound();
         document.getElementById('search-unit').value = '';
         document.getElementById('search-unit').focus();
+    }
+
+    function updateHistoryTable() {
+        const historyTable = document.getElementById('history-table');
+        historyTable.innerHTML = '';
+        searchHistory.forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${entry.unitID}</td><td>${entry.status}</td><td>${entry.time}</td>`;
+            historyTable.appendChild(row);
+        });
     }
 
     function updateFoundUnitsCount() {
@@ -136,26 +154,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function exportResults() {
-    const rows = Array.from(document.querySelectorAll('#units-table tr'));
-    const csvContent = rows.map(row => {
-    const cells = Array.from(row.cells).map(cell => `"${cell.textContent}"`);
-    return cells.join(',');
-    }).join('\n');
+        const rows = Array.from(document.querySelectorAll('#units-table tr'));
+        const csvContent = rows.map(row => {
+            const cells = Array.from(row.cells).map(cell => `"${cell.textContent}"`);
+            return cells.join(',');
+        }).join('\n');
 
-    const header = 'Unit ID,Status,Search Time\n';
-    const fullCsvContent = header + csvContent;
-    const blob = new Blob([fullCsvContent], { type: 'text/csv;charset=utf-8;' });
+        const historyContent = searchHistory.map(entry => `"${entry.unitID}","${entry.status}","${entry.time}"`).join('\n');
+        const header = 'Unit ID,Status,Search Time\n';
+        const fullCsvContent = header + csvContent + '\n\nSearch History\n' + header + historyContent;
+        const blob = new Blob([fullCsvContent], { type: 'text/csv;charset=utf-8;' });
 
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'search_results.csv');
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'search_results.csv');
 
-    document.body.appendChild(link);
-    link.click();
+        document.body.appendChild(link);
+        link.click();
 
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);  // 释放内存
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
     document.getElementById('export-button').addEventListener('click', exportResults);

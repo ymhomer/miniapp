@@ -18,7 +18,6 @@
     <script src="../../js/bootstrap.bundle.min.js"></script>
     <script src="../../MiniApp/ItemSearchSort/app.js"></script-->
 
-
 </head>
 <body>
     <div class="container my-4">
@@ -36,6 +35,7 @@
                     <input type="text" class="form-control" id="search-unit" placeholder="Enter unit ID/code">
                     <button class="btn btn-primary" id="search-button">Search</button>
                 </div>
+                <div id="last-searched"></div>
                 <div id="status-bar" class="mb-3">
                     Total Units: <span id="total-units">0</span> | Found Units: <span id="found-units">0</span>
                 </div>
@@ -51,6 +51,17 @@
                     <tbody id="units-table">
                         <!-- Units will be populated here -->
                     </tbody>
+                </table>
+                <h3>Search History</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Unit ID</th>
+                            <th>Status</th>
+                            <th>Search Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table"></tbody>
                 </table>
                 <button class="btn btn-success" id="export-button">Export Results</button>
             </div>

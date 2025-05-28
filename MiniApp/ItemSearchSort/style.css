@@ -2,3 +2,4 @@
 .status-success { color: green; }
 .status-duplicate { color: orange; }
 .status-not-found { color: red; }
+#last-searched { color: blue; margin-top: 5px; }
