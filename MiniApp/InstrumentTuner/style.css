@@ -1,41 +1,40 @@
 :root {
-    --case-bg: #e0e0e0; /* Light gray for the machine case */
-    --display-bg: #d3d3d3; /* Slightly darker for recessed areas */
+    --case-bg: #e0e0e0;
+    --display-bg: #d3d3d3;
     --frame-border-light: #ffffff;
     --frame-border-dark: #a0a0a0;
     --text-color: #222222;
     --secondary-text: #555555;
-    --accent-color: #005a9e; /* Darker blue */
-    --in-tune-color: #00cc00; /* Brighter green for LED feel */
+    --accent-color: #005a9e;
+    --in-tune-color: #00cc00;
     --in-tune-dark: #008800;
-    --flat-sharp-color: #ff8c00; /* Dark orange */
+    --flat-sharp-color: #ff8c00;
     --pointer-color: #333;
-    --mechanical-font: 'Orbitron', 'Courier New', Courier, monospace; /* Example */
+    --off-color: #d82c2c; /* Red for off state */
+    --off-dark: #a01010;
+    --mechanical-font: 'Orbitron', 'Courier New', Courier, monospace;
 }
 
 body {
     display: flex;
     justify-content: center;
-    align-items: center; /* Center the machine vertically */
+    align-items: center;
     min-height: 100vh;
-    background-color: #c0c0c0; /* Background around the machine */
+    background-color: #c0c0c0;
     font-family: "Segoe UI", system-ui, sans-serif;
     color: var(--text-color);
     padding: 20px;
     box-sizing: border-box;
 }
 
-/* Outer Machine Case - Raised Effect */
 .tuner-machine-case {
     background-color: var(--case-bg);
     padding: 20px;
     border-radius: 10px;
     border: 1px solid var(--frame-border-dark);
-    box-shadow:
-        -3px -3px 7px var(--frame-border-light), /* Top-left highlight */
-        3px 3px 7px var(--frame-border-dark);   /* Bottom-right shadow */
+    box-shadow: -3px -3px 7px var(--frame-border-light), 3px 3px 7px var(--frame-border-dark);
     width: 100%;
-    max-width: 380px; /* Adjusted max-width */
+    max-width: 380px;
     text-align: center;
 }
 
@@ -51,18 +50,15 @@ body {
 .machine-body {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Space between frames */
+    gap: 20px;
 }
 
-/* General Frame Styling */
 .control-frame {
-    background-color: var(--case-bg); /* Match case background */
+    background-color: var(--case-bg);
     padding: 15px;
     border-radius: 6px;
     border: 1px solid var(--frame-border-dark);
-    box-shadow:
-        -2px -2px 5px var(--frame-border-light),
-        2px 2px 5px var(--frame-border-dark);
+    box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark);
 }
 
 .control-frame label {
@@ -75,7 +71,6 @@ body {
     letter-spacing: 1px;
 }
 
-/* Instrument Selector */
 .instrument-switcher {
     display: inline-flex;
     align-items: center;
@@ -91,39 +86,17 @@ body {
     font-weight: 600;
 }
 
-.instrument-switcher:hover {
-    background-color: #c8c8c8;
-}
-
-.instrument-switcher:active {
-     box-shadow: inset 2px 2px 4px var(--frame-border-dark);
-}
-
-#instrument-display {
-    margin-right: 10px;
-}
-
-.switcher-arrow {
-    font-size: 0.8em;
-    opacity: 0.7;
-}
-
-/* Rectangular Meter Frame */
 .tuner-meter-frame {
     background-color: var(--display-bg);
     border-radius: 4px;
-    box-shadow:
-        inset 2px 2px 5px var(--frame-border-dark),
-        inset -2px -2px 5px var(--frame-border-light);
+    box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light);
     padding: 10px;
     border: 1px solid var(--frame-border-dark);
     transition: box-shadow 0.1s linear;
 }
 
 @keyframes flashGreen {
-    0% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 0px 0px var(--in-tune-color); }
     50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 10px 3px var(--in-tune-color); }
-    100% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 0px 0px var(--in-tune-color); }
 }
 
 .tuner-meter-frame.flash-green {
@@ -142,7 +115,6 @@ body {
 .meter-info-left, .meter-info-right {
     font-family: var(--mechanical-font);
     font-size: 0.9em;
-    color: var(--text-color);
 }
 
 .meter-info-left span, .meter-info-right span {
@@ -163,16 +135,12 @@ body {
     overflow: hidden;
 }
 
-/* --- NEW: Visual Guide Styling --- */
 .meter-guide {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     display: flex;
     border-radius: 3px;
-    overflow: hidden; /* Ensure guide sections adhere to the rounded corners */
+    overflow: hidden;
 }
 
 .guide-section {
@@ -181,41 +149,34 @@ body {
 }
 
 .guide-section.flat, .guide-section.sharp {
-    flex: 1; /* Take up remaining space equally */
-    background-color: rgba(255, 140, 0, 0.2); /* Semi-transparent version of --flat-sharp-color */
+    flex: 1;
+    background-color: rgba(255, 140, 0, 0.2);
 }
 
 .guide-section.in-tune {
-    width: 12%; /* A narrow band for the "in-tune" zone */
-    background-color: rgba(0, 204, 0, 0.25); /* Semi-transparent version of --in-tune-color */
+    width: 12%;
+    background-color: rgba(0, 204, 0, 0.25);
     border-left: 1px solid rgba(0,0,0,0.1);
     border-right: 1px solid rgba(0,0,0,0.1);
 }
-/* --- END: New Styles --- */
 
-
-/* Pointer Styling */
 #pointer {
-    width: 3px;
-    height: 95%;
+    width: 3px; height: 95%;
     background-color: var(--pointer-color);
     position: absolute;
-    bottom: 0;
-    left: 50%;
+    bottom: 0; left: 50%;
     transform-origin: bottom center;
     transform: translateX(-50%) rotate(0deg);
-    /* SLOWER transition for smoother perceived movement */
-    transition: transform 0.2s ease-out, background-color 0.2s ease-out; /* Slightly faster transition to feel responsive with smoothed data */
+    transition: transform 0.2s ease-out, background-color 0.2s ease-out;
     border-radius: 3px 3px 0 0;
     box-shadow: 0 0 3px rgba(0,0,0,0.4);
-    z-index: 10; /* Ensure pointer is on top of the guide */
+    z-index: 10;
 }
 
 #pointer.in-tune {
     background-color: var(--in-tune-color);
 }
 
-/* String Status Frame */
 .string-status-container {
     display: flex;
     justify-content: center;
@@ -228,44 +189,33 @@ body {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border: 1px solid var(--frame-border-dark);
     border-radius: 50%;
     font-weight: 600;
     font-size: 1em;
     color: var(--secondary-text);
     background-color: var(--display-bg);
-    box-shadow:
-        inset 1px 1px 2px var(--frame-border-dark),
-        inset -1px -1px 2px var(--frame-border-light),
-        1px 1px 2px rgba(0,0,0,0.2);
-    transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
-    position: relative;
+    box-shadow: inset 1px 1px 2px var(--frame-border-dark), inset -1px -1px 2px var(--frame-border-light), 1px 1px 2px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
 }
 
 .string-note.tuned {
     background-color: var(--in-tune-color);
     color: white;
     font-weight: bold;
-    box-shadow:
-        inset 1px 1px 2px var(--in-tune-dark),
-        inset -1px -1px 2px #88ff88,
-        0 0 8px var(--in-tune-color);
+    box-shadow: inset 1px 1px 2px var(--in-tune-dark), inset -1px -1px 2px #88ff88, 0 0 8px var(--in-tune-color);
     border-color: var(--in-tune-dark);
 }
 
 @keyframes flashString {
-    0% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
 }
 
 .string-note.flash-tune {
     animation: flashString 0.3s ease-in-out;
 }
 
-/* Status Message */
 .status-message {
     margin-top: 20px;
     font-size: 1em;
@@ -279,10 +229,63 @@ body {
 .status-message.sharp, .status-message.flat { color: var(--flat-sharp-color); }
 
 .machine-footer {
-    margin-top: 25px;
+    margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid var(--frame-border-dark);
+}
+
+.machine-footer p {
     font-size: 0.75em;
     color: var(--secondary-text);
     opacity: 0.8;
+    margin-top: 15px;
+}
+
+/* Feature Controls Styling */
+.feature-controls {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 15px;
+}
+
+.toggle-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.toggle-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--frame-border-dark);
+    cursor: pointer;
+    background-color: var(--off-color); /* Start in 'off' (red) state */
+    box-shadow: inset 1px 1px 2px var(--off-dark), inset -1px -1px 2px #ff8a8a, 1px 1px 2px rgba(0,0,0,0.3);
+    transition: all 0.2s ease-out;
+    padding: 0;
+}
+
+.toggle-button:active {
+    transform: scale(0.95);
+    box-shadow: inset 2px 2px 4px var(--off-dark);
+}
+
+.toggle-button.toggled-on {
+    background-color: var(--in-tune-color);
+    box-shadow: inset 1px 1px 2px var(--in-tune-dark), inset -1px -1px 2px #88ff88, 0 0 8px var(--in-tune-color);
+}
+
+.toggle-button.toggled-on:active {
+    box-shadow: inset 2px 2px 4px var(--in-tune-dark);
+}
+
+.toggle-label {
+    font-size: 0.65em; /* Super small font */
+    font-weight: 500;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
