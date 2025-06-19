@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instrument Tuner Machine</title>
     <link rel="stylesheet" href="style.css">
-</head>
+    </head>
 <body>
     <div class="tuner-machine-case">
         <header class="machine-header">
@@ -37,7 +37,6 @@
                     </div>
                 </div>
                 <div class="meter-body">
-                    <!-- NEW: Added a guide for visual reference -->
                     <div class="meter-guide">
                         <div class="guide-section flat"></div>
                         <div class="guide-section in-tune"></div>
@@ -58,6 +57,17 @@
         </main>
 
         <footer class="machine-footer">
+            <!-- UPDATED: Changed the ID and label for the noise filter button -->
+            <div class="feature-controls">
+                <div class="toggle-button-container">
+                    <button id="toggle-noise-filter" class="toggle-button" aria-label="Toggle Noise Filter"></button>
+                    <span class="toggle-label">Noise Filter</span>
+                </div>
+                <div class="toggle-button-container">
+                    <button id="toggle-wakelock" class="toggle-button" aria-label="Toggle Keep Screen On"></button>
+                    <span class="toggle-label">Keep Screen On</span>
+                </div>
+            </div>
             <p><small>Requires microphone access.</small></p>
         </footer>
     </div>
