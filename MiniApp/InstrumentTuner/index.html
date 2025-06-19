@@ -39,7 +39,10 @@
                 <div class="meter-body">
                     <div class="meter-guide">
                         <div class="guide-section flat"></div>
-                        <div class="guide-section in-tune"></div>
+                        <div class="guide-section in-tune">
+                            <!-- NEW: Added a center line for precise reference -->
+                            <div class="center-line"></div>
+                        </div>
                         <div class="guide-section sharp"></div>
                     </div>
                     <div id="pointer"></div>
@@ -57,7 +60,6 @@
         </main>
 
         <footer class="machine-footer">
-            <!-- UPDATED: Changed the ID and label for the noise filter button -->
             <div class="feature-controls">
                 <div class="toggle-button-container">
                     <button id="toggle-noise-filter" class="toggle-button" aria-label="Toggle Noise Filter"></button>
