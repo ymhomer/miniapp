@@ -158,6 +158,19 @@ body {
     background-color: rgba(0, 204, 0, 0.25);
     border-left: 1px solid rgba(0,0,0,0.1);
     border-right: 1px solid rgba(0,0,0,0.1);
+    position: relative; /* Needed for absolute positioning of the child center line */
+}
+
+/* NEW: Style for the center line marker */
+.center-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 35%; /* Make the line short and near the top */
+    background-color: rgba(0, 0, 0, 0.25); /* Subtle but visible color */
+    border-radius: 0 0 2px 2px;
 }
 
 #pointer {
@@ -262,7 +275,7 @@ body {
     border-radius: 50%;
     border: 1px solid var(--frame-border-dark);
     cursor: pointer;
-    background-color: var(--off-color); /* Start in 'off' (red) state */
+    background-color: var(--off-color);
     box-shadow: inset 1px 1px 2px var(--off-dark), inset -1px -1px 2px #ff8a8a, 1px 1px 2px rgba(0,0,0,0.3);
     transition: all 0.2s ease-out;
     padding: 0;
@@ -283,7 +296,7 @@ body {
 }
 
 .toggle-label {
-    font-size: 0.65em; /* Super small font */
+    font-size: 0.65em;
     font-weight: 500;
     color: var(--secondary-text);
     text-transform: uppercase;
