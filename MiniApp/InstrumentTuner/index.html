@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instrument Tuner Machine</title>
     <link rel="stylesheet" href="style.css">
-    </head>
+</head>
 <body>
     <div class="tuner-machine-case">
         <header class="machine-header">
@@ -18,7 +18,8 @@
                 <label>INSTRUMENT</label>
                 <div id="instrument-switcher" class="instrument-switcher" role="button" tabindex="0" aria-label="Switch instrument">
                     <span id="instrument-display">Guitar</span>
-                    <span class="switcher-arrow">❯</span> </div>
+                    <span class="switcher-arrow">❯</span>
+                </div>
                 <select id="instrument-select-hidden" style="display: none;">
                      <option value="guitar" selected>Guitar</option>
                     <option value="ukulele">Ukulele</option>
@@ -36,6 +37,12 @@
                     </div>
                 </div>
                 <div class="meter-body">
+                    <!-- NEW: Added a guide for visual reference -->
+                    <div class="meter-guide">
+                        <div class="guide-section flat"></div>
+                        <div class="guide-section in-tune"></div>
+                        <div class="guide-section sharp"></div>
+                    </div>
                     <div id="pointer"></div>
                 </div>
             </div>
@@ -43,7 +50,7 @@
             <div class="control-frame string-status-frame">
                  <label>STRING STATUS</label>
                 <div id="string-status" class="string-status-container">
-                    </div>
+                </div>
             </div>
 
              <div id="status" class="status-message">Initializing...</div>
