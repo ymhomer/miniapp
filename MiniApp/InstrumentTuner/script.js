@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const meterFrame = document.querySelector('.tuner-meter-frame');
     const instrumentSwitcher = document.getElementById('instrument-switcher');
     const instrumentDisplay = document.getElementById('instrument-display');
-    // UPDATED: Changed to noise filter button
     const toggleNoiseFilterBtn = document.getElementById('toggle-noise-filter');
     const toggleWakeLockBtn = document.getElementById('toggle-wakelock');
 
@@ -25,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteStrings = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
     const IN_TUNE_THRESHOLD_CENTS = 5;
     const MAX_POINTER_ROTATION = 80;
-    // UPDATED: RMS thresholds for noise filtering
     const DEFAULT_RMS_THRESHOLD = 0.01;
     const FILTERED_RMS_THRESHOLD = 0.025; // Higher threshold when filter is on
 
@@ -43,12 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const SMOOTHING_BUFFER_SIZE = 5;
     let frameCount = 0;
 
-    // --- NEW: Feature State Variables ---
-    let isNoiseFilterOn = false; // State for the noise filter
-    let stablePitchCounter = 0; // For pitch stability check
+    // --- Feature State Variables ---
+    let isNoiseFilterOn = false;
+    let stablePitchCounter = 0;
     const PITCH_STABILITY_THRESHOLD = 2; // Require 2 consecutive stable frames
     let lastDetectedPitch = -1;
-    
     let wakeLock = null;
     let isWakeLockEnabled = false;
 
@@ -67,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(stream => {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // Analyser for pitch detection
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 2048;
                 buf = new Float32Array(analyser.fftSize);
@@ -90,13 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // UPDATED: Pitch Detection now accepts a dynamic RMS threshold
+    // ==========================================================================
+    // Pitch Detection
+    // ==========================================================================
     function autoCorrelate(buf, sampleRate, rmsThreshold) {
         const SIZE = buf.length;
         let rms = 0;
         for (let i = 0; i < SIZE; i++) { rms += buf[i] * buf[i]; }
         rms = Math.sqrt(rms / SIZE);
-        // Use the passed-in threshold
         if (rms < rmsThreshold) return -1;
 
         let r1 = 0, r2 = SIZE - 1, thres = 0.2;
@@ -123,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function centsOffFromPitch(frequency, note) { return Math.floor(1200 * Math.log(frequency / (A4 * Math.pow(2, (note - 69) / 12))) / Math.log(2)); }
 
     // ==========================================================================
-    // UI Update Functions
+    // UI Setup Functions
     // ==========================================================================
     function setupInstrumentSwitcher() {
         instrumentDisplay.textContent = instruments[currentInstrumentKey].name;
@@ -140,9 +137,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateStringIndicators() { /* ... No changes here ... */ }
+    function updateStringIndicators() {
+        const targetNotes = instruments[currentInstrumentKey].notes;
+        stringStatusContainer.innerHTML = '';
+        if (!targetNotes) return;
+        for (const noteName in targetNotes) {
+            const span = document.createElement('span');
+            span.className = 'string-note';
+            span.textContent = noteName;
+            span.dataset.note = noteName;
+            if (stringTunedStatus[noteName]) span.classList.add('tuned');
+            stringStatusContainer.appendChild(span);
+        }
+    }
 
-    // UPDATED: Setup for feature toggles, now with Noise Filter
     function setupFeatureToggles() {
         // Noise Filter Toggle
         toggleNoiseFilterBtn.addEventListener('click', () => {
@@ -161,8 +169,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function requestWakeLock() { /* ... No changes here ... */ }
-    async function releaseWakeLock() { /* ... No changes here ... */ }
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                toggleWakeLockBtn.classList.add('toggled-on');
+                wakeLock.addEventListener('release', () => {
+                    isWakeLockEnabled = false;
+                    wakeLock = null;
+                    toggleWakeLockBtn.classList.remove('toggled-on');
+                });
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+                isWakeLockEnabled = false;
+                toggleWakeLockBtn.classList.add('toggled-on');
+                setTimeout(() => {
+                    toggleWakeLockBtn.classList.remove('toggled-on');
+                }, 300);
+            }
+        } else {
+            console.warn("Screen Wake Lock API not supported.");
+            isWakeLockEnabled = false;
+            toggleWakeLockBtn.classList.add('toggled-on');
+            setTimeout(() => {
+                toggleWakeLockBtn.classList.remove('toggled-on');
+            }, 300);
+        }
+    }
+
+    async function releaseWakeLock() {
+        if (wakeLock) {
+            await wakeLock.release();
+            wakeLock = null;
+        }
+        toggleWakeLockBtn.classList.remove('toggled-on');
+        isWakeLockEnabled = false;
+    }
 
 
     // ==========================================================================
@@ -173,13 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         analyser.getFloatTimeDomainData(buf);
         
-        // UPDATED: Apply noise filter logic
         const currentRmsThreshold = isNoiseFilterOn ? FILTERED_RMS_THRESHOLD : DEFAULT_RMS_THRESHOLD;
         const rawPitch = autoCorrelate(buf, audioContext.sampleRate, currentRmsThreshold);
-        let pitch = -1; // This will be the "filtered" pitch we use
+        let pitch = -1;
 
         if (isNoiseFilterOn) {
-            // Check if the new pitch is close to the last stable one
             if (rawPitch !== -1 && (lastDetectedPitch === -1 || Math.abs(rawPitch - lastDetectedPitch) < 15)) {
                 stablePitchCounter++;
                 lastDetectedPitch = rawPitch;
@@ -187,13 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 stablePitchCounter = 0;
                 lastDetectedPitch = -1;
             }
-
-            // Only accept the pitch if it's been stable for a few frames
             if (stablePitchCounter >= PITCH_STABILITY_THRESHOLD) {
                 pitch = lastDetectedPitch;
             }
         } else {
-            // If filter is off, use the raw pitch directly
             pitch = rawPitch;
         }
 
@@ -207,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentCents = centsOffFromPitch(pitch, note);
         }
         
-        // Smooth the cents value for the pointer
         centsBuffer.push(currentCents);
         if (centsBuffer.length > SMOOTHING_BUFFER_SIZE) centsBuffer.shift();
         const smoothedCents = centsBuffer.reduce((a, b) => a + b, 0) / centsBuffer.length;
@@ -220,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pointer.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
         pointer.classList.toggle('in-tune', isInTune);
 
-        // Update Text less frequently
+        // Update Text
         frameCount++;
         if (frameCount % 3 === 0) {
             frequencyDisplay.textContent = `${pitchDetected ? pitch.toFixed(1) : '--'} Hz`;
@@ -245,7 +281,20 @@ document.addEventListener('DOMContentLoaded', () => {
         rafId = requestAnimationFrame(updateTuner);
     }
 
+    // ==========================================================================
     // Event Listeners & Startup
-    document.addEventListener('visibilitychange', async () => { /* ... No changes here ... */ });
+    // ==========================================================================
+    document.addEventListener('visibilitychange', async () => {
+        if (!audioContext) return;
+        if (document.hidden) {
+            if (audioContext.state === 'running') audioContext.suspend();
+            await releaseWakeLock();
+        } else {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            if (isWakeLockEnabled) await requestWakeLock();
+        }
+    });
+
     initAudio();
 });
+
