@@ -10,7 +10,7 @@
     --in-tune-dark: #008800;
     --flat-sharp-color: #ff8c00;
     --pointer-color: #333;
-    --off-color: #d82c2c; /* Red for off state */
+    --off-color: #d82c2c;
     --off-dark: #a01010;
     --mechanical-font: 'Orbitron', 'Courier New', Courier, monospace;
 }
@@ -135,59 +135,11 @@ body {
     overflow: hidden;
 }
 
-.meter-guide {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.guide-section {
+/* Canvas styling */
+#tuner-canvas {
+    width: 100%;
     height: 100%;
-    transition: background-color 0.3s ease;
-}
-
-.guide-section.flat, .guide-section.sharp {
-    flex: 1;
-    background-color: rgba(255, 140, 0, 0.2);
-}
-
-.guide-section.in-tune {
-    width: 12%;
-    background-color: rgba(0, 204, 0, 0.25);
-    border-left: 1px solid rgba(0,0,0,0.1);
-    border-right: 1px solid rgba(0,0,0,0.1);
-    position: relative; /* Needed for absolute positioning of the child center line */
-}
-
-/* NEW: Style for the center line marker */
-.center-line {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: 35%; /* Make the line short and near the top */
-    background-color: rgba(0, 0, 0, 0.25); /* Subtle but visible color */
-    border-radius: 0 0 2px 2px;
-}
-
-#pointer {
-    width: 3px; height: 95%;
-    background-color: var(--pointer-color);
-    position: absolute;
-    bottom: 0; left: 50%;
-    transform-origin: bottom center;
-    transform: translateX(-50%) rotate(0deg);
-    transition: transform 0.2s ease-out, background-color 0.2s ease-out;
-    border-radius: 3px 3px 0 0;
-    box-shadow: 0 0 3px rgba(0,0,0,0.4);
-    z-index: 10;
-}
-
-#pointer.in-tune {
-    background-color: var(--in-tune-color);
+    display: block;
 }
 
 .string-status-container {
@@ -203,7 +155,7 @@ body {
     justify-content: center;
     align-items: center;
     width: 40px; height: 40px;
-    border: 1px solid var(--frame-border-dark);
+    border: 2px solid var(--frame-border-dark); /* Thicker border */
     border-radius: 50%;
     font-weight: 600;
     font-size: 1em;
@@ -211,6 +163,16 @@ body {
     background-color: var(--display-bg);
     box-shadow: inset 1px 1px 2px var(--frame-border-dark), inset -1px -1px 2px var(--frame-border-light), 1px 1px 2px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
+    position: relative;
+}
+
+/* NEW: Style for the currently targeted string for auto-advance */
+.string-note.targeted {
+    border-color: var(--accent-color);
+    box-shadow: inset 1px 1px 2px var(--frame-border-dark),
+                inset -1px -1px 2px var(--frame-border-light),
+                1px 1px 2px rgba(0,0,0,0.2),
+                0 0 8px var(--accent-color); /* Blue glow */
 }
 
 .string-note.tuned {
@@ -220,6 +182,14 @@ body {
     box-shadow: inset 1px 1px 2px var(--in-tune-dark), inset -1px -1px 2px #88ff88, 0 0 8px var(--in-tune-color);
     border-color: var(--in-tune-dark);
 }
+
+.string-note.tuned.targeted {
+    border-color: #88ff88; /* Light green border when tuned and targeted */
+    box-shadow: inset 1px 1px 2px var(--in-tune-dark),
+                inset -1px -1px 2px #88ff88,
+                0 0 12px var(--in-tune-color);
+}
+
 
 @keyframes flashString {
     50% { opacity: 0.5; transform: scale(0.95); }
@@ -254,12 +224,12 @@ body {
     margin-top: 15px;
 }
 
-/* Feature Controls Styling */
 .feature-controls {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 20px; /* Reduced gap slightly */
     margin-bottom: 15px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
 .toggle-button-container {
@@ -302,3 +272,4 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
