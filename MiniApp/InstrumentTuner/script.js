@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM 元素 ---
     const noteNameDisplay = document.getElementById('meter-note');
     const frequencyDisplay = document.getElementById('meter-hz');
     const centsDisplay = document.getElementById('meter-cents');
@@ -13,21 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleNoiseFilterBtn = document.getElementById('toggle-noise-filter');
     const toggleAutoAdvanceBtn = document.getElementById('toggle-auto-advance');
     const toggleWakeLockBtn = document.getElementById('toggle-wakelock');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsDialog = document.getElementById('settings-dialog');
+    const settingsForm = settingsDialog.querySelector('form');
+    const concertAInput = document.getElementById('concert-a');
+    const toleranceInput = document.getElementById('tolerance');
 
-    // --- 音訊設定 ---
     let audioContext, analyser, mediaStreamSource, buf, rafId, beepOsc, beepGain, bandpassFilter;
 
-    // --- 調音常數 ---
-    const A4 = 440;
+    let A4 = 440;
+    let IN_TUNE_THRESHOLD_CENTS = 5;
+
     const noteStrings = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
-    const IN_TUNE_THRESHOLD_CENTS = 5;
     const MAX_POINTER_ROTATION = 80;
-    const POINTER_SENSITIVITY_CENTS = 30; // 靈敏度設定：±30音分即可擺動到最大角度
+    const POINTER_SENSITIVITY_CENTS = 30;
     const DEFAULT_RMS_THRESHOLD = 0.01;
     const FILTERED_RMS_THRESHOLD = 0.025;
     const IN_TUNE_STABILITY_FRAMES = 5;
 
-    // --- 樂器定義 ---
     const instruments = {
         guitar: { name: "Guitar", notes: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2'], frequencies: { 'E2': 82.41, 'A2': 110.00, 'D3': 146.83, 'G3': 196.00, 'B3': 246.94, 'E4': 329.63 }, range: [80, 1000] },
         ukulele: { name: "Ukulele", notes: ['A4', 'E4', 'C4', 'G4'], frequencies: { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00 }, range: [250, 800] }
@@ -35,19 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const instrumentOrder = ['guitar', 'ukulele'];
     let currentInstrumentKey = 'guitar';
 
-    // --- 狀態變數 ---
     let stringTunedStatus = {}, stringStableCounters = {}, stableInTuneCounter = 0;
-    const centsBuffer = [], pointerHistory = []; // 用於歷史軌跡
+    const centsBuffer = [];
     const SMOOTHING_BUFFER_SIZE = 5;
     let isNoiseFilterOn = false, isAutoAdvanceOn = false, isWakeLockEnabled = false;
     let stablePitchCounter = 0, PITCH_STABILITY_THRESHOLD = 2, lastDetectedPitch = -1;
     let wakeLock = null;
-    let currentTargetStringIndex = 0; // 用於自動跳轉
+    let currentTargetStringIndex = 0;
     let autoAdvanceTimer = null;
 
-    // ==========================================================================
-    // 初始化
-    // ==========================================================================
     function init() {
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
@@ -71,51 +69,31 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.mediaDevices.getUserMedia({ audio: true, video: false })
             .then(stream => {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // 1. 音訊來源
                 mediaStreamSource = audioContext.createMediaStreamSource(stream);
-
-                // 2. 帶通濾波器 (核心準確性升級)
                 bandpassFilter = audioContext.createBiquadFilter();
                 bandpassFilter.type = 'bandpass';
-                updateBandpassFilter(); // 根據預設樂器設定濾波器
-
-                // 3. 分析器
+                updateBandpassFilter();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 2048;
                 buf = new Float32Array(analyser.fftSize);
-                analyser.smoothingTimeConstant = 0.1;
-
-                // 4. 連接音訊圖： Source -> Filter -> Analyser
                 mediaStreamSource.connect(bandpassFilter);
                 bandpassFilter.connect(analyser);
-
-                // 設定提示音
                 beepGain = audioContext.createGain();
                 beepGain.gain.setValueAtTime(0, audioContext.currentTime);
                 beepGain.connect(audioContext.destination);
                 beepOsc = audioContext.createOscillator();
-                beepOsc.type = 'sine';
                 beepOsc.frequency.setValueAtTime(880, audioContext.currentTime);
                 beepOsc.connect(beepGain);
                 try { beepOsc.start(); } catch (e) {}
-                
                 statusDisplay.textContent = "Microphone active";
                 setupControls();
                 updateStringIndicators();
-
                 if (audioContext.state === 'suspended') audioContext.resume();
                 if (!rafId) updateTuner();
             })
-            .catch(err => {
-                statusDisplay.textContent = "Error: Microphone access denied.";
-                console.error("Mic access error:", err);
-            });
+            .catch(err => { console.error(err); statusDisplay.textContent = "Mic access denied."; });
     }
 
-    // ==========================================================================
-    // 核心演算法與計算
-    // ==========================================================================
     function autoCorrelate(buf, sampleRate, rmsThreshold) {
         const SIZE = buf.length, rms = Math.sqrt(buf.reduce((s, v) => s + v*v, 0) / SIZE);
         if (rms < rmsThreshold) return -1;
@@ -140,12 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const freq = sampleRate/T0;
         return (freq > 60 && freq < 1400) ? freq : -1;
     }
+
     function noteFromPitch(f) { return Math.round(12 * Math.log2(f / A4)) + 69; }
     function centsOffFromPitch(f, n) { return Math.floor(1200 * Math.log2(f / (A4 * Math.pow(2, (n-69)/12)))); }
 
-    // ==========================================================================
-    // 控制與 UI 設定
-    // ==========================================================================
     function setupControls() {
         instrumentSwitcher.addEventListener('click', () => {
             let currentIndex = instrumentOrder.indexOf(currentInstrumentKey);
@@ -155,16 +131,25 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBandpassFilter();
         });
         toggleNoiseFilterBtn.addEventListener('click', () => { isNoiseFilterOn = !isNoiseFilterOn; toggleNoiseFilterBtn.classList.toggle('toggled-on', isNoiseFilterOn); });
-        toggleAutoAdvanceBtn.addEventListener('click', () => { 
-            isAutoAdvanceOn = !isAutoAdvanceOn; 
-            toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn);
-            // 啟用時，立即更新一次目標指示器
-            if(isAutoAdvanceOn) updateStringIndicators(); 
-        });
+        toggleAutoAdvanceBtn.addEventListener('click', () => { isAutoAdvanceOn = !isAutoAdvanceOn; toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn); updateStringIndicators(); });
         toggleWakeLockBtn.addEventListener('click', async () => { isWakeLockEnabled = !toggleWakeLockBtn.classList.contains('toggled-on'); isWakeLockEnabled ? await requestWakeLock() : await releaseWakeLock(); });
+        
+        settingsBtn.addEventListener('click', () => {
+            concertAInput.value = A4;
+            toleranceInput.value = IN_TUNE_THRESHOLD_CENTS;
+            settingsDialog.showModal();
+        });
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            A4 = parseFloat(concertAInput.value) || 440;
+            IN_TUNE_THRESHOLD_CENTS = parseInt(toleranceInput.value) || 5;
+            settingsDialog.close();
+            resetTunerState();
+        });
+        settingsForm.addEventListener('reset', () => settingsDialog.close());
     }
 
-    function resetTunerState() {
+        function resetTunerState() {
         stringTunedStatus = {}; stringStableCounters = {}; centsBuffer.length = 0; pointerHistory.length = 0;
         currentTargetStringIndex = 0;
         clearTimeout(autoAdvanceTimer);
@@ -176,9 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const instrument = instruments[currentInstrumentKey];
         const [low, high] = instrument.range;
         const centerFreq = Math.sqrt(low * high);
-        const q = centerFreq / (high - low);
+        const bandwidth = Math.log2(high/low);
         bandpassFilter.frequency.setTargetAtTime(centerFreq, audioContext.currentTime, 0.01);
-        bandpassFilter.Q.setTargetAtTime(q, audioContext.currentTime, 0.01);
+        bandpassFilter.Q.setTargetAtTime(1 / bandwidth, audioContext.currentTime, 0.01);
     }
     
     function updateStringIndicators() {
@@ -193,14 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = noteName;
             span.dataset.note = noteName;
             if (stringTunedStatus[noteName]) span.classList.add('tuned');
-            // 僅在自動跳轉模式開啟時，才標示當前目標
-            if (isAutoAdvanceOn && index === currentTargetStringIndex) span.classList.add('targeted');
+            if (index === currentTargetStringIndex) span.classList.add('targeted');
             stringStatusContainer.appendChild(span);
         });
     }
-
+    
     // ==========================================================================
-    // Canvas 繪圖 (視覺互動升級)
+    // Canvas 繪圖
     // ==========================================================================
     function drawMeter(cents) {
         const dpr = window.devicePixelRatio || 1;
@@ -208,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const width = canvas.width / dpr;
         const height = canvas.height / dpr;
         
-        // 1. 繪製背景參考格
         const inTuneZoneWidth = width * 0.12;
         const flatSharpWidth = (width - inTuneZoneWidth) / 2;
         ctx.fillStyle = 'rgba(255, 140, 0, 0.2)';
@@ -219,33 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.fillRect(width / 2 - 1, 0, 2, height * 0.35);
 
-        // 2. 計算指針角度
         let rotation = (cents / POINTER_SENSITIVITY_CENTS) * MAX_POINTER_ROTATION;
         rotation = Math.max(-MAX_POINTER_ROTATION, Math.min(MAX_POINTER_ROTATION, rotation));
         
-        // 3. 更新並繪製歷史軌跡
-        pointerHistory.push(rotation);
-        if (pointerHistory.length > 15) pointerHistory.shift();
-        
-        ctx.lineCap = 'round';
-        for (let i = 0; i < pointerHistory.length - 1; i++) {
-            const rot = pointerHistory[i];
-            const alpha = (i / pointerHistory.length) * 0.5;
-            ctx.save();
-            ctx.translate(width / 2, height);
-            ctx.rotate(rot * Math.PI / 180);
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -height * 0.95);
-            ctx.strokeStyle = `rgba(51, 51, 51, ${alpha})`;
-            ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
-        }
-        
-        // 4. 繪製主指針
         ctx.save();
         ctx.translate(width / 2, height);
         ctx.rotate(rotation * Math.PI / 180);
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -height * 0.95);
         ctx.strokeStyle = (Math.abs(cents) < IN_TUNE_THRESHOLD_CENTS) ? '#00cc00' : '#333';
-        ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+        ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
     }
 
     // ==========================================================================
@@ -260,10 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let pitch = -1;
 
         if (isNoiseFilterOn) {
-            if (rawPitch !== -1 && (lastDetectedPitch === -1 || Math.abs(rawPitch - lastDetectedPitch) < 15)) { stablePitchCounter++; lastDetectedPitch = rawPitch; } 
-            else { stablePitchCounter = 0; lastDetectedPitch = -1; }
-            if (stablePitchCounter >= PITCH_STABILITY_THRESHOLD) pitch = lastDetectedPitch;
-        } else { pitch = rawPitch; }
+                    if (rawPitch !== -1 && (lastDetectedPitch === -1 || Math.abs(rawPitch - lastDetectedPitch) < 15)) { stablePitchCounter++; lastDetectedPitch = rawPitch; } 
+                    else { stablePitchCounter = 0; lastDetectedPitch = -1; }
+                    if (stablePitchCounter >= PITCH_STABILITY_THRESHOLD) pitch = lastDetectedPitch;
+                } else { pitch = rawPitch; }
 
         const pitchDetected = pitch !== -1;
         let noteName = '--', currentCents = 0, detectedTargetNote = null, isInTune = false;
@@ -274,13 +239,31 @@ document.addEventListener('DOMContentLoaded', () => {
             currentCents = centsOffFromPitch(pitch, note);
             isInTune = Math.abs(currentCents) < IN_TUNE_THRESHOLD_CENTS;
             
-            const targetNotes = instruments[currentInstrumentKey].frequencies;
-            let minDiff = Infinity, closestTarget = null;
-            for (const target in targetNotes) {
-                const diff = Math.abs(pitch - targetNotes[target]);
-                if (diff < minDiff) { minDiff = diff; closestTarget = target; }
+            // --- FIXED: 琴弦識別邏輯 ---
+            let closestTarget = null;
+            const instrument = instruments[currentInstrumentKey];
+
+            // 如果開啟自動跳轉，優先匹配當前目標弦
+            if (isAutoAdvanceOn) {
+                const targetNoteName = instrument.notes[currentTargetStringIndex];
+                const targetFreq = instrument.frequencies[targetNoteName];
+                // 只有當音高與目標弦頻率非常接近時（約一個半音範圍內）才將其視為目標
+                if (Math.abs(pitch - targetFreq) < targetFreq * 0.06) {
+                    closestTarget = targetNoteName;
+                }
+            } else {
+            // 如果未開啟，則在所有弦中尋找最接近的
+                let minDiff = Infinity;
+                for (const target in instrument.frequencies) {
+                    const diff = Math.abs(pitch - instrument.frequencies[target]);
+                    if (diff < minDiff) { minDiff = diff; closestTarget = target; }
+                }
             }
-            if (Math.abs(1200 * Math.log2(pitch / targetNotes[closestTarget])) < 50) { detectedTargetNote = closestTarget; }
+
+            // 最後確認，識別出的音高與最接近的目標弦是否在50音分以內
+            if (closestTarget && Math.abs(1200 * Math.log2(pitch / instrument.frequencies[closestTarget])) < 50) {
+                detectedTargetNote = closestTarget;
+            }
         }
         
         centsBuffer.push(currentCents);
@@ -300,20 +283,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isInTune) {
                 stableInTuneCounter++;
                 statusDisplay.textContent = `${detectedTargetNote} In Tune ✓`; statusDisplay.classList.add('in-tune');
-                
+
                 if (stableInTuneCounter === IN_TUNE_STABILITY_FRAMES) {
                     const now = audioContext.currentTime;
                     beepGain.gain.cancelScheduledValues(now); beepGain.gain.setValueAtTime(0.2, now).linearRampToValueAtTime(0, now + 0.1);
                     meterFrame.classList.add('flash-green');
                     meterFrame.addEventListener('animationend', () => meterFrame.classList.remove('flash-green'), {once: true});
                 }
+                
                 if (!stringTunedStatus[detectedTargetNote] && stringStableCounters[detectedTargetNote] >= 3) {
                     stringTunedStatus[detectedTargetNote] = true;
-                    updateStringIndicators();
                     if (isAutoAdvanceOn) {
                         clearTimeout(autoAdvanceTimer);
                         autoAdvanceTimer = setTimeout(() => advanceToNextString(), 1500);
                     }
+                    updateStringIndicators();
                 }
             } else {
                 stableInTuneCounter = 0; clearTimeout(autoAdvanceTimer);
@@ -328,43 +312,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rafId = requestAnimationFrame(updateTuner);
     }
-    
+
     function advanceToNextString() {
         const notes = instruments[currentInstrumentKey].notes;
-        const currentTargetNoteName = notes[currentTargetStringIndex];
+        const allNotesCount = notes.length;
         
-        // 標記當前弦為已調準
-        stringTunedStatus[currentTargetNoteName] = true;
-
-        // 尋找下一根未調準的弦
-        let nextIndex = (currentTargetStringIndex + 1) % notes.length;
-        let allTuned = true;
-        for (let i = 0; i < notes.length; i++) {
-            if (!stringTunedStatus[notes[i]]) {
-                allTuned = false;
-            }
-            if (i > currentTargetStringIndex && !stringTunedStatus[notes[i]]) {
-                nextIndex = i;
-                break;
-            }
-             // 如果繞了一圈回到開頭
-            if (i === notes.length - 1) {
-                 for(let j=0; j < currentTargetStringIndex; j++){
-                     if(!stringTunedStatus[notes[j]]){
-                         nextIndex = j;
-                         break;
-                     }
-                 }
+        // 從當前位置的下一根弦開始查找
+        for (let i = 1; i <= allNotesCount; i++) {
+            const nextIndex = (currentTargetStringIndex + i) % allNotesCount;
+            const nextNoteName = notes[nextIndex];
+            // 如果找到一根還沒調準的弦
+            if (!stringTunedStatus[nextNoteName]) {
+                currentTargetStringIndex = nextIndex;
+                updateStringIndicators();
+                return;
             }
         }
-
-        if (allTuned) {
-            // 如果全部調完，可以選擇重置或停在最後一根
-            console.log("All strings are in tune!");
-        }
-
-        currentTargetStringIndex = nextIndex;
-        updateStringIndicators();
+        
+        console.log("All strings are in tune!");
+        statusDisplay.textContent = "All strings are in tune!";
     }
 
     async function requestWakeLock() {
@@ -396,4 +362,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     init();
 });
-
