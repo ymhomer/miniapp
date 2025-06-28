@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const allTunedDialog = document.getElementById('all-tuned-dialog');
     const allTunedYesBtn = document.getElementById('all-tuned-yes');
     const allTunedNoBtn = document.getElementById('all-tuned-no');
-    
+
     // Audio processing variables
     let audioContext, analyser, mediaStreamSource, stream, buf, rafId, beepOsc, beepGain, bandpassFilter;
 
@@ -33,12 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const NOTE_STRINGS = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
     const MAX_POINTER_ROTATION = 80;
     const POINTER_SENSITIVITY_CENTS = 30;
-    const RMS_THRESHOLD = 0.005; // Lowered for better sensitivity
+    const RMS_THRESHOLD = 0.005; // Lowered to improve sensitivity
     const IN_TUNE_STABILITY_FRAMES = 5;
 
     const instruments = {
         guitar: { name: "Guitar", notes: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'], frequencies: { 'E2': 82.41, 'A2': 110.00, 'D3': 146.83, 'G3': 196.00, 'B3': 246.94, 'E4': 329.63 }, range: [80, 1000] },
-        ukulele: { name: "  Ukulele", notes: ['G4', 'C4', 'E4', 'A4'], frequencies: { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00 }, range: [250, 800] }
+        ukulele: { name: "Ukulele", notes: ['G4', 'C4', 'E4', 'A4'], frequencies: { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00 }, range: [250, 800] }
     };
     const instrumentOrder = ['guitar', 'ukulele'];
     let currentInstrumentKey = 'guitar';
@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let wakeLock = null;
     let currentTargetStringIndex = 0;
     let autoAdvanceTimer = null;
-    
     let statusUpdateTimer = null;
     let lastStatus = "";
 
@@ -70,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
     }
-    
+
     async function startTuning() {
         if (isListening) return;
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -79,8 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }});
-            
+            stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
             isListening = true;
             startStopBtn.classList.add('listening');
             updateStatusMessage("listening");
@@ -90,14 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
             bandpassFilter.type = 'bandpass';
             updateBandpassFilter();
             analyser = audioContext.createAnalyser();
-            analyser.fftSize = 2048;
+            analyser.fftSize = 4096; // Increased for better frequency resolution
             buf = new Float32Array(analyser.fftSize);
             mediaStreamSource.connect(bandpassFilter).connect(analyser);
-            
+
             if (isWakeLockEnabled) await requestWakeLock();
             if (!rafId) updateTuner();
-
-        } catch (  err) {
+        } catch (err) {
             console.error(err);
             updateStatusMessage("error", "Mic access denied.");
         }
@@ -105,25 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function stopTuning() {
         if (!isListening) return;
-        
         stream.getTracks().forEach(track => track.stop());
         if (audioContext && audioContext.state !== 'closed') audioContext.close();
         cancelAnimationFrame(rafId);
         rafId = null;
-
         isListening = false;
         startStopBtn.classList.remove('listening');
         if (isWakeLockEnabled) releaseWakeLock();
-        
         resetUIDisplay();
     }
 
-    // Improved pitch detection
     function autoCorrelate(buf, sampleRate) {
         const SIZE = buf.length;
         const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / SIZE);
         if (rms < (isNoiseFilterOn ? 0.015 : RMS_THRESHOLD)) {
-            console.log(`RMS too low: ${rms}`);
+            console.log(`RMS too low: ${rms.toFixed(4)}`);
             return -1;
         }
 
@@ -146,8 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (a) T0 -= b / (2 * a);
         }
         const freq = sampleRate / T0;
-        console.log(`Detected freq: ${freq}`);
-        return (freq > 60 && freq < 1400) ? freq : -1;
+        console.log(`Detected freq: ${freq.toFixed(1)} Hz`);
+        return (freq > 50 && freq < 1500) ? freq : -1; // Widened range
     }
 
     function noteFromPitch(f) { return Math.round(12 * Math.log2(f / A4)) + 69; }
@@ -155,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupControls() {
         startStopBtn.addEventListener('click', () => isListening ? stopTuning() : startTuning());
-        
         instrumentSwitcher.addEventListener('click', () => {
             if (isListening) return;
             let currentIndex = instrumentOrder.indexOf(currentInstrumentKey);
@@ -163,25 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
             instrumentDisplay.textContent = instruments[currentInstrumentKey].name;
             resetTunerState();
         });
-
-        toggleNoiseFilterBtn.addEventListener('click', () => {
-            isNoiseFilterOn = !isNoiseFilterOn;
-            toggleNoiseFilterBtn.classList.toggle('toggled-on', isNoiseFilterOn);
-            updateBandpassFilter();
-        });
-        toggleAutoAdvanceBtn.addEventListener('click', () => {
-            isAutoAdvanceOn = !isAutoAdvanceOn;
-            toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn);
-            resetTunerState();
-        });
-        toggleWakeLockBtn.addEventListener('click', async () => { 
+        toggleNoiseFilterBtn.addEventListener('click', () => { isNoiseFilterOn = !isNoiseFilterOn; toggleNoiseFilterBtn.classList.toggle('toggled-on', isNoiseFilterOn); });
+        toggleAutoAdvanceBtn.addEventListener('click', () => { isAutoAdvanceOn = !isAutoAdvanceOn; toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn); resetTunerState(); });
+        toggleWakeLockBtn.addEventListener('click', async () => {
             isWakeLockEnabled = !isWakeLockEnabled;
             toggleWakeLockBtn.classList.toggle('toggled-on', isWakeLockEnabled);
             if (isListening) {
                 isWakeLockEnabled ? await requestWakeLock() : await releaseWakeLock();
             }
         });
-        
         settingsBtn.addEventListener('click', () => { settingsDialog.showModal(); });
         settingsForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -191,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsDialog.close();
         });
         settingsForm.addEventListener('reset', () => settingsDialog.close());
-
         allTunedYesBtn.addEventListener('click', () => {
             stopTuning();
             toggleAutoAdvanceBtn.classList.remove('toggled-on');
@@ -210,12 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetTunerState() {
         stringTunedStatus = {};
         currentTargetStringIndex = 0;
-        stableInTuneCounter = 0;
-        centsBuffer.length = 0;
         updateStringIndicators();
         resetUIDisplay();
     }
-    
+
     function updateBandpassFilter() {
         if (!audioContext) return;
         const instrument = instruments[currentInstrumentKey];
@@ -225,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bandpassFilter.frequency.setTargetAtTime(centerFreq, audioContext.currentTime, 0.01);
         bandpassFilter.Q.setTargetAtTime(q, audioContext.currentTime, 0.01);
     }
-    
+
     function updateStringIndicators() {
         const instrument = instruments[currentInstrumentKey];
         const notes = instrument.notes;
@@ -246,31 +225,26 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const width = canvas.width / dpr;
         const height = canvas.height / dpr;
-        
+
         const inTuneZoneWidth = width * 0.12;
         ctx.fillStyle = 'rgba(255, 140, 0, 0.2)';
         ctx.fillRect(0, 0, (width - inTuneZoneWidth) / 2, height);
         ctx.fillRect((width + inTuneZoneWidth) / 2, 0, (width - inTuneZoneWidth) / 2, height);
         ctx.fillStyle = 'rgba(0, 204, 0, 0.25)';
-        ctx.fillRect((acenteZoneWidth) / 2, 0, inTuneZoneWidth, height);
-        
+        ctx.fillRect((width - inTuneZoneWidth) / 2, 0, inTuneZoneWidth, height);
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.fillRect(width / 2 - 1, 0, 2, height * 0.35);
 
         let rotation = (cents / POINTER_SENSITIVITY_CENTS) * MAX_POINTER_ROTATION;
         rotation = Math.max(-MAX_POINTER_ROTATION, Math.min(MAX_POINTER_ROTATION, rotation));
-        
+
         ctx.save();
         ctx.translate(width / 2, height);
         ctx.rotate(rotation * Math.PI / 180);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, -height * 0.95);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -height * 0.95);
         ctx.strokeStyle = (Math.abs(cents) < IN_TUNE_THRESHOLD_CENTS) ? 'var(--in-tune-color)' : 'var(--pointer-color)';
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        ctx.restore();
+        ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
     }
 
     function updateTuner() {
@@ -280,25 +254,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let noteName = '--', currentCents = 0, detectedTargetNote = null, isInTune = false;
         const pitchDetected = pitch !== -1;
-        
+
         if (pitchDetected) {
             const instrument = instruments[currentInstrumentKey];
             let closestTarget = null;
+            let minDiff = Infinity;
 
             if (isAutoAdvanceOn) {
                 const targetNoteName = instrument.notes[currentTargetStringIndex];
                 const targetFreq = instrument.frequencies[targetNoteName];
-                if (Math.abs(pitch - targetFreq) < targetFreq * 0.15) { // Widened tolerance
+                const diff = Math.abs(pitch - targetFreq);
+                if (diff < targetFreq * 0.15) { // Increased tolerance
                     closestTarget = targetNoteName;
                 }
             } else {
-                let minDiff = Infinity;
                 for (const target in instrument.frequencies) {
                     const diff = Math.abs(pitch - instrument.frequencies[target]);
                     if (diff < minDiff) { minDiff = diff; closestTarget = target; }
                 }
             }
-            
+
             if (closestTarget) {
                 const noteNumber = noteFromPitch(instrument.frequencies[closestTarget]);
                 currentCents = centsOffFromPitch(pitch, noteNumber);
@@ -309,38 +284,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
+
         centsBuffer.push(currentCents);
         if (centsBuffer.length > SMOOTHING_BUFFER_SIZE) centsBuffer.shift();
         const smoothedCents = pitchDetected ? centsBuffer.reduce((a, b) => a + b, 0) / centsBuffer.length : 0;
-        
+
         drawMeter(smoothedCents);
         frequencyDisplay.textContent = `${pitchDetected ? pitch.toFixed(1) : '--'} Hz`;
         centsDisplay.textContent = `${pitchDetected ? smoothedCents.toFixed(0) : '--'} cents`;
         noteNameDisplay.textContent = noteName;
-        
+
         handleTuningLogic(detectedTargetNote, isInTune, smoothedCents);
-        
         rafId = requestAnimationFrame(updateTuner);
     }
 
     function updateStatusMessage(state, text1 = "", text2 = "") {
         let newStatus = state + text1 + text2;
         if (newStatus === lastStatus) return;
-        
         statusDisplay.className = 'status-message';
         let content = "";
 
-        switch(state) {
+        switch (state) {
             case "idle":
                 content = `<span>Tap Start to Tune</span>`;
                 break;
             case "listening":
-                content = `<span>${text1 || 'Listening...'}</span>`;
+                content = `<span>Listening...</span>`;
                 break;
             case "result":
                 content = `<span>${text1}</span>`;
-                if(text2) content += `<span>${text2}</span>`;
+                if (text2) content += `<span>${text2}</span>`;
                 statusDisplay.classList.add(text2.includes('Up') ? 'flat' : text2.includes('Down') ? 'sharp' : 'in-tune');
                 break;
             case "error":
@@ -361,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateStatusMessage("result", `${detectedTargetNote}`, "In Tune ✓");
                     stableInTuneCounter++;
                     if (stableInTuneCounter >= IN_TUNE_STABILITY_FRAMES && !stringTunedStatus[detectedTargetNote]) {
-                        console.log(`String ${detectedTargetNote} tuned!`);
                         stringTunedStatus[detectedTargetNote] = true;
                         playInTuneBeep();
                         updateStringIndicators();
@@ -402,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         beepGain.gain.linearRampToValueAtTime(0, now + 0.2);
         beepOsc.start(now);
         beepOsc.stop(now + 0.2);
-        
+
         meterFrame.classList.add('flash-green');
         meterFrame.addEventListener('animationend', () => {
             meterFrame.classList.remove('flash-green');
@@ -438,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function releaseWakeLock() {
         if (wakeLock) { await wakeLock.release(); wakeLock = null; }
     }
-    
+
     document.addEventListener('visibilitychange', () => {
         if (isWakeLockEnabled && isListening) {
             document.visibilityState === 'visible' ? requestWakeLock() : releaseWakeLock();
