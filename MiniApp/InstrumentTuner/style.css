@@ -125,14 +125,8 @@ body {
     transition: box-shadow 0.1s linear;
 }
 
-@keyframes flashGreen {
-    0% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light); }
-    50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 15px 5px var(--in-tune-color); }
-    100% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light); }
-}
-.tuner-meter-frame.flash-green {
-    animation: flashGreen 0.5s ease-out;
-}
+@keyframes flashGreen { 50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 10px 3px var(--in-tune-color); } }
+.tuner-meter-frame.flash-green { animation: flashGreen 0.4s ease-out; }
 
 .meter-header { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 5px; background-color: rgba(0, 0, 0, 0.03); border-radius: 3px; }
 .meter-info-left, .meter-info-right { font-family: var(--mechanical-font); font-size: 0.9em; }
@@ -172,19 +166,42 @@ body {
 
 @keyframes pulse-green { 0% { box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark), 0 0 5px var(--in-tune-color); } 50% { box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark), 0 0 12px var(--in-tune-color); } 100% { box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark), 0 0 5px var(--in-tune-color); } }
 
-/* --- Dialog Styles --- */
+/* --- REVISED: Dialog Styles for Touch --- */
 dialog { width: calc(100% - 40px); max-width: 320px; border-radius: 10px; border: 1px solid var(--frame-border-dark); box-shadow: -3px -3px 7px var(--frame-border-light), 3px 3px 7px var(--frame-border-dark); background-color: var(--case-bg); padding: 25px; text-align: center; }
 dialog::backdrop { background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px); }
 dialog h2 { text-align: center; color: var(--secondary-text); margin-top: 0; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
 dialog p { font-size: 1.1em; color: var(--text-color); margin: 0; margin-bottom: 25px;}
 
-.setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
 .setting-item.disabled { opacity: 0.5; }
-.setting-item label { margin-bottom: 0; font-size: 0.9em; color: var(--text-color); text-transform: none; letter-spacing: 0; }
-.setting-item input, .setting-item select { background-color: var(--display-bg); border: 1px solid var(--frame-border-dark); box-shadow: inset 1px 1px 3px var(--frame-border-dark); border-radius: 4px; padding: 8px; width: 100px; text-align: right; font-family: var(--mechanical-font); font-size: 1em; color: var(--text-color); }
+.setting-item label { 
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: var(--text-color);
+    text-transform: none;
+    letter-spacing: 0;
+}
+.setting-item input, .setting-item select { 
+    background-color: var(--display-bg);
+    border: 1px solid var(--frame-border-dark);
+    box-shadow: inset 1px 1px 3px var(--frame-border-dark);
+    border-radius: 4px;
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    font-family: var(--mechanical-font);
+    font-size: 1.1em;
+    color: var(--text-color);
+}
 
 .dialog-actions { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; }
-.dialog-actions button { flex-grow: 1; padding: 12px; border-radius: 6px; border: 1px solid var(--frame-border-dark); font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: -2px -2px 4px var(--frame-border-light), 2px 2px 4px var(--frame-border-dark); }
+.dialog-actions button { flex-grow: 1; padding: 14px; border-radius: 6px; border: 1px solid var(--frame-border-dark); font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: -2px -2px 4px var(--frame-border-light), 2px 2px 4px var(--frame-border-dark); }
 .dialog-actions button:active { box-shadow: inset -2px -2px 4px var(--frame-border-light), inset 2px 2px 4px var(--frame-border-dark); transform: translateY(1px); }
 
 #settings-save-btn, #all-tuned-yes { background-color: var(--accent-color); color: white; }
