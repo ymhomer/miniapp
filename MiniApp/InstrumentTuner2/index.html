@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrument Tuner</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="tuner-machine-case">
+        <div class="machine-header">
+            <h1>TUNER</h1>
+            <button id="settings-btn" class="settings-icon-btn" aria-label="Open settings"></button>
+        </div>
+
+        <div class="machine-body">
+            <div class="control-frame">
+                <label for="instrument-switcher">INSTRUMENT</label>
+                <div id="instrument-switcher" class="instrument-switcher">
+                    <span id="instrument-display">Guitar</span>
+                    <span class="switcher-arrow">❯</span>
+                </div>
+            </div>
+
+            <div class="tuner-meter-frame">
+                <div class="meter-header">
+                    <div class="meter-info-left">
+                        <span id="meter-hz">-- Hz</span>
+                        <span id="meter-cents">-- cents</span>
+                    </div>
+                    <div class="meter-info-right">
+                        <span id="meter-note">--</span>
+                    </div>
+                </div>
+                <div class="meter-body">
+                    <canvas id="tuner-canvas-bg" class="tuner-canvas"></canvas>
+                    <canvas id="tuner-canvas-zone" class="tuner-canvas"></canvas>
+                    <canvas id="tuner-canvas-pointer" class="tuner-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="control-frame">
+                <label>STRING STATUS</label>
+                <div id="string-status" class="string-status-container"></div>
+            </div>
+
+            <div class="status-message" id="status">
+                <span>Tap Start to Tune</span>
+            </div>
+        </div>
+
+        <div class="machine-footer">
+            <div class="feature-controls">
+                <div class="toggle-button-container">
+                    <button id="toggle-noise-filter" class="toggle-button" aria-label="Toggle noise filter"></button>
+                    <span class="toggle-label">Noise Filter</span>
+                </div>
+                <div class="toggle-button-container">
+                    <button id="toggle-auto-advance" class="toggle-button" aria-label="Toggle auto-advance"></button>
+                    <span class="toggle-label">Auto-Advance</span>
+                </div>
+                <div class="toggle-button-container">
+                    <button id="toggle-wakelock" class="toggle-button" aria-label="Toggle keep screen on"></button>
+                    <span class="toggle-label">Keep Screen On</span>
+                </div>
+            </div>
+            <div class="main-control-container">
+                <button id="start-stop-btn" class="start-stop-button" aria-label="Start or stop tuning"></button>
+            </div>
+            <p>Requires microphone access when active.</p>
+        </div>
+
+        <dialog id="settings-dialog">
+            <h2>Settings</h2>
+            <form>
+                <div class="setting-item">
+                    <label for="concert-a">Concert A (Hz)</label>
+                    <input type="number" id="concert-a" value="440" min="400" max="480" step="0.1">
+                </div>
+                <div class="setting-item">
+                    <label for="tolerance">Tolerance (cents)</label>
+                    <input type="number" id="tolerance" value="5" min="1" max="20">
+                </div>
+                <div class="setting-item disabled">
+                    <label for="temperament-key">Temperament Key</label>
+                    <select id="temperament-key" disabled><option>C</option></select>
+                </div>
+                <div class="setting-item disabled">
+                    <label for="temperament">Temperament</label>
+                    <select id="temperament" disabled><option>Equal</option><option>Just</option></select>
+                </div>
+                <div class="dialog-actions">
+                    <button type="reset" id="settings-cancel-btn">Cancel</button>
+                    <button type="submit" id="settings-save-btn">Save</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="all-tuned-dialog">
+            <h2>All strings tuned.</h2>
+            <p>Stop listening?</p>
+            <div class="dialog-actions">
+                <button id="all-tuned-no">No</button>
+                <button id="all-tuned-yes">Yes</button>
+            </div>
+        </dialog>
+    </div>
+</body>
+</html>
