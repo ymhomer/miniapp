@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.scale(dpr, dpr);
     }
     
-    // Start/Stop Logic
+    // --- REVISED: Start/Stop Logic ---
     async function startTuning() {
         if (isListening) return;
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notes.forEach((noteName, index) => {
             const span = document.createElement('span');
             span.className = 'string-note';
-            span.textContent = noteName.slice(0, -1);
+            span.textContent = noteName.slice(0,-1);
             span.dataset.note = noteName;
             if (stringTunedStatus[noteName]) span.classList.add('tuned');
             if (isAutoAdvanceOn && index === currentTargetStringIndex) span.classList.add('targeted');
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rafId = requestAnimationFrame(updateTuner);
     }
 
-    // 3-State Status Update Logic
+    // --- REVISED: 3-State Status Update Logic ---
     function updateStatusMessage(state, text1 = "", text2 = "") {
         let newStatus = state + text1 + text2;
         if (newStatus === lastStatus) return; // Avoid unnecessary DOM updates
@@ -336,16 +336,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleTuningLogic(detectedTargetNote, isInTune, cents) {
         clearTimeout(statusUpdateTimer);
-
+    
         if (detectedTargetNote) {
             statusUpdateTimer = setTimeout(() => {
                 if (isInTune) {
                     updateStatusMessage("result", `${detectedTargetNote}`, "In Tune ✓");
                     stableInTuneCounter++;
                     if (stableInTuneCounter >= IN_TUNE_STABILITY_FRAMES && !stringTunedStatus[detectedTargetNote]) {
-                        playInTuneBeep();
-                        stringTunedStatus[detectedTargetNote] = true;
-                        updateStringIndicators();
+                        stringTunedStatus[detectedTargetNote] = true; // Mark string as tuned
+                        playInTuneBeep(); // Trigger beep and flash
+                        updateStringIndicators(); // Update UI immediately
                         if (isAutoAdvanceOn) {
                             clearTimeout(autoAdvanceTimer);
                             autoAdvanceTimer = setTimeout(advanceToNextString, 500);
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const directionText = cents > IN_TUNE_THRESHOLD_CENTS ? 'Tune Down ↓' : 'Tune Up ↑';
                     updateStatusMessage("result", `${detectedTargetNote}`, directionText);
                 }
-            }, 100); // Add a small delay for stability
+            }, 100); // Small delay for stability
         } else {
             stableInTuneCounter = 0;
             statusUpdateTimer = setTimeout(() => {
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
         }
     }
-
+    
     function playInTuneBeep() {
         if (!audioContext || audioContext.state !== 'running') {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -376,16 +376,18 @@ document.addEventListener('DOMContentLoaded', () => {
         beepOsc = audioContext.createOscillator();
         beepGain = audioContext.createGain();
         beepOsc.type = 'sine';
-        beepOsc.frequency.setValueAtTime(880, now); // Higher pitch for in-tune
+        beepOsc.frequency.setValueAtTime(880, now); // 880 Hz for a clear beep
+        beepOsc.connect(beepGain).connect(audioContext.destination);
         beepGain.gain.setValueAtTime(0, now);
         beepGain.gain.linearRampToValueAtTime(0.3, now + 0.01);
         beepGain.gain.linearRampToValueAtTime(0, now + 0.2);
-        beepOsc.connect(beepGain).connect(audioContext.destination);
         beepOsc.start(now);
         beepOsc.stop(now + 0.2);
         
         meterFrame.classList.add('flash-green');
-        meterFrame.addEventListener('animationend', () => meterFrame.classList.remove('flash-green'), { once: true });
+        meterFrame.addEventListener('animationend', () => {
+            meterFrame.classList.remove('flash-green');
+        }, { once: true });
     }
 
     function advanceToNextString() {
