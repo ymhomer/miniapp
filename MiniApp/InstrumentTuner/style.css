@@ -37,10 +37,9 @@ body {
     width: 100%;
     max-width: 380px;
     text-align: center;
-    position: relative; /* For settings button positioning */
+    position: relative;
 }
 
-/* --- NEW: Settings Button Style --- */
 .settings-icon-btn {
     position: absolute;
     top: 15px;
@@ -63,7 +62,6 @@ body {
     box-shadow: inset -1px -1px 3px var(--frame-border-light), inset 1px 1px 3px var(--frame-border-dark);
     transform: scale(0.97);
 }
-
 
 .machine-header h1 {
     font-size: 1.4em;
@@ -125,8 +123,12 @@ body {
     transition: box-shadow 0.1s linear;
 }
 
-@keyframes flashGreen { 50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 10px 3px var(--in-tune-color); } }
-.tuner-meter-frame.flash-green { animation: flashGreen 0.4s ease-out; }
+@keyframes flashGreen { 
+    0% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light); }
+    50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 12px 4px var(--in-tune-color); }
+    100% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light); }
+}
+.tuner-meter-frame.flash-green { animation: flashGreen 0.3s ease-out 1; }
 
 .meter-header { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 5px; background-color: rgba(0, 0, 0, 0.03); border-radius: 3px; }
 .meter-info-left, .meter-info-right { font-family: var(--mechanical-font); font-size: 0.9em; }
@@ -151,7 +153,6 @@ body {
 .machine-footer { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--frame-border-dark); }
 .machine-footer p { font-size: 0.75em; color: var(--secondary-text); opacity: 0.8; margin-top: 20px; }
 
-/* --- REDESIGNED: Feature and Main Controls --- */
 .feature-controls { display: flex; justify-content: space-around; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
 .toggle-button-container { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-basis: 80px; }
 .toggle-button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--frame-border-dark); cursor: pointer; background-color: #aaa; box-shadow: inset 1px 1px 2px #777, inset -1px -1px 2px #ddd, 1px 1px 2px rgba(0,0,0,0.3); transition: all 0.2s ease-out; padding: 0; }
@@ -166,7 +167,6 @@ body {
 
 @keyframes pulse-green { 0% { box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark), 0 0 5px var(--in-tune-color); } 50% { box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark), 0 0 12px var(--in-tune-color); } 100% { box-shadow: -2px -2px 5px var(--frame-border-light), 2px 2px 5px var(--frame-border-dark), 0 0 5px var(--in-tune-color); } }
 
-/* --- Dialog Styles --- */
 dialog { width: calc(100% - 40px); max-width: 320px; border-radius: 10px; border: 1px solid var(--frame-border-dark); box-shadow: -3px -3px 7px var(--frame-border-light), 3px 3px 7px var(--frame-border-dark); background-color: var(--case-bg); padding: 25px; text-align: center; }
 dialog::backdrop { background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px); }
 dialog h2 { text-align: center; color: var(--secondary-text); margin-top: 0; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
