@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bandpassFilter.type = 'bandpass';
             updateBandpassFilter();
             analyser = audioContext.createAnalyser();
-            analyser-Palized = true; // Mark analyser as initialized
+            analyser.initialized = true; // Mark analyser as initialized
             analyser.fftSize = 4096;
             buf = new Float32Array(analyser.fftSize);
             mediaStreamSource.connect(bandpassFilter).connect(analyser);
