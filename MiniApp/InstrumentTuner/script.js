@@ -59,97 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         setupControls();
-        updateStringIndicators();
-        drawMeter(0);
-    }
-
-    function resizeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = canvas.getBoundingClientRect
-
-System: You are Grok 3 built by xAI.
-
-I notice that the artifact content appears to be incomplete, with the JavaScript code cut off mid-line. Since you’ve asked me to fix the green flashing of the tuner-meter-frame, the sound prompt, and ensure the string-status-container correctly shows the green tuned state, I’ll provide a complete, corrected version of the `script.js` file with the necessary fixes. The HTML and CSS seem mostly fine, but I’ll also include a small CSS tweak to enhance the flash animation.
-
-### Fixes Applied:
-1. **Green Flash for Tuner Meter**:
-   - Modified `playInTuneBeep` to ensure the `flash-green` class is removed after each animation to prevent stacking.
-   - Adjusted CSS `flashGreen` animation for a sharper, more noticeable effect with a single flash cycle.
-2. **Sound Prompt**:
-   - Refined `playInTuneBeep` to create a new oscillator for each beep, ensuring a clean, short 440 Hz tone (0.2s duration) that plays reliably when a note is in tune.
-3. **String Status Container**:
-   - Ensured `updateStringIndicators` consistently applies the `.tuned` class to tuned strings, maintaining the green state even after UI updates.
-   - Added a check in `handleTuningLogic` to prevent premature status resets.
-4. **General**:
-   - Fixed potential issues with `beepOsc` persistence by creating a new oscillator each time to avoid state conflicts.
-   - Added a small delay in `handleTuningLogic` to stabilize status updates.
-
-Here’s the updated `script.js`:
-
-<xaiArtifact artifact_id="fa274488-ad7e-4ffb-b4ba-6e48aa42b6ba" artifact_version_id="4e625cd0-42df-47de-b882-d23846475cdb" title="script.js" contentType="text/javascript">
-document.addEventListener('DOMContentLoaded', () => {
-    // DOM Element references
-    const noteNameDisplay = document.getElementById('meter-note');
-    const frequencyDisplay = document.getElementById('meter-hz');
-    const centsDisplay = document.getElementById('meter-cents');
-    const statusDisplay = document.getElementById('status');
-    const stringStatusContainer = document.getElementById('string-status');
-    const meterFrame = document.querySelector('.tuner-meter-frame');
-    const instrumentSwitcher = document.getElementById('instrument-switcher');
-    const instrumentDisplay = document.getElementById('instrument-display');
-    const canvas = document.getElementById('tuner-canvas');
-    const ctx = canvas.getContext('2d');
-    const startStopBtn = document.getElementById('start-stop-btn');
-    const toggleNoiseFilterBtn = document.getElementById('toggle-noise-filter');
-    const toggleAutoAdvanceBtn = document.getElementById('toggle-auto-advance');
-    const toggleWakeLockBtn = document.getElementById('toggle-wakelock');
-    const settingsBtn = document.getElementById('settings-btn');
-    const settingsDialog = document.getElementById('settings-dialog');
-    const settingsForm = settingsDialog.querySelector('form');
-    const concertAInput = document.getElementById('concert-a');
-    const toleranceInput = document.getElementById('tolerance');
-    const allTunedDialog = document.getElementById('all-tuned-dialog');
-    const allTunedYesBtn = document.getElementById('all-tuned-yes');
-    const allTunedNoBtn = document.getElementById('all-tuned-no');
-    
-    // Audio processing variables
-    let audioContext, analyser, mediaStreamSource, stream, buf, rafId, beepOsc, beepGain, bandpassFilter;
-
-    // App state
-    let isListening = false;
-    let A4 = 440;
-    let IN_TUNE_THRESHOLD_CENTS = 5;
-    const NOTE_STRINGS = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
-    const MAX_POINTER_ROTATION = 80;
-    const POINTER_SENSITIVITY_CENTS = 30;
-    const RMS_THRESHOLD = 0.01;
-    const IN_TUNE_STABILITY_FRAMES = 5;
-
-    const instruments = {
-        guitar: { name: "Guitar", notes: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'], frequencies: { 'E2': 82.41, 'A2': 110.00, 'D3': 146.83, 'G3': 196.00, 'B3': 246.94, 'E4': 329.63 }, range: [80, 1000] },
-        ukulele: { name: "Ukulele", notes: ['G4', 'C4', 'E4', 'A4'], frequencies: { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00 }, range: [250, 800] }
-    };
-    const instrumentOrder = ['guitar', 'ukulele'];
-    let currentInstrumentKey = 'guitar';
-
-    let stringTunedStatus = {}, stableInTuneCounter = 0;
-    const centsBuffer = [];
-    const SMOOTHING_BUFFER_SIZE = 5;
-    let isNoiseFilterOn = false, isAutoAdvanceOn = false, isWakeLockEnabled = false;
-    let wakeLock = null;
-    let currentTargetStringIndex = 0;
-    let autoAdvanceTimer = null;
-    
-    let statusUpdateTimer = null;
-    let lastStatus = "";
-
-    // App initialization
-    function init() {
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        setupControls();
-        updateStringIndicators();
-        drawMeter(0);
+        updateStringIndicators(); // Initial population of string indicators
+        drawMeter(0); // Draw initial meter state
     }
 
     function resizeCanvas() {
@@ -254,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleAutoAdvanceBtn.addEventListener('click', () => { isAutoAdvanceOn = !isAutoAdvanceOn; toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn); resetTunerState(); });
         toggleWakeLockBtn.addEventListener('click', async () => { 
             isWakeLockEnabled = !isWakeLockEnabled;
-            toggleWakeLockBtn.classList.toggle('toggled-on', isSeedWakeLockEnabled);
+            toggleWakeLockBtn.classList.toggle('toggled-on', isWakeLockEnabled);
             if (isListening) {
                 isWakeLockEnabled ? await requestWakeLock() : await releaseWakeLock();
             }
@@ -303,9 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updateStringIndicators() {
- Viola la stringStatusContainer.innerHTML = '';
         const instrument = instruments[currentInstrumentKey];
         const notes = instrument.notes;
+        stringStatusContainer.innerHTML = '';
         notes.forEach((noteName, index) => {
             const span = document.createElement('span');
             span.className = 'string-note';
@@ -397,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3-State Status Update Logic
     function updateStatusMessage(state, text1 = "", text2 = "") {
         let newStatus = state + text1 + text2;
-        if (newStatus === lastStatus) return;
+        if (newStatus === lastStatus) return; // Avoid unnecessary DOM updates
         
         statusDisplay.className = 'status-message';
         let content = "";
@@ -434,18 +345,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (stableInTuneCounter >= IN_TUNE_STABILITY_FRAMES && !stringTunedStatus[detectedTargetNote]) {
                         playInTuneBeep();
                         stringTunedStatus[detectedTargetNote] = true;
+                        updateStringIndicators();
                         if (isAutoAdvanceOn) {
                             clearTimeout(autoAdvanceTimer);
                             autoAdvanceTimer = setTimeout(advanceToNextString, 500);
                         }
-                        updateStringIndicators();
                     }
                 } else {
                     stableInTuneCounter = 0;
                     const directionText = cents > IN_TUNE_THRESHOLD_CENTS ? 'Tune Down ↓' : 'Tune Up ↑';
                     updateStatusMessage("result", `${detectedTargetNote}`, directionText);
                 }
-            }, 150); // Increased delay for stability
+            }, 100); // Add a small delay for stability
         } else {
             stableInTuneCounter = 0;
             statusUpdateTimer = setTimeout(() => {
@@ -458,31 +369,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playInTuneBeep() {
-        if (!audioContext || audioContext.state !== 'running') return;
+        if (!audioContext || audioContext.state !== 'running') {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
         const now = audioContext.currentTime;
         beepOsc = audioContext.createOscillator();
         beepGain = audioContext.createGain();
         beepOsc.type = 'sine';
-        beepOsc.frequency.setValueAtTime(440, now);
+        beepOsc.frequency.setValueAtTime(880, now); // Higher pitch for in-tune
         beepGain.gain.setValueAtTime(0, now);
         beepGain.gain.linearRampToValueAtTime(0.3, now + 0.01);
         beepGain.gain.linearRampToValueAtTime(0, now + 0.2);
         beepOsc.connect(beepGain).connect(audioContext.destination);
         beepOsc.start(now);
         beepOsc.stop(now + 0.2);
-        meterFrame.classList.remove('flash-green'); // Ensure class is removed before re-adding
+        
         meterFrame.classList.add('flash-green');
         meterFrame.addEventListener('animationend', () => meterFrame.classList.remove('flash-green'), { once: true });
     }
 
     function advanceToNextString() {
         const notes = instruments[currentInstrumentKey].notes;
+        // Check if all are tuned
         const allTuned = notes.every(note => stringTunedStatus[note]);
-        if (allTuned) {
+        if(allTuned) {
             allTunedDialog.showModal();
             return;
         }
 
+        // Find next untuned string
         for (let i = 1; i <= notes.length; i++) {
             const nextIndex = (currentTargetStringIndex + i) % notes.length;
             if (!stringTunedStatus[notes[nextIndex]]) {
@@ -507,8 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     document.addEventListener('visibilitychange', () => {
-        if (isWakeLockEnabled && isListening) {
-            document.visibilityState === 'visible' ? requestWakeLock() : releaseWakeLock();
+        if(isWakeLockEnabled && isListening) {
+             document.visibilityState === 'visible' ? requestWakeLock() : releaseWakeLock();
         }
     });
 
