@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const allTunedNoBtn = document.getElementById('all-tuned-no');
     
     // Audio processing variables
-    let audioContext, analyser, mediaStreamSource, stream, buf, rafId, beepOsc, beepGain, bandpassFilter;
+    // --- FIX: Removed beepOsc and beepGain from global scope. They will be created on demand.
+    let audioContext, analyser, mediaStreamSource, stream, buf, rafId, bandpassFilter;
 
     // App state
     let isListening = false;
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
+        drawMeter(0); // Redraw after resize
     }
     
     // --- REVISED: Start/Stop Logic ---
@@ -95,14 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buf = new Float32Array(analyser.fftSize);
             mediaStreamSource.connect(bandpassFilter).connect(analyser);
             
-            // --- FIX: Create beep components once per session ---
-            if (!beepOsc) {
-                beepOsc = audioContext.createOscillator();
-                beepGain = audioContext.createGain();
-                beepOsc.frequency.setValueAtTime(880, audioContext.currentTime);
-                beepOsc.connect(beepGain).connect(audioContext.destination);
-                beepOsc.start();
-            }
+            // --- FIX: Removed the persistent beep oscillator creation. It will now be created on-demand. ---
 
             if (isWakeLockEnabled) await requestWakeLock();
             if (!rafId) updateTuner();
@@ -123,8 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- FIX: Nullify audio components so they are recreated on next start ---
         rafId = null;
         audioContext = null;
-        beepOsc = null;
-        beepGain = null;
 
         isListening = false;
         startStopBtn.classList.remove('listening');
@@ -253,13 +246,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const height = canvas.height / dpr;
         
         const inTuneZoneWidth = width * 0.12;
-        ctx.fillStyle = 'rgba(255, 140, 0, 0.2)';
+        ctx.fillStyle = 'rgba(255, 140, 0, 0.2)'; // Flat/Sharp zone color
         ctx.fillRect(0, 0, (width - inTuneZoneWidth) / 2, height);
         ctx.fillRect((width + inTuneZoneWidth) / 2, 0, (width - inTuneZoneWidth) / 2, height);
-        ctx.fillStyle = 'rgba(0, 204, 0, 0.25)';
+        ctx.fillStyle = 'rgba(0, 204, 0, 0.25)'; // In-tune zone color
         ctx.fillRect((width - inTuneZoneWidth) / 2, 0, inTuneZoneWidth, height);
         
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; // Center line
         ctx.fillRect(width / 2 - 1, 0, 2, height * 0.35);
 
         let rotation = (cents / POINTER_SENSITIVITY_CENTS) * MAX_POINTER_ROTATION;
@@ -269,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.translate(width / 2, height);
         ctx.rotate(rotation * Math.PI / 180);
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -height * 0.95);
-        ctx.strokeStyle = (Math.abs(cents) < IN_TUNE_THRESHOLD_CENTS) ? 'var(--in-tune-color)' : 'var(--pointer-color)';
+        ctx.strokeStyle = (Math.abs(cents) < IN_TUNE_THRESHOLD_CENTS) ? 'var(--in-tune-color, #00CC00)' : 'var(--pointer-color, #FF4500)';
         ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
     }
 
@@ -279,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         analyser.getFloatTimeDomainData(buf);
         const pitch = autoCorrelate(buf, audioContext.sampleRate);
 
-        let noteName = '--', currentCents = 0, detectedTargetNote = null, isInTune = false;
+        let noteName = '--', currentCents = 0, detectedTargetNote = null;
         const pitchDetected = pitch !== -1;
         
         if (pitchDetected) {
@@ -289,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isAutoAdvanceOn) {
                 const targetNoteName = instrument.notes[currentTargetStringIndex];
                 const targetFreq = instrument.frequencies[targetNoteName];
+                // Check if the detected pitch is reasonably close to the target string (e.g., within ~1.5 semitones)
                 if (Math.abs(pitch - targetFreq) < targetFreq * 0.12) {
                     closestTarget = targetNoteName;
                 }
@@ -300,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
+            // Check if the closest note is within 50 cents to be considered the target
             if (closestTarget && Math.abs(1200 * Math.log2(pitch / instrument.frequencies[closestTarget])) < 50) {
                 detectedTargetNote = closestTarget;
                 const noteNumber = noteFromPitch(instrument.frequencies[closestTarget]);
@@ -307,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 noteName = detectedTargetNote;
             }
         }
-        isInTune = Math.abs(currentCents) < IN_TUNE_THRESHOLD_CENTS;
         
         centsBuffer.push(currentCents);
         if (centsBuffer.length > SMOOTHING_BUFFER_SIZE) centsBuffer.shift();
@@ -318,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         centsDisplay.textContent = `${pitchDetected ? smoothedCents.toFixed(0) : '--'} cents`;
         noteNameDisplay.textContent = noteName;
         
+        const isInTune = Math.abs(smoothedCents) < IN_TUNE_THRESHOLD_CENTS;
         handleTuningLogic(detectedTargetNote, isInTune, smoothedCents);
         
         rafId = requestAnimationFrame(updateTuner);
@@ -341,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case "error":
                 content = `<span>${text1}</span>`;
-                statusDisplay.classList.add('sharp');
+                statusDisplay.classList.add('sharp'); // Using 'sharp' style for error
                 break;
         }
         statusDisplay.innerHTML = content;
@@ -353,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(statusUpdateTimer);
 
         if (detectedTargetNote) {
+            // Give a small delay before updating status to avoid flickering
             statusUpdateTimer = setTimeout(() => {
                 if (isInTune) {
                     stableInTuneCounter++;
@@ -378,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 150); // Delay for stability
         } else {
             stableInTuneCounter = 0;
+            // Delay before showing "Listening..." to avoid flashing when switching notes
             statusUpdateTimer = setTimeout(() => {
                 let msg = isAutoAdvanceOn 
                     ? `Tune ${instruments[currentInstrumentKey].notes[currentTargetStringIndex]}...`
@@ -387,11 +384,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- FIX: On-demand beep sound generation ---
     function playInTuneBeep() {
-        if (!audioContext || !beepGain || audioContext.state !== 'running') return;
+        if (!audioContext || audioContext.state !== 'running') return;
+        
+        // Create a new oscillator and gain for each beep to ensure it's clean
         const now = audioContext.currentTime;
-        beepGain.gain.cancelScheduledValues(now);
-        beepGain.gain.setValueAtTime(0, now).linearRampToValueAtTime(0.3, now + 0.01).linearRampToValueAtTime(0, now + 0.2);
+        const beepOsc = audioContext.createOscillator();
+        const beepGain = audioContext.createGain();
+
+        beepOsc.connect(beepGain);
+        beepGain.connect(audioContext.destination);
+
+        // Configure the beep sound
+        beepOsc.frequency.setValueAtTime(880, now); // A pleasant A5 note
+        beepGain.gain.setValueAtTime(0, now);
+        
+        // Create a short sound envelope
+        beepGain.gain.linearRampToValueAtTime(0.3, now + 0.02); // Quick attack
+        beepGain.gain.linearRampToValueAtTime(0, now + 0.2);   // Decay
+
+        // Start and stop the oscillator to play the sound and then clean it up
+        beepOsc.start(now);
+        beepOsc.stop(now + 0.2);
+
+        // Trigger the visual flash feedback
         meterFrame.classList.add('flash-green');
         meterFrame.addEventListener('animationend', () => meterFrame.classList.remove('flash-green'), { once: true });
     }
@@ -404,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Find the next untuned string
         for (let i = 1; i <= notes.length; i++) {
             const nextIndex = (currentTargetStringIndex + i) % notes.length;
             if (!stringTunedStatus[notes[nextIndex]]) {
