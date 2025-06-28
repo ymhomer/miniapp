@@ -32,9 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let IN_TUNE_THRESHOLD_CENTS = 5;
     const NOTE_STRINGS = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
     const MAX_POINTER_ROTATION = 80;
-    const POINTER_SENSITIVITY_CENTS = 30;
+    const PITCH_BUFFER_SIZE = 10; // Sliding window for pitch values
     const RMS_THRESHOLD = 0.005;
     const IN_TUNE_STABILITY_FRAMES = 5;
+    const SUSTAINED_NOTE_RESET_MS = 3000; // Reset pitch buffer after 3s
 
     const instruments = {
         guitar: { name: "Guitar", notes: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'], frequencies: { 'E2': 82.41, 'A2': 110.00, 'D3': 146.83, 'G3': 196.00, 'B3': 246.94, 'E4': 329.63 }, range: [80, 1000] },
@@ -45,8 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let stringTunedStatus = {}, stableInTuneCounter = 0, lastDetectedNote = null;
     const centsBuffer = [];
+    const pitchBuffer = []; // New buffer for pitch values
     const SMOOTHING_BUFFER_SIZE = 5;
-    let isNoiseFilterOn = false, isAutoAdvanceOn = false, isWakeLockEnabled = false;
+    let lastPitchResetTime = 0;
+    let isNoiseFilterOn = false, isAutoAdvanceOn = false, isAutoAdvanceOn = false, isWakeLockEnabled = false;
     let wakeLock = null;
     let currentTargetStringIndex = 0;
     let autoAdvanceTimer = null;
@@ -89,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bandpassFilter.type = 'bandpass';
             updateBandpassFilter();
             analyser = audioContext.createAnalyser();
-            analyser.initialized = true; // Mark analyser as initialized
+            analyser.initialized = true;
             analyser.fftSize = 4096;
             buf = new Float32Array(analyser.fftSize);
             mediaStreamSource.connect(bandpassFilter).connect(analyser);
@@ -123,8 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function autoCorrelate(buf, sampleRate) {
         const SIZE = buf.length;
         const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / SIZE);
-        if (rms < (isNoiseFilterOn ? 0.015 : RMS_THRESHOLD)) {
-            console.log(`RMS too low: ${rms.toFixed(4)}`);
+        const dynamicRmsThreshold = isNoiseFilterOn ? Math.max(0.015, rms * 0.5) : RMS_THRESHOLD;
+        if (rms < dynamicRmsThreshold) {
+            console.log(`RMS too low: ${rms.toFixed(4)} (threshold: ${dynamicRmsThreshold.toFixed(4)})`);
             return -1;
         }
 
@@ -147,8 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (a) T0 -= b / (2 * a);
         }
         const freq = sampleRate / T0;
-        console.log(`Detected freq: ${freq.toFixed(1)} Hz`);
-        return (freq > 50 && freq < 1500) ? freq : -1;
+        return (freq > 40 && freq < 2000) ? freq : -1; // Widened range for stability
+    }
+
+    function median(array) {
+        const sorted = [...array].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
     }
 
     function noteFromPitch(f) { return Math.round(12 * Math.log2(f / A4)) + 69; }
@@ -207,6 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTargetStringIndex = 0;
         stableInTuneCounter = 0;
         lastDetectedNote = null;
+        pitchBuffer.length = 0;
+        lastPitchResetTime = 0;
         updateStringIndicators();
         resetUIDisplay();
     }
@@ -252,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
         ctx.fillRect(width / 2 - 1, 0, 2, height * 0.35);
 
-        let rotation = (cents / POINTER_SENSITIVITY_CENTS) * MAX_POINTER_ROTATION;
+        let rotation = (cents / 30) * MAX_POINTER_ROTATION;
         rotation = Math.max(-MAX_POINTER_ROTATION, Math.min(MAX_POINTER_ROTATION, rotation));
 
         ctx.save();
@@ -264,18 +275,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTuner() {
-        if (!isListening) return;
-        if (!analyser.initialized) {
-            console.log("Analyser not initialized, skipping update.");
+        if (!isListening || !analyser.initialized) {
+            console.log("Tuner not ready, skipping update.");
             return;
         }
         analyser.getFloatTimeDomainData(buf);
-        const pitch = autoCorrelate(buf, audioContext.sampleRate);
+        let pitch = autoCorrelate(buf, audioContext.sampleRate);
+
+        // Reset pitch buffer after 3 seconds to prevent drift
+        const currentTime = performance.now();
+        if (currentTime - lastPitchResetTime > SUSTAINED_NOTE_RESET_MS) {
+            pitchBuffer.length = 0;
+            lastPitchResetTime = currentTime;
+        }
 
         let noteName = '--', currentCents = 0, detectedTargetNote = null, isInTune = false;
         const pitchDetected = pitch !== -1;
 
         if (pitchDetected) {
+            pitchBuffer.push(pitch);
+            if (pitchBuffer.length > PITCH_BUFFER_SIZE) pitchBuffer.shift();
+            pitch = median(pitchBuffer); // Use median for stability
+
             const instrument = instruments[currentInstrumentKey];
             let closestTarget = null;
             let minDiff = Infinity;
@@ -284,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetNoteName = instrument.notes[currentTargetStringIndex];
                 const targetFreq = instrument.frequencies[targetNoteName];
                 const diff = Math.abs(pitch - targetFreq);
-                if (diff < targetFreq * 0.15) {
+                if (diff < targetFreq * 0.2) { // Increased tolerance
                     closestTarget = targetNoteName;
                 }
             } else {
