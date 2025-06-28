@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+            console.log("Microphone access granted, stream initialized.");
             isListening = true;
             startStopBtn.classList.add('listening');
             updateStatusMessage("listening");
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bandpassFilter.type = 'bandpass';
             updateBandpassFilter();
             analyser = audioContext.createAnalyser();
+            analyser-Palized = true; // Mark analyser as initialized
             analyser.fftSize = 4096;
             buf = new Float32Array(analyser.fftSize);
             mediaStreamSource.connect(bandpassFilter).connect(analyser);
@@ -95,8 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isWakeLockEnabled) await requestWakeLock();
             if (!rafId) updateTuner();
         } catch (err) {
-            console.error(err);
-            updateStatusMessage("error", "Mic access denied.");
+            console.error("Error in startTuning:", err);
+            if (err.name === 'NotAllowedError' || err.message.includes('auth required')) {
+                updateStatusMessage("error", "Please grant microphone access and try again.");
+            } else {
+                updateStatusMessage("error", "Failed to start tuner.");
+            }
+            isListening = false;
+            startStopBtn.classList.remove('listening');
         }
     }
 
@@ -115,7 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function autoCorrelate(buf, sampleRate) {
         const SIZE = buf.length;
         const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / SIZE);
-        if (rms < (isNoiseFilterOn ? 0.015 : RMS_THRESHOLD)) return -1;
+        if (rms < (isNoiseFilterOn ? 0.015 : RMS_THRESHOLD)) {
+            console.log(`RMS too low: ${rms.toFixed(4)}`);
+            return -1;
+        }
 
         const C = new Float32Array(SIZE).map((_, i) => {
             let sum = 0;
@@ -136,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (a) T0 -= b / (2 * a);
         }
         const freq = sampleRate / T0;
+        console.log(`Detected freq: ${freq.toFixed(1)} Hz`);
         return (freq > 50 && freq < 1500) ? freq : -1;
     }
 
@@ -143,7 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function centsOffFromPitch(f, n) { return Math.floor(1200 * Math.log2(f / (A4 * Math.pow(2, (n - 69) / 12)))); }
 
     function setupControls() {
-        startStopBtn.addEventListener('click', () => isListening ? stopTuning() : startTuning());
+        startStopBtn.addEventListener('click', () => {
+            if (isListening) {
+                stopTuning();
+            } else {
+                startTuning();
+            }
+        });
         instrumentSwitcher.addEventListener('click', () => {
             if (isListening) return;
             let currentIndex = instrumentOrder.indexOf(currentInstrumentKey);
@@ -247,6 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateTuner() {
         if (!isListening) return;
+        if (!analyser.initialized) {
+            console.log("Analyser not initialized, skipping update.");
+            return;
+        }
         analyser.getFloatTimeDomainData(buf);
         const pitch = autoCorrelate(buf, audioContext.sampleRate);
 
@@ -370,8 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
         beepOsc.frequency.setValueAtTime(880, now);
         beepOsc.connect(beepGain).connect(audioContext.destination);
         beepGain.gain.setValueAtTime(0, now);
-        beepGain.gain.linearRampToValueAtTime(0.5, now + 0.01); // Increased volume
-        beepGain.gain.linearRampToValueAtTime(0, now + 0.3); // Extended duration
+        beepGain.gain.linearRampToValueAtTime(0.5, now + 0.01);
+        beepGain.gain.linearRampToValueAtTime(0, now + 0.3);
         beepOsc.start(now);
         beepOsc.stop(now + 0.3);
 
