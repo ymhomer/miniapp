@@ -125,8 +125,14 @@ body {
     transition: box-shadow 0.1s linear;
 }
 
-@keyframes flashGreen { 50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 10px 3px var(--in-tune-color); } }
-.tuner-meter-frame.flash-green { animation: flashGreen 0.4s ease-out; }
+@keyframes flashGreen {
+    0% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light); }
+    50% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light), 0 0 15px 5px var(--in-tune-color); }
+    100% { box-shadow: inset 2px 2px 5px var(--frame-border-dark), inset -2px -2px 5px var(--frame-border-light); }
+}
+.tuner-meter-frame.flash-green {
+    animation: flashGreen 0.5s ease-out;
+}
 
 .meter-header { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 5px; background-color: rgba(0, 0, 0, 0.03); border-radius: 3px; }
 .meter-info-left, .meter-info-right { font-family: var(--mechanical-font); font-size: 0.9em; }
