@@ -30,10 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const FILTERED_RMS_THRESHOLD = 0.025;
     const IN_TUNE_STABILITY_FRAMES = 5;
 
+    // --- FIX START: Reversed the note order for conventional display (low to high). ---
     const instruments = {
-        guitar: { name: "Guitar", notes: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2'], frequencies: { 'E2': 82.41, 'A2': 110.00, 'D3': 146.83, 'G3': 196.00, 'B3': 246.94, 'E4': 329.63 }, range: [80, 1000] },
-        ukulele: { name: "Ukulele", notes: ['A4', 'E4', 'C4', 'G4'], frequencies: { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00 }, range: [250, 800] }
+        guitar: { name: "Guitar", notes: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'], frequencies: { 'E2': 82.41, 'A2': 110.00, 'D3': 146.83, 'G3': 196.00, 'B3': 246.94, 'E4': 329.63 }, range: [80, 1000] },
+        ukulele: { name: "Ukulele", notes: ['G4', 'C4', 'E4', 'A4'], frequencies: { 'G4': 392.00, 'C4': 261.63, 'E4': 329.63, 'A4': 440.00 }, range: [250, 800] }
     };
+    // --- FIX END ---
     const instrumentOrder = ['guitar', 'ukulele'];
     let currentInstrumentKey = 'guitar';
 
@@ -150,12 +152,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
         function resetTunerState() {
-        stringTunedStatus = {}; stringStableCounters = {}; centsBuffer.length = 0; pointerHistory.length = 0;
-        currentTargetStringIndex = 0;
-        clearTimeout(autoAdvanceTimer);
-        updateStringIndicators();
-        noteNameDisplay.textContent = '--'; statusDisplay.textContent = 'Play a note...';
-    }
+            stringTunedStatus = {}; 
+            stringStableCounters = {}; 
+            centsBuffer.length = 0; 
+            // --- FIX START: Removed line that caused script error because pointerHistory is not defined ---
+            // pointerHistory.length = 0; 
+            // --- FIX END ---
+            currentTargetStringIndex = 0;
+            clearTimeout(autoAdvanceTimer);
+            updateStringIndicators(); // This function will now be called correctly.
+            noteNameDisplay.textContent = '--'; 
+            statusDisplay.textContent = 'Play a note...';
+        }
 
     function updateBandpassFilter() {
         const instrument = instruments[currentInstrumentKey];
@@ -178,13 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = noteName;
             span.dataset.note = noteName;
             if (stringTunedStatus[noteName]) span.classList.add('tuned');
-            if (index === currentTargetStringIndex) span.classList.add('targeted');
+            if (isAutoAdvanceOn && index === currentTargetStringIndex) span.classList.add('targeted');
             stringStatusContainer.appendChild(span);
         });
     }
     
     // ==========================================================================
-    // Canvas 繪圖
+    // Canvas Drawing
     // ==========================================================================
     function drawMeter(cents) {
         const dpr = window.devicePixelRatio || 1;
@@ -214,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================================================
-    // 主更新循環
+    // Main Update Loop
     // ==========================================================================
     function updateTuner() {
         if (!audioContext || !analyser) { rafId = requestAnimationFrame(updateTuner); return; }
@@ -225,10 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let pitch = -1;
 
         if (isNoiseFilterOn) {
-                    if (rawPitch !== -1 && (lastDetectedPitch === -1 || Math.abs(rawPitch - lastDetectedPitch) < 15)) { stablePitchCounter++; lastDetectedPitch = rawPitch; } 
-                    else { stablePitchCounter = 0; lastDetectedPitch = -1; }
-                    if (stablePitchCounter >= PITCH_STABILITY_THRESHOLD) pitch = lastDetectedPitch;
-                } else { pitch = rawPitch; }
+            if (rawPitch !== -1 && (lastDetectedPitch === -1 || Math.abs(rawPitch - lastDetectedPitch) < 15)) { stablePitchCounter++; lastDetectedPitch = rawPitch; } 
+            else { stablePitchCounter = 0; lastDetectedPitch = -1; }
+            if (stablePitchCounter >= PITCH_STABILITY_THRESHOLD) pitch = lastDetectedPitch;
+        } else { pitch = rawPitch; }
 
         const pitchDetected = pitch !== -1;
         let noteName = '--', currentCents = 0, detectedTargetNote = null, isInTune = false;
@@ -239,28 +247,23 @@ document.addEventListener('DOMContentLoaded', () => {
             currentCents = centsOffFromPitch(pitch, note);
             isInTune = Math.abs(currentCents) < IN_TUNE_THRESHOLD_CENTS;
             
-            // --- FIXED: 琴弦識別邏輯 ---
             let closestTarget = null;
             const instrument = instruments[currentInstrumentKey];
 
-            // 如果開啟自動跳轉，優先匹配當前目標弦
             if (isAutoAdvanceOn) {
                 const targetNoteName = instrument.notes[currentTargetStringIndex];
                 const targetFreq = instrument.frequencies[targetNoteName];
-                // 只有當音高與目標弦頻率非常接近時（約一個半音範圍內）才將其視為目標
                 if (Math.abs(pitch - targetFreq) < targetFreq * 0.06) {
                     closestTarget = targetNoteName;
                 }
             } else {
-            // 如果未開啟，則在所有弦中尋找最接近的
                 let minDiff = Infinity;
                 for (const target in instrument.frequencies) {
                     const diff = Math.abs(pitch - instrument.frequencies[target]);
                     if (diff < minDiff) { minDiff = diff; closestTarget = target; }
                 }
             }
-
-            // 最後確認，識別出的音高與最接近的目標弦是否在50音分以內
+            
             if (closestTarget && Math.abs(1200 * Math.log2(pitch / instrument.frequencies[closestTarget])) < 50) {
                 detectedTargetNote = closestTarget;
             }
@@ -277,12 +280,14 @@ document.addEventListener('DOMContentLoaded', () => {
         noteNameDisplay.textContent = noteName;
 
         Object.keys(stringStableCounters).forEach(note => { if (note !== detectedTargetNote) stringStableCounters[note] = 0; });
+        
+        statusDisplay.className = 'status-message'; // Reset classes
         if (detectedTargetNote) {
             stringStableCounters[detectedTargetNote]++;
-            statusDisplay.className = 'status-message';
             if (isInTune) {
                 stableInTuneCounter++;
-                statusDisplay.textContent = `${detectedTargetNote} In Tune ✓`; statusDisplay.classList.add('in-tune');
+                statusDisplay.textContent = `${detectedTargetNote} In Tune ✓`; 
+                statusDisplay.classList.add('in-tune');
 
                 if (stableInTuneCounter === IN_TUNE_STABILITY_FRAMES) {
                     const now = audioContext.currentTime;
@@ -291,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     meterFrame.addEventListener('animationend', () => meterFrame.classList.remove('flash-green'), {once: true});
                 }
                 
-                if (!stringTunedStatus[detectedTargetNote] && stringStableCounters[detectedTargetNote] >= 3) {
+                if (!stringTunedStatus[detectedTargetNote] && stringStableCounters[detectedTargetNote] >= IN_TUNE_STABILITY_FRAMES) {
                     stringTunedStatus[detectedTargetNote] = true;
                     if (isAutoAdvanceOn) {
                         clearTimeout(autoAdvanceTimer);
@@ -300,13 +305,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateStringIndicators();
                 }
             } else {
-                stableInTuneCounter = 0; clearTimeout(autoAdvanceTimer);
-                statusDisplay.textContent = currentCents > IN_TUNE_THRESHOLD_CENTS ? `${detectedTargetNote} Tune Down ↓` : `${detectedTargetNote} Tune Up ↑`;
+                stableInTuneCounter = 0; 
+                clearTimeout(autoAdvanceTimer);
+                const direction = currentCents > IN_TUNE_THRESHOLD_CENTS ? 'Tune Down ↓' : 'Tune Up ↑';
+                statusDisplay.textContent = `${detectedTargetNote} ${direction}`;
                 statusDisplay.classList.add(currentCents > 0 ? 'sharp' : 'flat');
             }
         } else {
-            stableInTuneCounter = 0; clearTimeout(autoAdvanceTimer);
-            statusDisplay.className = 'status-message';
+            stableInTuneCounter = 0; 
+            clearTimeout(autoAdvanceTimer);
             statusDisplay.textContent = pitchDetected ? "Aim for a string..." : "Play a note...";
         }
 
@@ -317,11 +324,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const notes = instruments[currentInstrumentKey].notes;
         const allNotesCount = notes.length;
         
-        // 從當前位置的下一根弦開始查找
         for (let i = 1; i <= allNotesCount; i++) {
             const nextIndex = (currentTargetStringIndex + i) % allNotesCount;
             const nextNoteName = notes[nextIndex];
-            // 如果找到一根還沒調準的弦
             if (!stringTunedStatus[nextNoteName]) {
                 currentTargetStringIndex = nextIndex;
                 updateStringIndicators();
@@ -356,8 +361,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.addEventListener('visibilitychange', async () => {
         if (!audioContext) return;
-        if (document.hidden) { if (audioContext.state === 'running') audioContext.suspend(); await releaseWakeLock(); } 
-        else { if (audioContext.state === 'suspended') audioContext.resume(); if (isWakeLockEnabled) await requestWakeLock(); }
+        if (document.hidden) { 
+            if (audioContext.state === 'running') audioContext.suspend(); 
+            if (isWakeLockEnabled) await releaseWakeLock(); 
+        } else { 
+            if (audioContext.state === 'suspended') audioContext.resume(); 
+            if (isWakeLockEnabled) await requestWakeLock(); 
+        }
     });
 
     init();
