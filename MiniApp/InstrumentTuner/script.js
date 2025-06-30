@@ -27,22 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let wakeLock = null;
 
     // --- Tuner Settings ---
-    let concertA = 440; // A4 frequency
-    let inTuneThreshold = 5; // Cents
+    let concertA = 440;
+    let inTuneThreshold = 5;
     let isNoiseFilterOn = false;
     let isAutoAdvanceOn = false;
     let isWakeLockEnabled = false;
 
     // --- RESTRUCTURED: Centralized Note & Instrument Data ---
-    const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
-
-    // A master list of notes. Frequencies will be calculated dynamically.
     const ALL_NOTES = {
-        'E2': { name: 'E2', freq: 82.41 }, 'A2': { name: 'A2', freq: 110.00 },
-        'D3': { name: 'D3', freq: 146.83 }, 'G3': { name: 'G3', freq: 196.00 },
-        'B3': { name: 'B3', freq: 246.94 }, 'E4': { name: 'E4', freq: 329.63 },
-        'A4': { name: 'A4', freq: 440.00 }, 'G4': { name: 'G4', freq: 392.00 },
-        'C4': { name: 'C4', freq: 261.63 }
+        'E2': { freq: 82.41 }, 'A2': { freq: 110.00 }, 'D3': { freq: 146.83 },
+        'G3': { freq: 196.00 }, 'B3': { freq: 246.94 }, 'E4': { freq: 329.63 },
+        'C4': { freq: 261.63 }, 'G4': { freq: 392.00 }, 'A4': { freq: 440.00 }
     };
 
     const INSTRUMENTS = {
@@ -56,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let stringTunedStatus = {};
     let currentTargetStringIndex = 0;
     let stableInTuneCounter = 0;
-    const IN_TUNE_STABILITY_FRAMES = 5; // Needs 5 consecutive frames to be considered stable
+    const IN_TUNE_STABILITY_FRAMES = 5;
     const centsBuffer = [];
     const SMOOTHING_BUFFER_SIZE = 5;
     let autoAdvanceTimer = null;
@@ -64,20 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastStatusKey = "";
 
     // --- Constants ---
-    const MAX_POINTER_ROTATION = 80; // Degrees
-    const POINTER_SENSITIVITY_CENTS = 40; // Cents for full deflection
-    const RMS_THRESHOLD = 0.01; // Minimum volume to start detecting
+    const MAX_POINTER_ROTATION = 80;
+    const POINTER_SENSITIVITY_CENTS = 40;
+    const RMS_THRESHOLD = 0.01;
 
     // ===================================================================
-    // INITIALIZATION
+    // INITIALIZATION & SETUP
     // ===================================================================
     function init() {
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         setupEventListeners();
-        updateNoteFrequencies(); // Calculate initial frequencies based on default Concert A
-        resetTunerState(); // Set up the initial UI state
-        drawMeter(0); // Draw initial meter state
+        updateNoteFrequencies();
+        resetTunerState();
     }
 
     function resizeCanvas() {
@@ -86,7 +80,56 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
-        drawMeter(0); // Redraw meter after resize
+        drawMeter(0, false); // Redraw meter after resize
+    }
+
+    function setupEventListeners() {
+        startStopBtn.addEventListener('click', () => isListening ? stopTuning() : startTuning());
+        
+        instrumentSwitcher.addEventListener('click', () => {
+            if (isListening) return;
+            let currentIndex = instrumentOrder.indexOf(currentInstrumentKey);
+            currentInstrumentKey = instrumentOrder[(currentIndex + 1) % instrumentOrder.length];
+            instrumentDisplay.textContent = INSTRUMENTS[currentInstrumentKey].name;
+            resetTunerState(); // This will now provide clear visual feedback
+        });
+
+        toggleNoiseFilterBtn.addEventListener('click', () => { 
+            isNoiseFilterOn = !isNoiseFilterOn; 
+            toggleNoiseFilterBtn.classList.toggle('toggled-on', isNoiseFilterOn); 
+        });
+        toggleAutoAdvanceBtn.addEventListener('click', () => { 
+            isAutoAdvanceOn = !isAutoAdvanceOn; 
+            toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn);
+            resetTunerState();
+        });
+        toggleWakeLockBtn.addEventListener('click', async () => { 
+            isWakeLockEnabled = !isWakeLockEnabled;
+            toggleWakeLockBtn.classList.toggle('toggled-on', isWakeLockEnabled);
+            if (isListening) {
+                isWakeLockEnabled ? await requestWakeLock() : await releaseWakeLock();
+            }
+        });
+        
+        settingsBtn.addEventListener('click', () => settingsDialog.showModal());
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            concertA = parseFloat(concertAInput.value) || 440;
+            inTuneThreshold = parseInt(toleranceInput.value) || 5;
+            updateNoteFrequencies();
+            resetTunerState();
+            settingsDialog.close();
+        });
+        settingsForm.addEventListener('reset', () => settingsDialog.close());
+
+        allTunedDialog.addEventListener('close', () => {
+            if (allTunedDialog.returnValue === 'yes') {
+                stopTuning();
+                isAutoAdvanceOn = false;
+                toggleAutoAdvanceBtn.classList.remove('toggled-on');
+            }
+            resetTunerState();
+        });
     }
 
     // ===================================================================
@@ -94,10 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     async function startTuning() {
         if (isListening) return;
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            updateStatusMessage("error", "Browser not supported.");
-            return;
-        }
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
@@ -109,12 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
             mediaStreamSource = audioContext.createMediaStreamSource(stream);
             bandpassFilter = audioContext.createBiquadFilter();
             analyser = audioContext.createAnalyser();
-            analyser.fftSize = 4096; // Increased for better low-frequency resolution
+            analyser.fftSize = 4096;
             buffer = new Float32Array(analyser.fftSize);
 
-            // Setup audio graph
-            mediaStreamSource.connect(bandpassFilter);
-            bandpassFilter.connect(analyser);
+            mediaStreamSource.connect(bandpassFilter).connect(analyser);
             updateBandpassFilter();
 
             if (isWakeLockEnabled) await requestWakeLock();
@@ -123,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error("Error starting audio:", err);
             updateStatusMessage("error", "Mic access denied.");
-            stopTuning(); // Clean up on error
+            stopTuning();
         }
     }
 
@@ -159,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const instrument = INSTRUMENTS[currentInstrumentKey];
             let closestNoteInfo = findClosestTargetNote(pitch, instrument);
             
-            // Only process if the detected pitch is reasonably close to a target string (within 50 cents)
             if (closestNoteInfo && Math.abs(closestNoteInfo.cents) < 50) {
                 detectedTargetNoteKey = closestNoteInfo.key;
                 const standardNoteNumber = getNoteNumber(ALL_NOTES[detectedTargetNoteKey].freq);
@@ -168,19 +204,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Smooth the cents value for a more stable pointer
         centsBuffer.push(currentCents);
         if (centsBuffer.length > SMOOTHING_BUFFER_SIZE) centsBuffer.shift();
         const smoothedCents = pitchDetected ? centsBuffer.reduce((a, b) => a + b, 0) / centsBuffer.length : 0;
         
-        // Update UI
-        drawMeter(smoothedCents);
+        const isInTune = Math.abs(smoothedCents) < inTuneThreshold;
+
+        // --- REVISED LOGIC: Update UI instantly ---
+        drawMeter(smoothedCents, pitchDetected && isInTune);
         frequencyDisplay.textContent = `${pitchDetected ? pitch.toFixed(1) : '--'} Hz`;
         centsDisplay.textContent = `${pitchDetected ? smoothedCents.toFixed(0) : '--'} cents`;
         noteNameDisplay.textContent = noteName;
         
-        const isInTune = Math.abs(smoothedCents) < inTuneThreshold;
-        handleTuningLogic(detectedTargetNoteKey, isInTune, smoothedCents);
+        // This function now only handles status messages and one-time events
+        handleTuningEvents(detectedTargetNoteKey, isInTune, smoothedCents);
         
         rafId = requestAnimationFrame(updateTunerLoop);
     }
@@ -191,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function autoCorrelate(buf, sampleRate) {
         const SIZE = buf.length;
         const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / SIZE);
-        if (rms < (isNoiseFilterOn ? 0.02 : RMS_THRESHOLD)) return -1; // Exit if signal is too weak
+        if (rms < (isNoiseFilterOn ? 0.02 : RMS_THRESHOLD)) return -1;
 
         const C = new Float32Array(SIZE).fill(0);
         for (let i = 0; i < SIZE; i++) {
@@ -208,10 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let T0 = maxpos;
         if (maxpos > 0 && maxpos < SIZE - 1) {
-            const y1 = C[maxpos - 1], y2 = C[maxpos], y3 = C[maxpos + 1];
-            const a = (y1 + y3 - 2 * y2) / 2;
-            const b = (y3 - y1) / 2;
-            if (a !== 0) T0 = T0 - b / (2 * a);
+            const y1 = C[maxpos-1], y2 = C[maxpos], y3 = C[maxpos+1];
+            const a = (y1 + y3 - 2 * y2) / 2, b = (y3 - y1) / 2;
+            if (a !== 0) T0 -= b / (2 * a);
         }
 
         if (T0 === 0) return -1;
@@ -224,16 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let closestTarget = { key: null, cents: Infinity };
 
         if (isAutoAdvanceOn) {
-            // In auto-advance, only focus on the current target string
             const targetKey = instrument.tuning[currentTargetStringIndex];
             const targetFreq = ALL_NOTES[targetKey].freq;
-            const centsDiff = 1200 * Math.log2(pitch / targetFreq);
-            closestTarget = { key: targetKey, cents: centsDiff };
+            closestTarget = { key: targetKey, cents: 1200 * Math.log2(pitch / targetFreq) };
         } else {
-            // In manual mode, find the closest of all strings
             instrument.tuning.forEach(noteKey => {
-                const targetFreq = ALL_NOTES[noteKey].freq;
-                const centsDiff = 1200 * Math.log2(pitch / targetFreq);
+                const centsDiff = 1200 * Math.log2(pitch / ALL_NOTES[noteKey].freq);
                 if (Math.abs(centsDiff) < Math.abs(closestTarget.cents)) {
                     closestTarget = { key: noteKey, cents: centsDiff };
                 }
@@ -243,84 +275,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // UI & STATE MANAGEMENT
+    // UI, STATE, & EVENT MANAGEMENT
     // ===================================================================
-
-    // --- FIXED: Added the missing drawMeter function ---
-    function drawMeter(cents) {
+    function drawMeter(cents, isInTune) {
         const dpr = window.devicePixelRatio || 1;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const width = canvas.width / dpr;
-        const height = canvas.height / dpr;
+        const width = canvas.width / dpr, height = canvas.height / dpr;
         
-        // Define the width of the "in-tune" zone in the center
         const inTuneZoneWidth = width * 0.12;
-        
-        // Draw flat/sharp zones (left and right)
         ctx.fillStyle = 'rgba(255, 140, 0, 0.2)'; 
         ctx.fillRect(0, 0, (width - inTuneZoneWidth) / 2, height);
         ctx.fillRect((width + inTuneZoneWidth) / 2, 0, (width - inTuneZoneWidth) / 2, height);
-        
-        // Draw the "in-tune" zone (center)
         ctx.fillStyle = 'rgba(0, 204, 0, 0.25)'; 
         ctx.fillRect((width - inTuneZoneWidth) / 2, 0, inTuneZoneWidth, height);
         
-        // Draw the center line
         ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
         ctx.fillRect(width / 2 - 1, 0, 2, height * 0.35);
 
-        // Calculate pointer rotation based on cents
         let rotation = (cents / POINTER_SENSITIVITY_CENTS) * MAX_POINTER_ROTATION;
         rotation = Math.max(-MAX_POINTER_ROTATION, Math.min(MAX_POINTER_ROTATION, rotation));
         
-        // Draw the pointer
         ctx.save();
-        ctx.translate(width / 2, height); // Move origin to bottom-center
-        ctx.rotate(rotation * Math.PI / 180); // Rotate
+        ctx.translate(width / 2, height);
+        ctx.rotate(rotation * Math.PI / 180);
         ctx.beginPath(); 
         ctx.moveTo(0, 0); 
         ctx.lineTo(0, -height * 0.95);
         
-        // Change pointer color when in tune
-        ctx.strokeStyle = (Math.abs(cents) < inTuneThreshold) ? 'var(--in-tune-color)' : 'var(--pointer-color)';
+        // --- FIXED: Pointer color changes instantly ---
+        ctx.strokeStyle = isInTune ? 'var(--in-tune-color)' : 'var(--pointer-color)';
         ctx.lineWidth = 4; 
         ctx.lineCap = 'round'; 
         ctx.stroke(); 
         ctx.restore();
     }
-
-    function handleTuningLogic(detectedNoteKey, isInTune, cents) {
+    
+    // --- REVISED: This function now handles one-time events and status messages ---
+    function handleTuningEvents(detectedNoteKey, isInTune, cents) {
         clearTimeout(statusUpdateTimer);
     
         if (detectedNoteKey) {
-            // Wait a moment to ensure the detected note is stable before updating the message
             statusUpdateTimer = setTimeout(() => {
                 if (isInTune) {
                     stableInTuneCounter++;
                     if (stableInTuneCounter >= IN_TUNE_STABILITY_FRAMES) {
-                        // --- CORRECTLY TUNED LOGIC ---
                         updateStatusMessage("result-in-tune", detectedNoteKey);
+                        // --- FIXED: Trigger one-time feedback only if the string wasn't tuned before ---
                         if (!stringTunedStatus[detectedNoteKey]) {
                             stringTunedStatus[detectedNoteKey] = true;
-                            playInTuneFeedback(detectedNoteKey); // Visual and audio feedback
+                            playInTuneFeedback(); // Sound and flash
+                            updateStringIndicators(); // Update the string to permanent green
                             if (isAutoAdvanceOn) {
                                 clearTimeout(autoAdvanceTimer);
                                 autoAdvanceTimer = setTimeout(advanceToNextString, 500);
                             }
                         }
                     } else {
-                        // Note is in the tune zone, but not yet stable
                         updateStatusMessage("stabilizing", detectedNoteKey);
                     }
                 } else {
-                    // Note is detected, but out of tune
                     stableInTuneCounter = 0;
                     const direction = cents > 0 ? 'Tune Down ↓' : 'Tune Up ↑';
                     updateStatusMessage("result-out-of-tune", detectedNoteKey, direction);
                 }
-            }, 100); // 100ms delay for stability check
+            }, 100);
         } else {
-            // No valid note detected
             stableInTuneCounter = 0;
             statusUpdateTimer = setTimeout(() => {
                 let msg = isAutoAdvanceOn 
@@ -333,9 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateStatusMessage(state, text1 = "", text2 = "") {
         const statusKey = state + text1 + text2;
-        if (statusKey === lastStatusKey) return; // Avoid redundant DOM updates
+        if (statusKey === lastStatusKey) return;
     
-        statusDisplay.className = 'status-message'; // Reset classes
+        statusDisplay.className = 'status-message';
         let content = "";
     
         switch(state) {
@@ -364,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTargetStringIndex = 0;
         stableInTuneCounter = 0;
         centsBuffer.length = 0;
-        updateStringIndicators();
+        updateStringIndicators(); // This will now give clear feedback on instrument change
         resetUIDisplay();
         if (isListening) {
             updateBandpassFilter();
@@ -376,19 +395,18 @@ document.addEventListener('DOMContentLoaded', () => {
         frequencyDisplay.textContent = '-- Hz';
         centsDisplay.textContent = '-- cents';
         meterFrame.classList.remove('flash-green');
-        drawMeter(0);
+        drawMeter(0, false);
         updateStatusMessage("idle");
     }
 
     function updateStringIndicators() {
-        const instrument = INSTRUMENTS[currentInstrumentKey];
-        const tuning = instrument.tuning;
+        const tuning = INSTRUMENTS[currentInstrumentKey].tuning;
         stringStatusContainer.innerHTML = '';
         tuning.forEach((noteKey, index) => {
             const span = document.createElement('span');
             span.className = 'string-note';
-            // Display only the note name (e.g., 'E' from 'E2')
-            span.textContent = noteKey.replace(/[0-9]/g, ''); 
+            // --- FIXED: Display the full note name like 'E2', 'A2' ---
+            span.textContent = noteKey;
             span.dataset.note = noteKey;
             
             if (stringTunedStatus[noteKey]) {
@@ -409,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Find the next untuned string, wrapping around if necessary
         let nextIndex = currentTargetStringIndex;
         for (let i = 0; i < tuning.length; i++) {
             nextIndex = (currentTargetStringIndex + 1 + i) % tuning.length;
@@ -422,66 +439,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // EVENT LISTENERS & CONTROLS
-    // ===================================================================
-    function setupEventListeners() {
-        startStopBtn.addEventListener('click', () => isListening ? stopTuning() : startTuning());
-        
-        instrumentSwitcher.addEventListener('click', () => {
-            if (isListening) return;
-            let currentIndex = instrumentOrder.indexOf(currentInstrumentKey);
-            currentInstrumentKey = instrumentOrder[(currentIndex + 1) % instrumentOrder.length];
-            instrumentDisplay.textContent = INSTRUMENTS[currentInstrumentKey].name;
-            resetTunerState();
-        });
-
-        // Toggle buttons
-        toggleNoiseFilterBtn.addEventListener('click', () => { 
-            isNoiseFilterOn = !isNoiseFilterOn; 
-            toggleNoiseFilterBtn.classList.toggle('toggled-on', isNoiseFilterOn); 
-        });
-        toggleAutoAdvanceBtn.addEventListener('click', () => { 
-            isAutoAdvanceOn = !isAutoAdvanceOn; 
-            toggleAutoAdvanceBtn.classList.toggle('toggled-on', isAutoAdvanceOn);
-            resetTunerState(); // Reset to apply mode change
-        });
-        toggleWakeLockBtn.addEventListener('click', async () => { 
-            isWakeLockEnabled = !isWakeLockEnabled;
-            toggleWakeLockBtn.classList.toggle('toggled-on', isWakeLockEnabled);
-            if (isListening) {
-                isWakeLockEnabled ? await requestWakeLock() : await releaseWakeLock();
-            }
-        });
-        
-        // Settings Dialog
-        settingsBtn.addEventListener('click', () => settingsDialog.showModal());
-        settingsForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            concertA = parseFloat(concertAInput.value) || 440;
-            inTuneThreshold = parseInt(toleranceInput.value) || 5;
-            updateNoteFrequencies();
-            resetTunerState();
-            settingsDialog.close();
-        });
-        settingsForm.addEventListener('reset', () => settingsDialog.close());
-
-        // "All Tuned" Dialog
-        allTunedDialog.addEventListener('close', () => {
-            if (allTunedDialog.returnValue === 'yes') {
-                stopTuning();
-                isAutoAdvanceOn = false;
-                toggleAutoAdvanceBtn.classList.remove('toggled-on');
-            }
-            resetTunerState(); // Reset to allow re-tuning
-        });
-    }
-
-    // ===================================================================
     // HELPERS & UTILITIES
     // ===================================================================
     function updateNoteFrequencies() {
         for (const noteKey in ALL_NOTES) {
-            const noteNumber = getNoteNumber(ALL_NOTES[noteKey].freq, 440); // Get standard number
+            const noteNumber = getNoteNumber(ALL_NOTES[noteKey].freq, 440);
             ALL_NOTES[noteKey].freq = concertA * Math.pow(2, (noteNumber - 69) / 12);
         }
     }
@@ -499,31 +461,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function getNoteNumber(freq, baseA4 = concertA) { return Math.round(12 * Math.log2(freq / baseA4)) + 69; }
     function calculateCents(freq, noteNum) { return Math.floor(1200 * Math.log2(freq / (concertA * Math.pow(2, (noteNum - 69) / 12)))); }
 
-    function playInTuneFeedback(noteKey) {
+    // --- FIXED: This function now ONLY handles the one-time sound/flash event ---
+    function playInTuneFeedback() {
         // 1. Flash the meter frame green
         meterFrame.classList.add('flash-green');
         meterFrame.addEventListener('animationend', () => meterFrame.classList.remove('flash-green'), { once: true });
 
-        // 2. Update the specific string indicator to be green
-        updateStringIndicators();
-
-        // 3. Play a subtle beep sound
+        // 2. Play a subtle beep sound
         if (!audioContext || audioContext.state !== 'running') return;
         const now = audioContext.currentTime;
         const beepOsc = audioContext.createOscillator();
         const beepGain = audioContext.createGain();
         beepOsc.connect(beepGain).connect(audioContext.destination);
         
-        beepOsc.frequency.setValueAtTime(ALL_NOTES[noteKey].freq * 2, now); // Beep one octave higher
+        beepOsc.frequency.setValueAtTime(880, now); // A5 note
         beepGain.gain.setValueAtTime(0, now);
-        beepGain.gain.linearRampToValueAtTime(0.2, now + 0.02); // Quick attack
-        beepGain.gain.linearRampToValueAtTime(0, now + 0.2);   // Short decay
+        beepGain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+        beepGain.gain.linearRampToValueAtTime(0, now + 0.2);
 
         beepOsc.start(now);
         beepOsc.stop(now + 0.25);
     }
 
-    // --- Wake Lock API ---
     async function requestWakeLock() {
         if ('wakeLock' in navigator) {
             try {
@@ -533,10 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function releaseWakeLock() {
-        if (wakeLock) { 
-            await wakeLock.release(); 
-            wakeLock = null; 
-        }
+        if (wakeLock) { await wakeLock.release(); wakeLock = null; }
     }
     
     document.addEventListener('visibilitychange', () => {
@@ -545,6 +501,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Start the application ---
     init();
 });
