@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Instrument Tuner Machine</title>
-    <!-- The user will provide the CSS file later -->
     <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for a more 'mechanical' look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="tuner-machine-case">
-        <!-- SETTINGS BUTTON MOVED TO TOP RIGHT -->
+        <!-- Settings button -->
         <button id="settings-btn" class="settings-icon-btn" aria-label="Open Settings"></button>
         
         <header class="machine-header">
@@ -17,6 +20,7 @@
         </header>
 
         <main class="machine-body">
+            <!-- Instrument Selector -->
             <div class="control-frame instrument-selector-frame">
                 <label>INSTRUMENT</label>
                 <div id="instrument-switcher" class="instrument-switcher" role="button" tabindex="0" aria-label="Switch instrument">
@@ -25,6 +29,7 @@
                 </div>
             </div>
 
+            <!-- Tuner Meter -->
             <div class="control-frame tuner-meter-frame">
                 <div class="meter-header">
                     <div class="meter-info-left">
@@ -40,6 +45,7 @@
                 </div>
             </div>
 
+            <!-- String Status Indicators -->
             <div class="control-frame string-status-frame">
                 <label>STRING STATUS</label>
                 <div id="string-status" class="string-status-container">
@@ -47,14 +53,14 @@
                 </div>
             </div>
 
+            <!-- Status Message Display -->
              <div id="status" class="status-message">
                 <span>Tap Start to Tune</span>
              </div>
-
         </main>
 
         <footer class="machine-footer">
-            <!-- REDESIGNED FEATURE CONTROLS -->
+            <!-- Feature Controls (Toggles) -->
             <div class="feature-controls">
                 <div class="toggle-button-container">
                     <button id="toggle-noise-filter" class="toggle-button" aria-label="Toggle Noise Filter"></button>
@@ -70,7 +76,7 @@
                 </div>
             </div>
 
-            <!-- NEW START/STOP BUTTON -->
+            <!-- Main Start/Stop Button -->
             <div class="main-control-container">
                 <button id="start-stop-btn" class="start-stop-button" aria-label="Start or Stop Listening"></button>
             </div>
@@ -79,7 +85,7 @@
         </footer>
     </div>
 
-    <!-- SETTINGS DIALOG -->
+    <!-- Settings Dialog -->
     <dialog id="settings-dialog">
         <form method="dialog">
             <h2>Settings</h2>
@@ -101,7 +107,6 @@
                 <label for="temperament">Temperament</label>
                 <select id="temperament" name="temperament" disabled>
                     <option>Equal</option>
-                    <option>Just</option>
                 </select>
             </div>
             <div class="dialog-actions">
@@ -111,7 +116,7 @@
         </form>
     </dialog>
     
-    <!-- NEW CONFIRMATION DIALOG -->
+    <!-- "All Tuned" Confirmation Dialog -->
     <dialog id="all-tuned-dialog">
         <form method="dialog">
             <p>All strings tuned. Stop listening?</p>
@@ -122,7 +127,8 @@
         </form>
     </dialog>
 
-    <!-- Changed script source to the new file name -->
+    <!-- Main Application Script -->
     <script src="script.js"></script>
 </body>
 </html>
+
