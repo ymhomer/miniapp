@@ -246,6 +246,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // UI & STATE MANAGEMENT
     // ===================================================================
 
+    // --- FIXED: Added the missing drawMeter function ---
+    function drawMeter(cents) {
+        const dpr = window.devicePixelRatio || 1;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const width = canvas.width / dpr;
+        const height = canvas.height / dpr;
+        
+        // Define the width of the "in-tune" zone in the center
+        const inTuneZoneWidth = width * 0.12;
+        
+        // Draw flat/sharp zones (left and right)
+        ctx.fillStyle = 'rgba(255, 140, 0, 0.2)'; 
+        ctx.fillRect(0, 0, (width - inTuneZoneWidth) / 2, height);
+        ctx.fillRect((width + inTuneZoneWidth) / 2, 0, (width - inTuneZoneWidth) / 2, height);
+        
+        // Draw the "in-tune" zone (center)
+        ctx.fillStyle = 'rgba(0, 204, 0, 0.25)'; 
+        ctx.fillRect((width - inTuneZoneWidth) / 2, 0, inTuneZoneWidth, height);
+        
+        // Draw the center line
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
+        ctx.fillRect(width / 2 - 1, 0, 2, height * 0.35);
+
+        // Calculate pointer rotation based on cents
+        let rotation = (cents / POINTER_SENSITIVITY_CENTS) * MAX_POINTER_ROTATION;
+        rotation = Math.max(-MAX_POINTER_ROTATION, Math.min(MAX_POINTER_ROTATION, rotation));
+        
+        // Draw the pointer
+        ctx.save();
+        ctx.translate(width / 2, height); // Move origin to bottom-center
+        ctx.rotate(rotation * Math.PI / 180); // Rotate
+        ctx.beginPath(); 
+        ctx.moveTo(0, 0); 
+        ctx.lineTo(0, -height * 0.95);
+        
+        // Change pointer color when in tune
+        ctx.strokeStyle = (Math.abs(cents) < inTuneThreshold) ? 'var(--in-tune-color)' : 'var(--pointer-color)';
+        ctx.lineWidth = 4; 
+        ctx.lineCap = 'round'; 
+        ctx.stroke(); 
+        ctx.restore();
+    }
+
     function handleTuningLogic(detectedNoteKey, isInTune, cents) {
         clearTimeout(statusUpdateTimer);
     
@@ -505,4 +548,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Start the application ---
     init();
 });
-
