@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One-Stroke Circle Game</title>
+    <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --container-bg-color: #ffffff;
+            --border-color: #cccccc;
+            --primary-color: #3498db;
+            --text-color: #333333;
+            --score-bg-good: #2ecc71;
+            --score-bg-fair: #f1c40f;
+            --score-bg-bad: #e74c3c;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--container-bg-color);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        p.instructions {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+            z-index: 2;
+        }
+        
+        #idealCircleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .score-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+
+        .score-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .score-card h3 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            transition: color 0.3s ease;
+        }
+
+        #overallScore {
+            font-size: 2.5rem;
+        }
+        
+        #navigationButton {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 10px;
+            align-self: center;
+        }
+        
+        #navigationButton:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        #navigationButton:active {
+            transform: translateY(0);
+        }
+
+        .content-view {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-view.active {
+            display: flex;
+        }
+
+        #historyView ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #historyView li {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #historyView li:last-child {
+            border-bottom: none;
+        }
+
+        .history-item-scores {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .history-item-date {
+            font-size: 0.8rem;
+            color: #999;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        #highScoreView {
+            text-align: center;
+        }
+
+        #highScoreView h2 {
+            font-size: 2rem;
+            color: var(--score-bg-good);
+            margin-bottom: 10px;
+        }
+
+        #highScoreView .score-value {
+            font-size: 4rem;
+        }
+
+        #highScoreView .score-details {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        #highScoreView button {
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 15px;
+            }
+            .score-value {
+                font-size: 1.5rem;
+            }
+            #overallScore {
+                font-size: 2rem;
+            }
+            #highScoreView .score-value {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Draw A Circle</h1>
+        
+        <button id="navigationButton">Go to History</button>
+
+        <div id="gameView" class="content-view active">
+            <p class="instructions">Draw a perfect circle with a single stroke. Your score will be calculated when you release the mouse or lift your finger.</p>
+            <div class="canvas-container">
+                <canvas id="drawingCanvas"></canvas>
+                <canvas id="idealCircleCanvas"></canvas>
+            </div>
+            <div class="score-container">
+                <div class="score-card">
+                    <h3>Roundness</h3>
+                    <div class="score-value" id="roundnessScore">0</div>
+                    <div class="score-explanation">How close your shape is to a perfect circle.</div>
+                </div>
+                <div class="score-card">
+                    <h3>Perimeter</h3>
+                    <div class="score-value" id="perimeterScore">0</div>
+                    <div class="score-explanation">Length of your drawing vs. an ideal circle.</div>
+                </div>
+                <div class="score-card">
+                    <h3>Closure</h3>
+                    <div class="score-value" id="closureScore">0</div>
+                    <div class="score-explanation">Distance between your start and end points.</div>
+                </div>
+                <div class="score-card">
+                    <h3>Overall Score</h3>
+                    <div class="score-value" id="overallScore">0</div>
+                    <div class="score-explanation">The weighted average of all scores.</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="historyView" class="content-view">
+            <h2>Game History</h2>
+            <ul id="historyList">
+                </ul>
+        </div>
+
+        <div id="highScoreView" class="content-view">
+            <h2>Highest Score</h2>
+            <div id="highScoreDisplay">
+                </div>
+            <button id="replayHighScoreButton" style="display: none;">Replay High Score Circle</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const drawingCtx = drawingCanvas.getContext('2d');
+        const idealCircleCanvas = document.getElementById('idealCircleCanvas');
+        const idealCircleCtx = idealCircleCanvas.getContext('2d');
+        const navigationButton = document.getElementById('navigationButton');
+        const replayHighScoreButton = document.getElementById('replayHighScoreButton');
+        
+        // Views
+        const gameView = document.getElementById('gameView');
+        const historyView = document.getElementById('historyView');
+        const highScoreView = document.getElementById('highScoreView');
+
+        let isDrawing = false;
+        let points = [];
+        let drawingRadius = 0;
+        let drawingCenter = { x: 0, y: 0 };
+        let activeViewIndex = 0;
+        const views = [gameView, historyView, highScoreView];
+        const buttonTexts = ['Go to History', 'Go to High Score', 'Go to Game'];
+        
+        // Local storage keys
+        const historyKey = 'circleGameHistory';
+        const highScoreKey = 'circleGameHighScore';
+
+        const scaleCanvas = () => {
+            const rect = drawingCanvas.getBoundingClientRect();
+            drawingCanvas.width = rect.width * devicePixelRatio;
+            drawingCanvas.height = rect.height * devicePixelRatio;
+            drawingCtx.scale(devicePixelRatio, devicePixelRatio);
+            
+            idealCircleCanvas.width = rect.width * devicePixelRatio;
+            idealCircleCanvas.height = rect.height * devicePixelRatio;
+            idealCircleCtx.scale(devicePixelRatio, devicePixelRatio);
+        };
+
+        window.addEventListener('resize', scaleCanvas);
+        scaleCanvas();
+
+        const getPos = (event) => {
+            const rect = drawingCanvas.getBoundingClientRect();
+            const clientX = event.clientX || event.touches[0].clientX;
+            const clientY = event.clientY || event.touches[0].clientY;
+            return {
+                x: (clientX - rect.left),
+                y: (clientY - rect.top)
+            };
+        };
+
+        const startDrawing = (event) => {
+            event.preventDefault();
+            isDrawing = true;
+            points = [];
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
+            updateScores(0, 0, 0, 0);
+            
+            drawingCtx.beginPath();
+            const pos = getPos(event);
+            points.push(pos);
+            drawingCtx.moveTo(pos.x, pos.y);
+            drawingCtx.strokeStyle = '#3498db';
+            drawingCtx.lineWidth = 4;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+        };
+
+        const draw = (event) => {
+            if (!isDrawing) return;
+            event.preventDefault();
+            const pos = getPos(event);
+            points.push(pos);
+            drawingCtx.lineTo(pos.x, pos.y);
+            drawingCtx.stroke();
+        };
+
+        const stopDrawing = (event) => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (points.length > 10) {
+                calculateAndSaveScore();
+            } else {
+                updateScores(0, 0, 0, 0);
+            }
+        };
+
+        const calculateAndSaveScore = () => {
+            if (points.length < 2) return;
+
+            const { center, radius } = fitCircle(points);
+            drawingCenter = center;
+            drawingRadius = radius;
+
+            if (drawingCenter.x && drawingCenter.y && drawingRadius) {
+                drawIdealCircle(drawingCenter, drawingRadius);
+            }
+
+            const roundnessScore = calculateRoundnessScore();
+            const perimeterScore = calculatePerimeterScore();
+            const closureScore = calculateClosureScore();
+            const overallScore = (roundnessScore * 0.8) + (perimeterScore * 0.1) + (closureScore * 0.1);
+
+            updateScores(roundnessScore, perimeterScore, closureScore, overallScore);
+            
+            saveScoreToHistory({
+                roundness: Math.round(roundnessScore),
+                perimeter: Math.round(perimeterScore),
+                closure: Math.round(closureScore),
+                overall: Math.round(overallScore),
+                date: new Date().toLocaleString(),
+                points: points // Save the points to replay later
+            });
+        };
+
+        const drawIdealCircle = (center, radius) => {
+            idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
+            idealCircleCtx.beginPath();
+            idealCircleCtx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+            idealCircleCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            idealCircleCtx.lineWidth = 2;
+            idealCircleCtx.stroke();
+        };
+
+        const saveScoreToHistory = (scoreData) => {
+            const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+            history.unshift(scoreData);
+            localStorage.setItem(historyKey, JSON.stringify(history));
+            
+            const currentHighScore = JSON.parse(localStorage.getItem(highScoreKey) || '{"overall": 0}');
+            if (scoreData.overall > currentHighScore.overall) {
+                localStorage.setItem(highScoreKey, JSON.stringify(scoreData));
+            }
+        };
+
+        const fitCircle = (pts) => {
+            if (pts.length < 3) return { center: {x: 0, y: 0}, radius: 0 };
+            
+            let sumX = 0, sumY = 0, sumX2 = 0, sumY2 = 0, sumX3 = 0, sumY3 = 0, sumXY = 0, sumX1Y2 = 0, sumX2Y1 = 0;
+            const n = pts.length;
+            
+            pts.forEach(p => {
+                const x = p.x;
+                const y = p.y;
+                sumX += x;
+                sumY += y;
+                sumX2 += x * x;
+                sumY2 += y * y;
+                sumX3 += x * x * x;
+                sumY3 += y * y * y;
+                sumXY += x * y;
+                sumX1Y2 += x * y * y;
+                sumX2Y1 += x * x * y;
+            });
+            
+            const C = n * sumX2 - sumX * sumX;
+            const D = n * sumXY - sumX * sumY;
+            const E = n * sumX3 + n * sumX1Y2 - (sumX2 + sumY2) * sumX;
+            const G = n * sumY2 - sumY * sumY;
+            const H = n * sumX2Y1 + n * sumY3 - (sumX2 + sumY2) * sumY;
+            
+            const a = (E * G - D * H) / (C * G - D * D);
+            const b = (C * H - D * E) / (C * G - D * D);
+            
+            const centerX = a / 2;
+            const centerY = b / 2;
+            
+            const radius = Math.sqrt(sumX2 / n + sumY2 / n - a * sumX / n - b * sumY / n + (a * a + b * b) / 4);
+
+            return {
+                center: { x: centerX, y: centerY },
+                radius: radius
+            };
+        };
+
+        const calculateRoundnessScore = () => {
+            if (drawingRadius === 0) return 0;
+            let errorSum = 0;
+            points.forEach(p => {
+                const distance = Math.sqrt(Math.pow(p.x - drawingCenter.x, 2) + Math.pow(p.y - drawingCenter.y, 2));
+                errorSum += Math.pow(distance - drawingRadius, 2);
+            });
+            const meanSquaredError = errorSum / points.length;
+            const normalizedError = Math.sqrt(meanSquaredError) / drawingRadius;
+            const score = Math.max(0, 100 - (normalizedError * 200)); 
+            return score;
+        };
+
+        const calculatePerimeterScore = () => {
+            const idealRadius = Math.min(drawingCanvas.width, drawingCanvas.height) * 0.4;
+            const idealPerimeter = 2 * Math.PI * idealRadius;
+            
+            let pathLength = 0;
+            for (let i = 1; i < points.length; i++) {
+                pathLength += Math.sqrt(Math.pow(points[i].x - points[i-1].x, 2) + Math.pow(points[i].y - points[i-1].y, 2));
+            }
+
+            const error = Math.abs(pathLength - idealPerimeter);
+            const normalizedError = error / idealPerimeter;
+            const score = Math.max(0, 100 - (normalizedError * 100));
+            return score;
+        };
+        
+        const calculateClosureScore = () => {
+            const startPoint = points[0];
+            const endPoint = points[points.length - 1];
+            const distance = Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
+            const maxDistance = Math.min(drawingCanvas.width, drawingCanvas.height) * 0.1;
+            
+            const normalizedDistance = Math.min(distance, maxDistance) / maxDistance;
+            const score = 100 - (normalizedDistance * 100);
+            return score;
+        };
+
+        const updateScores = (roundness, perimeter, closure, overall) => {
+            document.getElementById('roundnessScore').textContent = Math.round(roundness);
+            document.getElementById('perimeterScore').textContent = Math.round(perimeter);
+            document.getElementById('closureScore').textContent = Math.round(closure);
+            document.getElementById('overallScore').textContent = Math.round(overall);
+        };
+        
+        const renderHistory = () => {
+            const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            if (history.length === 0) {
+                historyList.innerHTML = '<p style="text-align:center; color:#777;">No game history available.</p>';
+            } else {
+                history.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <div class="history-item-scores">
+                            <strong>Overall: ${item.overall}</strong> | Roundness: ${item.roundness}, Perimeter: ${item.perimeter}, Closure: ${item.closure}
+                        </div>
+                        <div class="history-item-date">${item.date}</div>
+                    `;
+                    historyList.appendChild(listItem);
+                });
+            }
+        };
+
+        const renderHighScore = () => {
+            const highScore = JSON.parse(localStorage.getItem(highScoreKey) || 'null');
+            const highScoreDisplay = document.getElementById('highScoreDisplay');
+            if (highScore) {
+                highScoreDisplay.innerHTML = `
+                    <div class="score-value">${highScore.overall}</div>
+                    <div class="score-details">
+                        Roundness: ${highScore.roundness}, Perimeter: ${highScore.perimeter}, Closure: ${highScore.closure}
+                        <br>
+                        <small>Achieved on: ${highScore.date}</small>
+                    </div>
+                `;
+                replayHighScoreButton.style.display = 'block';
+                // Store the points on the button for easy access
+                replayHighScoreButton.scorePoints = highScore.points;
+            } else {
+                highScoreDisplay.innerHTML = '<p style="text-align:center; color:#777;">No high score yet. Play a round!</p>';
+                replayHighScoreButton.style.display = 'none';
+            }
+        };
+
+        const replayDrawing = (pointsToDraw) => {
+            showView(0); // ????????
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
+            updateScores(0, 0, 0, 0);
+            
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(pointsToDraw[0].x, pointsToDraw[0].y);
+            drawingCtx.strokeStyle = 'rgba(52, 152, 219, 0.5)'; // Use a slightly transparent color for replay
+            drawingCtx.lineWidth = 4;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+            
+            pointsToDraw.forEach(p => {
+                drawingCtx.lineTo(p.x, p.y);
+                drawingCtx.stroke();
+            });
+            
+            // Recalculate and show ideal circle for the replayed drawing
+            const { center, radius } = fitCircle(pointsToDraw);
+            drawIdealCircle(center, radius);
+        };
+        
+        const showView = (index) => {
+            views.forEach((view, i) => {
+                view.classList.toggle('active', i === index);
+            });
+            navigationButton.textContent = buttonTexts[index];
+            
+            if (views[index] === historyView) {
+                renderHistory();
+            } else if (views[index] === highScoreView) {
+                renderHighScore();
+            } else {
+                // Game View is active, clear canvases
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
+                updateScores(0, 0, 0, 0);
+            }
+            activeViewIndex = index;
+        };
+
+        // Event Listeners
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseleave', stopDrawing);
+
+        drawingCanvas.addEventListener('touchstart', startDrawing, {passive: false});
+        drawingCanvas.addEventListener('touchmove', draw, {passive: false});
+        drawingCanvas.addEventListener('touchend', stopDrawing, {passive: false});
+        drawingCanvas.addEventListener('touchcancel', stopDrawing, {passive: false});
+        
+        navigationButton.addEventListener('click', () => {
+            let nextIndex = (activeViewIndex + 1) % views.length;
+            showView(nextIndex);
+        });
+        
+        replayHighScoreButton.addEventListener('click', () => {
+            if (replayHighScoreButton.scorePoints) {
+                replayDrawing(replayHighScoreButton.scorePoints);
+            }
+        });
+        
+        // Initial view
+        showView(0);
+    </script>
+
+</body>
+</html>
