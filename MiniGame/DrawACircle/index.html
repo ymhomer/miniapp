@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One-Stroke Circle Game</title>
+    <title>Draw A Circle</title>
     <style>
         :root {
             --bg-color: #f0f0f0;
@@ -12,9 +12,8 @@
             --primary-color: #3498db;
             --text-color: #333333;
             --score-bg-good: #2ecc71;
-            --score-bg-fair: #f1c40f;
-            --score-bg-bad: #e74c3c;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --button-primary: #2980b9;
         }
 
         *, *::before, *::after {
@@ -33,16 +32,16 @@
             min-height: 100vh;
             color: var(--text-color);
             line-height: 1.6;
-            padding: 20px;
+            padding: 10px;
+            overflow-y: auto; /* Allow scrolling on small screens */
         }
 
         .game-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 600px;
             background-color: var(--container-bg-color);
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
             display: flex;
             flex-direction: column;
             padding: 20px;
@@ -52,14 +51,51 @@
         h1 {
             text-align: center;
             color: var(--primary-color);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        p.instructions {
-            text-align: center;
-            font-size: 1.1rem;
-            color: #666;
-            margin-bottom: 20px;
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        #navigationButton {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        
+        #navigationButton:hover {
+            background-color: var(--button-primary);
+            transform: translateY(-2px);
+        }
+        
+        #navigationButton:active {
+            transform: translateY(0);
+        }
+
+        .content-view {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-view.active {
+            display: flex;
+        }
+        
+        .main-game-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .canvas-container {
@@ -82,7 +118,7 @@
             z-index: 2;
         }
         
-        #idealCircleCanvas {
+        #highScoreCanvas, #idealCircleCanvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -91,70 +127,55 @@
             pointer-events: none;
             z-index: 1;
         }
+        
+        #highScoreCanvas {
+            z-index: 3; /* Ensure high score circle is on top */
+        }
+        
+        p.instructions {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: -5px;
+        }
 
         .score-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
             text-align: center;
         }
 
         .score-card {
             background-color: #f9f9f9;
             border-radius: 8px;
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #eee;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .score-card.overall-score-card {
+            grid-column: 1 / -1; /* Span across both columns */
         }
 
         .score-card h3 {
-            font-size: 1rem;
-            margin-bottom: 5px;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
             color: #555;
         }
-
+        
         .score-value {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: var(--primary-color);
-            transition: color 0.3s ease;
         }
 
-        #overallScore {
+        .score-card.overall-score-card .score-value {
             font-size: 2.5rem;
-        }
-        
-        #navigationButton {
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: var(--primary-color);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            margin-top: 10px;
-            align-self: center;
-        }
-        
-        #navigationButton:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-        
-        #navigationButton:active {
-            transform: translateY(0);
-        }
-
-        .content-view {
-            display: none;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .content-view.active {
-            display: flex;
+            color: var(--score-bg-good);
         }
 
         #historyView ul {
@@ -163,7 +184,7 @@
         }
 
         #historyView li {
-            padding: 15px;
+            padding: 12px;
             border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
@@ -177,10 +198,11 @@
         .history-item-scores {
             flex-grow: 1;
             text-align: left;
+            font-size: 0.9rem;
         }
 
         .history-item-date {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #999;
             text-align: right;
             white-space: nowrap;
@@ -191,39 +213,17 @@
         }
 
         #highScoreView h2 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--score-bg-good);
             margin-bottom: 10px;
         }
-
-        #highScoreView .score-value {
-            font-size: 4rem;
-        }
-
+        
         #highScoreView .score-details {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: #666;
             margin-top: 5px;
         }
 
-        #highScoreView button {
-            margin-top: 15px;
-        }
-        
-        @media (max-width: 600px) {
-            .game-container {
-                padding: 15px;
-            }
-            .score-value {
-                font-size: 1.5rem;
-            }
-            #overallScore {
-                font-size: 2rem;
-            }
-            #highScoreView .score-value {
-                font-size: 3rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -234,59 +234,60 @@
         <button id="navigationButton">Go to History</button>
 
         <div id="gameView" class="content-view active">
-            <p class="instructions">Draw a perfect circle with a single stroke. Your score will be calculated when you release the mouse or lift your finger.</p>
-            <div class="canvas-container">
-                <canvas id="drawingCanvas"></canvas>
-                <canvas id="idealCircleCanvas"></canvas>
+            <div class="main-game-layout">
+                <div class="canvas-container">
+                    <canvas id="drawingCanvas"></canvas>
+                    <canvas id="idealCircleCanvas"></canvas>
+                </div>
+                <p class="instructions">Draw a perfect circle with a single stroke. Your score will be calculated when you release the mouse or lift your finger.</p>
             </div>
+            
             <div class="score-container">
                 <div class="score-card">
                     <h3>Roundness</h3>
                     <div class="score-value" id="roundnessScore">0</div>
-                    <div class="score-explanation">How close your shape is to a perfect circle.</div>
                 </div>
                 <div class="score-card">
                     <h3>Perimeter</h3>
                     <div class="score-value" id="perimeterScore">0</div>
-                    <div class="score-explanation">Length of your drawing vs. an ideal circle.</div>
                 </div>
                 <div class="score-card">
                     <h3>Closure</h3>
                     <div class="score-value" id="closureScore">0</div>
-                    <div class="score-explanation">Distance between your start and end points.</div>
                 </div>
-                <div class="score-card">
+                <div class="score-card overall-score-card">
                     <h3>Overall Score</h3>
                     <div class="score-value" id="overallScore">0</div>
-                    <div class="score-explanation">The weighted average of all scores.</div>
                 </div>
             </div>
         </div>
 
         <div id="historyView" class="content-view">
             <h2>Game History</h2>
-            <ul id="historyList">
-                </ul>
+            <ul id="historyList"></ul>
         </div>
 
         <div id="highScoreView" class="content-view">
             <h2>Highest Score</h2>
-            <div id="highScoreDisplay">
+            <div id="highScoreDisplay"></div>
+            <div class="main-game-layout" style="margin-top: 20px;">
+                <div class="canvas-container">
+                    <canvas id="highScoreCanvas"></canvas>
                 </div>
-            <button id="replayHighScoreButton" style="display: none;">Replay High Score Circle</button>
+                <p class="instructions">This is your best circle so far!</p>
+            </div>
         </div>
     </div>
 
     <script>
-        // DOM elements
         const drawingCanvas = document.getElementById('drawingCanvas');
         const drawingCtx = drawingCanvas.getContext('2d');
         const idealCircleCanvas = document.getElementById('idealCircleCanvas');
         const idealCircleCtx = idealCircleCanvas.getContext('2d');
+        const highScoreCanvas = document.getElementById('highScoreCanvas');
+        const highScoreCtx = highScoreCanvas.getContext('2d');
         const navigationButton = document.getElementById('navigationButton');
-        const replayHighScoreButton = document.getElementById('replayHighScoreButton');
         
-        // Views
         const gameView = document.getElementById('gameView');
         const historyView = document.getElementById('historyView');
         const highScoreView = document.getElementById('highScoreView');
@@ -299,19 +300,16 @@
         const views = [gameView, historyView, highScoreView];
         const buttonTexts = ['Go to History', 'Go to High Score', 'Go to Game'];
         
-        // Local storage keys
         const historyKey = 'circleGameHistory';
         const highScoreKey = 'circleGameHighScore';
 
         const scaleCanvas = () => {
             const rect = drawingCanvas.getBoundingClientRect();
-            drawingCanvas.width = rect.width * devicePixelRatio;
-            drawingCanvas.height = rect.height * devicePixelRatio;
-            drawingCtx.scale(devicePixelRatio, devicePixelRatio);
-            
-            idealCircleCanvas.width = rect.width * devicePixelRatio;
-            idealCircleCanvas.height = rect.height * devicePixelRatio;
-            idealCircleCtx.scale(devicePixelRatio, devicePixelRatio);
+            [drawingCanvas, idealCircleCanvas, highScoreCanvas].forEach(canvas => {
+                canvas.width = rect.width * devicePixelRatio;
+                canvas.height = rect.height * devicePixelRatio;
+                canvas.getContext('2d').scale(devicePixelRatio, devicePixelRatio);
+            });
         };
 
         window.addEventListener('resize', scaleCanvas);
@@ -319,8 +317,11 @@
 
         const getPos = (event) => {
             const rect = drawingCanvas.getBoundingClientRect();
-            const clientX = event.clientX || event.touches[0].clientX;
-            const clientY = event.clientY || event.touches[0].clientY;
+            const clientX = event.clientX || (event.touches ? event.touches[0].clientX : null);
+            const clientY = event.clientY || (event.touches ? event.touches[0].clientY : null);
+            
+            if (clientX === null || clientY === null) return null;
+            
             return {
                 x: (clientX - rect.left),
                 y: (clientY - rect.top)
@@ -328,15 +329,16 @@
         };
 
         const startDrawing = (event) => {
-            event.preventDefault();
+            const pos = getPos(event);
+            if (!pos) return;
             isDrawing = true;
             points = [];
+            
             drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
             idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
             updateScores(0, 0, 0, 0);
             
             drawingCtx.beginPath();
-            const pos = getPos(event);
             points.push(pos);
             drawingCtx.moveTo(pos.x, pos.y);
             drawingCtx.strokeStyle = '#3498db';
@@ -347,8 +349,8 @@
 
         const draw = (event) => {
             if (!isDrawing) return;
-            event.preventDefault();
             const pos = getPos(event);
+            if (!pos) return;
             points.push(pos);
             drawingCtx.lineTo(pos.x, pos.y);
             drawingCtx.stroke();
@@ -372,7 +374,7 @@
             drawingRadius = radius;
 
             if (drawingCenter.x && drawingCenter.y && drawingRadius) {
-                drawIdealCircle(drawingCenter, drawingRadius);
+                drawIdealCircle(drawingCenter, drawingRadius, idealCircleCtx);
             }
 
             const roundnessScore = calculateRoundnessScore();
@@ -388,17 +390,34 @@
                 closure: Math.round(closureScore),
                 overall: Math.round(overallScore),
                 date: new Date().toLocaleString(),
-                points: points // Save the points to replay later
+                points: points
             });
         };
 
-        const drawIdealCircle = (center, radius) => {
-            idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
-            idealCircleCtx.beginPath();
-            idealCircleCtx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
-            idealCircleCtx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-            idealCircleCtx.lineWidth = 2;
-            idealCircleCtx.stroke();
+        const drawIdealCircle = (center, radius, ctx) => {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        };
+        
+        const drawPath = (pointsToDraw, ctx, strokeStyle) => {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            if (pointsToDraw.length < 2) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(pointsToDraw[0].x, pointsToDraw[0].y);
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            pointsToDraw.forEach(p => {
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+            });
         };
 
         const saveScoreToHistory = (scoreData) => {
@@ -446,10 +465,7 @@
             
             const radius = Math.sqrt(sumX2 / n + sumY2 / n - a * sumX / n - b * sumY / n + (a * a + b * b) / 4);
 
-            return {
-                center: { x: centerX, y: centerY },
-                radius: radius
-            };
+            return { center: { x: centerX, y: centerY }, radius: radius };
         };
 
         const calculateRoundnessScore = () => {
@@ -461,8 +477,7 @@
             });
             const meanSquaredError = errorSum / points.length;
             const normalizedError = Math.sqrt(meanSquaredError) / drawingRadius;
-            const score = Math.max(0, 100 - (normalizedError * 200)); 
-            return score;
+            return Math.max(0, 100 - (normalizedError * 200));
         };
 
         const calculatePerimeterScore = () => {
@@ -476,8 +491,7 @@
 
             const error = Math.abs(pathLength - idealPerimeter);
             const normalizedError = error / idealPerimeter;
-            const score = Math.max(0, 100 - (normalizedError * 100));
-            return score;
+            return Math.max(0, 100 - (normalizedError * 100));
         };
         
         const calculateClosureScore = () => {
@@ -487,8 +501,7 @@
             const maxDistance = Math.min(drawingCanvas.width, drawingCanvas.height) * 0.1;
             
             const normalizedDistance = Math.min(distance, maxDistance) / maxDistance;
-            const score = 100 - (normalizedDistance * 100);
-            return score;
+            return 100 - (normalizedDistance * 100);
         };
 
         const updateScores = (roundness, perimeter, closure, overall) => {
@@ -530,36 +543,11 @@
                         <small>Achieved on: ${highScore.date}</small>
                     </div>
                 `;
-                replayHighScoreButton.style.display = 'block';
-                // Store the points on the button for easy access
-                replayHighScoreButton.scorePoints = highScore.points;
+                drawPath(highScore.points, highScoreCtx, 'rgba(52, 152, 219, 0.7)');
             } else {
                 highScoreDisplay.innerHTML = '<p style="text-align:center; color:#777;">No high score yet. Play a round!</p>';
-                replayHighScoreButton.style.display = 'none';
+                highScoreCtx.clearRect(0, 0, highScoreCanvas.width, highScoreCanvas.height);
             }
-        };
-
-        const replayDrawing = (pointsToDraw) => {
-            showView(0); // ????????
-            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-            idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
-            updateScores(0, 0, 0, 0);
-            
-            drawingCtx.beginPath();
-            drawingCtx.moveTo(pointsToDraw[0].x, pointsToDraw[0].y);
-            drawingCtx.strokeStyle = 'rgba(52, 152, 219, 0.5)'; // Use a slightly transparent color for replay
-            drawingCtx.lineWidth = 4;
-            drawingCtx.lineCap = 'round';
-            drawingCtx.lineJoin = 'round';
-            
-            pointsToDraw.forEach(p => {
-                drawingCtx.lineTo(p.x, p.y);
-                drawingCtx.stroke();
-            });
-            
-            // Recalculate and show ideal circle for the replayed drawing
-            const { center, radius } = fitCircle(pointsToDraw);
-            drawIdealCircle(center, radius);
         };
         
         const showView = (index) => {
@@ -573,7 +561,6 @@
             } else if (views[index] === highScoreView) {
                 renderHighScore();
             } else {
-                // Game View is active, clear canvases
                 drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
                 idealCircleCtx.clearRect(0, 0, idealCircleCanvas.width, idealCircleCanvas.height);
                 updateScores(0, 0, 0, 0);
@@ -581,31 +568,24 @@
             activeViewIndex = index;
         };
 
-        // Event Listeners
+        // Event Listeners for drawing, limited to the canvas
         drawingCanvas.addEventListener('mousedown', startDrawing);
         drawingCanvas.addEventListener('mousemove', draw);
         drawingCanvas.addEventListener('mouseup', stopDrawing);
         drawingCanvas.addEventListener('mouseleave', stopDrawing);
-
-        drawingCanvas.addEventListener('touchstart', startDrawing, {passive: false});
-        drawingCanvas.addEventListener('touchmove', draw, {passive: false});
-        drawingCanvas.addEventListener('touchend', stopDrawing, {passive: false});
-        drawingCanvas.addEventListener('touchcancel', stopDrawing, {passive: false});
+        drawingCanvas.addEventListener('touchstart', startDrawing, {passive: true});
+        drawingCanvas.addEventListener('touchmove', draw, {passive: true});
+        drawingCanvas.addEventListener('touchend', stopDrawing, {passive: true});
+        drawingCanvas.addEventListener('touchcancel', stopDrawing, {passive: true});
         
+        // Navigation button listener
         navigationButton.addEventListener('click', () => {
             let nextIndex = (activeViewIndex + 1) % views.length;
             showView(nextIndex);
         });
         
-        replayHighScoreButton.addEventListener('click', () => {
-            if (replayHighScoreButton.scorePoints) {
-                replayDrawing(replayHighScoreButton.scorePoints);
-            }
-        });
-        
-        // Initial view
+        // Initial view setup
         showView(0);
     </script>
-
 </body>
 </html>
