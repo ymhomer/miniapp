@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3D Flappy Flight Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none;
+        }
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #stats {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+            pointer-events: none;
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        #stats > div {
+            margin: 8px 0;
+        }
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(30,60,114,0.95) 0%, rgba(42,82,152,0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: all;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #gameOverScreen {
+            display: none;
+            background: linear-gradient(135deg, rgba(139,0,0,0.95) 0%, rgba(178,34,34,0.95) 100%);
+        }
+        .title-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            color: #FFD700;
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 4px 4px 12px rgba(0,0,0,0.9);
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        .btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 26px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 50px;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+        }
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin: 20px;
+            max-width: 600px;
+        }
+        .instruction-item {
+            color: white;
+            font-size: 18px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            line-height: 1.6;
+        }
+        .instruction-icon {
+            background: rgba(255,215,0,0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        #finalStats {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 30px 50px;
+            margin: 30px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            color: white;
+            font-size: 24px;
+        }
+        .stat-label {
+            font-weight: 300;
+            margin-right: 30px;
+        }
+        .stat-value {
+            font-weight: 700;
+            color: #FFD700;
+            font-size: 28px;
+        }
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+        }
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+        .crosshair::before {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .crosshair::after {
+            height: 2px;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .crosshair-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: rgba(255,215,0,0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255,215,0,0.8);
+        }
+        .credit {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            font-weight: 300;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 42px;
+            }
+            .subtitle {
+                font-size: 16px;
+            }
+            .btn {
+                font-size: 20px;
+                padding: 15px 40px;
+            }
+            .instructions {
+                padding: 20px 25px;
+            }
+            .instruction-item {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="ui">
+        <div id="stats">
+            <div>⏱️ Time: <span id="time">0.0</span>s</div>
+            <div>📏 Distance: <span id="distance">0</span>m</div>
+            <div>📈 Height: <span id="height">0</span>m</div>
+        </div>
+        <div class="crosshair">
+            <div class="crosshair-center"></div>
+        </div>
+        <div id="startScreen">
+            <div class="title-container">
+                <h1>FLAPPY FLIGHT</h1>
+                <div class="subtitle">3D Simulator</div>
+            </div>
+            <div class="instructions">
+                <div class="instruction-item">
+                    <div class="instruction-icon">🖱️</div>
+                    <div><strong>Desktop:</strong> Hold mouse to look around, release to jump</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="instruction-icon">📱</div>
+                    <div><strong>Mobile:</strong> Touch & drag to look, release to jump</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="instruction-icon">🎯</div>
+                    <div>Your jump direction is set when you <strong>release</strong>!</div>
+                </div>
+            </div>
+            <button class="btn" onclick="startGame()">Start Flight</button>
+            <div class="credit">Created by Claude | Idea by ymhomer</div>
+        </div>
+        <div id="gameOverScreen">
+            <div class="title-container">
+                <h1>FLIGHT ENDED</h1>
+                <div class="subtitle">Mission Complete</div>
+            </div>
+            <div id="finalStats"></div>
+            <button class="btn" onclick="restartGame()">Try Again</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+
+        // Game state
+        let gameStarted = false;
+        let gameOver = false;
+        let startTime = 0;
+        let totalDistance = 0;
+        let mouseDown = false;
+        let touchActive = false;
+        let collisionType = 'unknown'; // Track what player collided with
+
+        // Player physics - INCREASED JUMP DISTANCE
+        const player = {
+            position: new THREE.Vector3(0, 35, 0), // Raised starting height from 15 to 35
+            velocity: new THREE.Vector3(0, 0, 1), // Initial velocity pointing +Z to match bird facing
+            jumpDirection: new THREE.Vector3(0, 0, 1), // Initial jump direction +Z
+            nextJumpDirection: new THREE.Vector3(0, 0, 1), // Next jump direction +Z
+            speed: 22, // Increased from 12 to 22 for bigger jumps
+            jumpForce: 18, // Increased from 15 to 18
+            gravity: -22, // Adjusted gravity for better arc
+            isJumping: false
+        };
+
+        // Camera control
+        const cameraControl = {
+            yaw: Math.PI, // Start facing away from player (+Z direction)
+            pitch: 0,
+            lastMouseX: 0,
+            lastMouseY: 0,
+            sensitivity: 0.002
+        };
+
+        // Scene setup
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 100, 300);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -150;
+        dirLight.shadow.camera.right = 150;
+        dirLight.shadow.camera.top = 150;
+        dirLight.shadow.camera.bottom = -150;
+        scene.add(dirLight);
+
+        // Infinite ground system
+        const groundChunks = new Map();
+        const chunkSize = 100;
+        const viewDistance = 3;
+
+        function getChunkKey(x, z) {
+            return `${x},${z}`;
+        }
+
+        function createGroundChunk(chunkX, chunkZ) {
+            const key = getChunkKey(chunkX, chunkZ);
+            if (groundChunks.has(key)) return;
+
+            const groundGeo = new THREE.PlaneGeometry(chunkSize, chunkSize);
+            const groundMat = new THREE.MeshLambertMaterial({ color: 0x228B22 }); // Forest green
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.set(chunkX * chunkSize, 0, chunkZ * chunkSize);
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Add water patches - larger and more natural
+            const waterMat = new THREE.MeshLambertMaterial({ color: 0x1E90FF });
+            const waters = [];
+            const waterCount = 2 + Math.floor(seedRandom(chunkX * 7, chunkZ * 11) * 2);
+            for (let i = 0; i < waterCount; i++) {
+                const waterSize = 20 + seedRandom(chunkX * i, chunkZ * (i + 2)) * 25;
+                const water = new THREE.Mesh(
+                    new THREE.CircleGeometry(waterSize, 16),
+                    waterMat
+                );
+                water.rotation.x = -Math.PI / 2;
+                water.position.set(
+                    chunkX * chunkSize + (seedRandom(chunkX * i * 3, chunkZ) - 0.5) * chunkSize * 0.8,
+                    0.05,
+                    chunkZ * chunkSize + (seedRandom(chunkX, chunkZ * i * 3) - 0.5) * chunkSize * 0.8
+                );
+                water.receiveShadow = true;
+                scene.add(water);
+                waters.push(water);
+            }
+
+            groundChunks.set(key, { ground, waters });
+        }
+
+        function seedRandom(x, z) {
+            const seed = x * 73856093 ^ z * 19349663;
+            let s = Math.sin(seed) * 10000;
+            return s - Math.floor(s);
+        }
+
+        function removeGroundChunk(chunkX, chunkZ) {
+            const key = getChunkKey(chunkX, chunkZ);
+            const chunk = groundChunks.get(key);
+            if (!chunk) return;
+
+            scene.remove(chunk.ground);
+            chunk.ground.geometry.dispose();
+            chunk.ground.material.dispose();
+            
+            chunk.waters.forEach(w => {
+                scene.remove(w);
+                w.geometry.dispose();
+                w.material.dispose();
+            });
+
+            groundChunks.delete(key);
+        }
+
+        function updateGroundChunks() {
+            const playerChunkX = Math.floor(player.position.x / chunkSize);
+            const playerChunkZ = Math.floor(player.position.z / chunkSize);
+
+            // Create nearby chunks
+            for (let x = playerChunkX - viewDistance; x <= playerChunkX + viewDistance; x++) {
+                for (let z = playerChunkZ - viewDistance; z <= playerChunkZ + viewDistance; z++) {
+                    createGroundChunk(x, z);
+                }
+            }
+
+            // Remove far chunks
+            const toRemove = [];
+            groundChunks.forEach((chunk, key) => {
+                const [x, z] = key.split(',').map(Number);
+                if (Math.abs(x - playerChunkX) > viewDistance + 1 || 
+                    Math.abs(z - playerChunkZ) > viewDistance + 1) {
+                    toRemove.push([x, z]);
+                }
+            });
+            toRemove.forEach(([x, z]) => removeGroundChunk(x, z));
+        }
+
+        // Initialize ground
+        updateGroundChunks();
+
+        // Player visual (bird) - Simple round design with flapping wings
+        // Bird model is designed to face +Z direction by default
+        const playerMesh = new THREE.Group();
+        
+        // Body - simple sphere
+        const bodyGeo = new THREE.SphereGeometry(0.8, 16, 16);
+        const bodyMat = new THREE.MeshLambertMaterial({ color: 0xFFFF00 });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.castShadow = true;
+        playerMesh.add(body);
+
+        // Beak pointing in +Z direction (front of bird)
+        const beakGeo = new THREE.ConeGeometry(0.3, 0.6, 8);
+        const beakMat = new THREE.MeshLambertMaterial({ color: 0xFF6600 });
+        const beak = new THREE.Mesh(beakGeo, beakMat);
+        beak.rotation.x = Math.PI / 2; // Cone points along +Z
+        beak.position.set(0, 0, 0.7); // Front of bird
+        playerMesh.add(beak);
+
+        // Eyes on the front (+Z side)
+        const eyeGeo = new THREE.SphereGeometry(0.12, 8, 8);
+        const eyeWhiteMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+        const eyeL = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+        eyeL.position.set(-0.3, 0.3, 0.6);
+        playerMesh.add(eyeL);
+        const eyeR = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+        eyeR.position.set(0.3, 0.3, 0.6);
+        playerMesh.add(eyeR);
+
+        const pupilGeo = new THREE.SphereGeometry(0.06, 8, 8);
+        const pupilMat = new THREE.MeshLambertMaterial({ color: 0x000000 });
+        const pupilL = new THREE.Mesh(pupilGeo, pupilMat);
+        pupilL.position.set(-0.3, 0.3, 0.68);
+        playerMesh.add(pupilL);
+        const pupilR = new THREE.Mesh(pupilGeo, pupilMat);
+        pupilR.position.set(0.3, 0.3, 0.68);
+        playerMesh.add(pupilR);
+
+        // Wings - positioned on sides, will flap
+        const wingGeo = new THREE.BoxGeometry(0.2, 1.2, 0.6);
+        const wingMat = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
+        
+        const wingL = new THREE.Mesh(wingGeo, wingMat);
+        wingL.position.set(-0.9, 0, 0);
+        wingL.castShadow = true;
+        playerMesh.add(wingL);
+        
+        const wingR = new THREE.Mesh(wingGeo, wingMat);
+        wingR.position.set(0.9, 0, 0);
+        wingR.castShadow = true;
+        playerMesh.add(wingR);
+
+        // Store wings for animation
+        playerMesh.userData.wingL = wingL;
+        playerMesh.userData.wingR = wingR;
+        playerMesh.userData.wingTime = 0;
+
+        scene.add(playerMesh);
+
+        // Infinite obstacle system
+        const obstacles = new Map();
+        const obstacleChunkSize = 30;
+        const obstacleViewDistance = 8;
+
+        function createObstacleChunk(chunkX, chunkZ) {
+            const key = getChunkKey(chunkX, chunkZ);
+            if (obstacles.has(key)) return;
+
+            const obsList = [];
+            const baseX = chunkX * obstacleChunkSize;
+            const baseZ = chunkZ * obstacleChunkSize;
+
+            // Skip starting area
+            if (chunkX === 0 && chunkZ === 0) {
+                obstacles.set(key, obsList);
+                return;
+            }
+
+            const rand = seedRandom(chunkX, chunkZ);
+            const typeRand = seedRandom(chunkX * 5, chunkZ * 7);
+            
+            if (rand > 0.5) {
+                // Create pipe with different colors
+                const height = 15 + (seedRandom(chunkX * 2, chunkZ) * 15);
+                let pipeColor, pipeType;
+                
+                if (typeRand < 0.33) {
+                    pipeColor = 0x228B22; // Green pipe
+                    pipeType = 'green pipe';
+                } else if (typeRand < 0.66) {
+                    pipeColor = 0xDC143C; // Red pipe
+                    pipeType = 'red pipe';
+                } else {
+                    pipeColor = 0x4169E1; // Blue pipe
+                    pipeType = 'blue pipe';
+                }
+                
+                const pipeGeo = new THREE.CylinderGeometry(2, 2, height, 16);
+                const pipeMat = new THREE.MeshLambertMaterial({ color: pipeColor });
+                const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+                pipe.position.set(baseX, height / 2, baseZ);
+                pipe.castShadow = true;
+                pipe.receiveShadow = true;
+                scene.add(pipe);
+                
+                const rimGeo = new THREE.CylinderGeometry(2.5, 2.5, 1, 16);
+                const rim = new THREE.Mesh(rimGeo, pipeMat);
+                rim.position.set(baseX, height, baseZ);
+                rim.castShadow = true;
+                scene.add(rim);
+                
+                obsList.push({ 
+                    meshes: [pipe, rim], 
+                    position: new THREE.Vector3(baseX, height / 2, baseZ), 
+                    radius: 2.5, 
+                    height,
+                    type: pipeType
+                });
+            } else {
+                // Create island with variations
+                const size = 15 + (seedRandom(chunkX, chunkZ * 2) * 10);
+                const height = 8 + (seedRandom(chunkX * 3, chunkZ) * 8);
+                let islandType;
+                
+                // Different island types
+                if (typeRand < 0.25) {
+                    // Rocky island
+                    islandType = 'rocky island';
+                    const islandGeo = new THREE.CylinderGeometry(size, size * 0.7, height, 16);
+                    const islandMat = new THREE.MeshLambertMaterial({ color: 0x708090 }); // Gray
+                    const island = new THREE.Mesh(islandGeo, islandMat);
+                    island.position.set(baseX, height / 2, baseZ);
+                    island.castShadow = true;
+                    island.receiveShadow = true;
+                    scene.add(island);
+                    
+                    const topGeo = new THREE.CylinderGeometry(size + 1, size * 0.7, 1, 16);
+                    const topMat = new THREE.MeshLambertMaterial({ color: 0x556B2F });
+                    const top = new THREE.Mesh(topGeo, topMat);
+                    top.position.set(baseX, height, baseZ);
+                    top.castShadow = true;
+                    scene.add(top);
+                    
+                    obsList.push({ 
+                        meshes: [island, top], 
+                        position: new THREE.Vector3(baseX, height / 2, baseZ), 
+                        radius: size, 
+                        height,
+                        type: islandType
+                    });
+                } else if (typeRand < 0.5) {
+                    // Sandy island
+                    islandType = 'sandy island';
+                    const islandGeo = new THREE.CylinderGeometry(size, size * 0.7, height, 16);
+                    const islandMat = new THREE.MeshLambertMaterial({ color: 0xF4A460 }); // Sandy brown
+                    const island = new THREE.Mesh(islandGeo, islandMat);
+                    island.position.set(baseX, height / 2, baseZ);
+                    island.castShadow = true;
+                    island.receiveShadow = true;
+                    scene.add(island);
+                    
+                    const palmCount = 2;
+                    const meshes = [island];
+                    for (let i = 0; i < palmCount; i++) {
+                        const palmH = 6 + seedRandom(chunkX * i * 2, chunkZ) * 3;
+                        const palm = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.3, 0.4, palmH, 8),
+                            new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+                        );
+                        const px = baseX + (seedRandom(chunkX * i * 3, chunkZ) - 0.5) * size * 0.5;
+                        const pz = baseZ + (seedRandom(chunkX, chunkZ * i * 3) - 0.5) * size * 0.5;
+                        palm.position.set(px, height + palmH / 2, pz);
+                        palm.castShadow = true;
+                        scene.add(palm);
+                        meshes.push(palm);
+                    }
+                    
+                    obsList.push({ 
+                        meshes, 
+                        position: new THREE.Vector3(baseX, height / 2, baseZ), 
+                        radius: size, 
+                        height,
+                        type: islandType
+                    });
+                } else {
+                    // Green forest island (original)
+                    islandType = 'forest island';
+                    const islandGeo = new THREE.CylinderGeometry(size, size * 0.7, height, 16);
+                    const islandMat = new THREE.MeshLambertMaterial({ color: 0x8B7355 });
+                    const island = new THREE.Mesh(islandGeo, islandMat);
+                    island.position.set(baseX, height / 2, baseZ);
+                    island.castShadow = true;
+                    island.receiveShadow = true;
+                    scene.add(island);
+                    
+                    const grassGeo = new THREE.CylinderGeometry(size + 1, size * 0.7, 1, 16);
+                    const grassMat = new THREE.MeshLambertMaterial({ color: 0x2E8B57 });
+                    const grass = new THREE.Mesh(grassGeo, grassMat);
+                    grass.position.set(baseX, height, baseZ);
+                    grass.castShadow = true;
+                    scene.add(grass);
+                    
+                    const meshes = [island, grass];
+                    
+                    // Add trees
+                    const treeCount = 2 + Math.floor(seedRandom(chunkX, chunkZ * 3) * 3);
+                    for (let i = 0; i < treeCount; i++) {
+                        const treeH = 5 + (seedRandom(chunkX * i, chunkZ * (i + 1)) * 5);
+                        const tree = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.3, 0.5, treeH, 8),
+                            new THREE.MeshLambertMaterial({ color: 0x654321 })
+                        );
+                        const tx = baseX + (seedRandom(chunkX * i * 2, chunkZ) - 0.5) * size * 0.6;
+                        const tz = baseZ + (seedRandom(chunkX, chunkZ * i * 2) - 0.5) * size * 0.6;
+                        tree.position.set(tx, height + treeH / 2, tz);
+                        tree.castShadow = true;
+                        scene.add(tree);
+                        
+                        const leaves = new THREE.Mesh(
+                            new THREE.SphereGeometry(2, 8, 8),
+                            new THREE.MeshLambertMaterial({ color: 0x228B22 })
+                        );
+                        leaves.position.set(tx, height + treeH + 1.5, tz);
+                        leaves.castShadow = true;
+                        scene.add(leaves);
+                        
+                        meshes.push(tree, leaves);
+                    }
+                    
+                    obsList.push({ 
+                        meshes, 
+                        position: new THREE.Vector3(baseX, height / 2, baseZ), 
+                        radius: size, 
+                        height,
+                        type: islandType
+                    });
+                }
+            }
+
+            obstacles.set(key, obsList);
+        }
+
+        function removeObstacleChunk(chunkX, chunkZ) {
+            const key = getChunkKey(chunkX, chunkZ);
+            const obsList = obstacles.get(key);
+            if (!obsList) return;
+
+            obsList.forEach(obs => {
+                obs.meshes.forEach(mesh => {
+                    scene.remove(mesh);
+                    mesh.geometry.dispose();
+                    mesh.material.dispose();
+                });
+            });
+
+            obstacles.delete(key);
+        }
+
+        function updateObstacles() {
+            const playerChunkX = Math.floor(player.position.x / obstacleChunkSize);
+            const playerChunkZ = Math.floor(player.position.z / obstacleChunkSize);
+
+            // Create nearby obstacles
+            for (let x = playerChunkX - obstacleViewDistance; x <= playerChunkX + obstacleViewDistance; x++) {
+                for (let z = playerChunkZ - obstacleViewDistance; z <= playerChunkZ + obstacleViewDistance; z++) {
+                    createObstacleChunk(x, z);
+                }
+            }
+
+            // Remove far obstacles
+            const toRemove = [];
+            obstacles.forEach((obsList, key) => {
+                const [x, z] = key.split(',').map(Number);
+                if (Math.abs(x - playerChunkX) > obstacleViewDistance + 1 || 
+                    Math.abs(z - playerChunkZ) > obstacleViewDistance + 1) {
+                    toRemove.push([x, z]);
+                }
+            });
+            toRemove.forEach(([x, z]) => removeObstacleChunk(x, z));
+        }
+
+        // Initialize obstacles
+        updateObstacles();
+
+        // Input handling
+        function onMouseDown(e) {
+            if (!gameStarted || gameOver) return;
+            mouseDown = true;
+            cameraControl.lastMouseX = e.clientX;
+            cameraControl.lastMouseY = e.clientY;
+        }
+
+        function onMouseMove(e) {
+            if (!mouseDown || !gameStarted || gameOver) return;
+            
+            const deltaX = e.clientX - cameraControl.lastMouseX;
+            const deltaY = e.clientY - cameraControl.lastMouseY;
+            
+            cameraControl.yaw -= deltaX * cameraControl.sensitivity;
+            cameraControl.pitch -= deltaY * cameraControl.sensitivity;
+            cameraControl.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraControl.pitch));
+            
+            cameraControl.lastMouseX = e.clientX;
+            cameraControl.lastMouseY = e.clientY;
+            
+            updateNextJumpDirection();
+        }
+
+        function onMouseUp() {
+            if (!gameStarted || gameOver || !mouseDown) return;
+            mouseDown = false;
+            jump();
+        }
+
+        function onTouchStart(e) {
+            if (!gameStarted || gameOver) return;
+            e.preventDefault();
+            touchActive = true;
+            const touch = e.touches[0];
+            cameraControl.lastMouseX = touch.clientX;
+            cameraControl.lastMouseY = touch.clientY;
+        }
+
+        function onTouchMove(e) {
+            if (!touchActive || !gameStarted || gameOver) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - cameraControl.lastMouseX;
+            const deltaY = touch.clientY - cameraControl.lastMouseY;
+            
+            cameraControl.yaw -= deltaX * cameraControl.sensitivity;
+            cameraControl.pitch -= deltaY * cameraControl.sensitivity;
+            cameraControl.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraControl.pitch));
+            
+            cameraControl.lastMouseX = touch.clientX;
+            cameraControl.lastMouseY = touch.clientY;
+            
+            updateNextJumpDirection();
+        }
+
+        function onTouchEnd(e) {
+            if (!gameStarted || gameOver || !touchActive) return;
+            e.preventDefault();
+            touchActive = false;
+            jump();
+        }
+
+        canvas.addEventListener('mousedown', onMouseDown);
+        canvas.addEventListener('mousemove', onMouseMove);
+        canvas.addEventListener('mouseup', onMouseUp);
+        canvas.addEventListener('touchstart', onTouchStart);
+        canvas.addEventListener('touchmove', onTouchMove);
+        canvas.addEventListener('touchend', onTouchEnd);
+
+        function updateNextJumpDirection() {
+            // Camera yaw = 0 means looking along +X axis
+            // Camera yaw = π means looking along -X axis  
+            // Camera yaw = π/2 means looking along +Z axis
+            // Camera yaw = -π/2 means looking along -Z axis
+            const direction = new THREE.Vector3();
+            direction.x = Math.sin(cameraControl.yaw) * Math.cos(cameraControl.pitch);
+            direction.y = Math.sin(cameraControl.pitch);
+            direction.z = Math.cos(cameraControl.yaw) * Math.cos(cameraControl.pitch);
+            player.nextJumpDirection.copy(direction).normalize();
+        }
+
+        function jump() {
+            player.jumpDirection.copy(player.nextJumpDirection);
+            player.velocity.copy(player.jumpDirection).multiplyScalar(player.speed);
+            player.velocity.y = player.jumpForce;
+            player.isJumping = true;
+        }
+
+        function checkCollisions() {
+            const playerPos = player.position;
+            
+            // Ground collision
+            if (playerPos.y < 1) {
+                collisionType = 'ground';
+                return true;
+            }
+            
+            // Obstacle collision - check nearby chunks only
+            const playerChunkX = Math.floor(playerPos.x / obstacleChunkSize);
+            const playerChunkZ = Math.floor(playerPos.z / obstacleChunkSize);
+            
+            for (let x = playerChunkX - 1; x <= playerChunkX + 1; x++) {
+                for (let z = playerChunkZ - 1; z <= playerChunkZ + 1; z++) {
+                    const key = getChunkKey(x, z);
+                    const obsList = obstacles.get(key);
+                    if (!obsList) continue;
+                    
+                    for (const obs of obsList) {
+                        const dist = new THREE.Vector2(
+                            playerPos.x - obs.position.x,
+                            playerPos.z - obs.position.z
+                        ).length();
+                        
+                        if (dist < obs.radius + 1.5) {
+                            const heightDiff = Math.abs(playerPos.y - obs.position.y);
+                            if (heightDiff < obs.height / 2 + 1.5) {
+                                collisionType = obs.type;
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        function endGame() {
+            gameOver = true;
+            const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            const finalDist = totalDistance.toFixed(0);
+            const maxHeight = player.position.y.toFixed(0);
+            
+            // Generate fun messages based on collision type
+            const messages = {
+                'ground': [
+                    "Oops! You kissed the ground!",
+                    "Fun fact: Flappy Birds can't swim... or walk!",
+                    "The ground is not your friend!",
+                    "Gravity: 1, Bird: 0"
+                ],
+                'green pipe': [
+                    "Bonk! Hit a classic green pipe!",
+                    "That green pipe came out of nowhere!",
+                    "Mario would be disappointed...",
+                    "Green means go, not hit!"
+                ],
+                'red pipe': [
+                    "Ouch! Crashed into a red pipe!",
+                    "Red means stop! You didn't stop...",
+                    "That red pipe was playing hard to get!",
+                    "Red alert! Pipe collision!"
+                ],
+                'blue pipe': [
+                    "Splash! Hit a blue pipe!",
+                    "The blue pipe got you!",
+                    "Feeling blue about that pipe?",
+                    "Blue pipes are sneaky!"
+                ],
+                'forest island': [
+                    "Crashed into a forest island!",
+                    "The trees didn't see you coming!",
+                    "That's one way to stop and smell the roses...",
+                    "Island life isn't for everyone!"
+                ],
+                'rocky island': [
+                    "Smacked into a rocky island!",
+                    "Those rocks are harder than they look!",
+                    "Rock solid defense by that island!",
+                    "Between a rock and a... well, just rocks!"
+                ],
+                'sandy island': [
+                    "Beached on a sandy island!",
+                    "Sand-wiched by an island!",
+                    "No beach vacation for you!",
+                    "That island was shore-ly in the way!"
+                ],
+                'unknown': [
+                    "Something stopped your flight!",
+                    "Flight terminated!",
+                    "Better luck next time!",
+                    "The sky is the limit... except when it's not!"
+                ]
+            };
+            
+            const messageArray = messages[collisionType] || messages['unknown'];
+            const randomMessage = messageArray[Math.floor(Math.random() * messageArray.length)];
+            
+            document.getElementById('finalStats').innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px; font-size: 20px; color: #FFD700; font-style: italic;">
+                    "${randomMessage}"
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Flight Time</span>
+                    <span class="stat-value">${finalTime}s</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Distance Traveled</span>
+                    <span class="stat-value">${finalDist}m</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Max Height</span>
+                    <span class="stat-value">${maxHeight}m</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Collision</span>
+                    <span class="stat-value" style="font-size: 20px;">${collisionType}</span>
+                </div>
+            `;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            gameStarted = true;
+            gameOver = false;
+            startTime = Date.now();
+            totalDistance = 0;
+            player.position.set(0, 35, 0); // Starting height raised to 35
+            player.velocity.set(0, 0, 1); // Start moving in +Z direction
+            player.jumpDirection.set(0, 0, 1); // Initial direction +Z
+            player.nextJumpDirection.set(0, 0, 1);
+            cameraControl.yaw = Math.PI; // Camera looks in +Z direction (away from origin)
+            cameraControl.pitch = 0;
+            
+            // Reset bird rotation to match initial velocity
+            playerMesh.rotation.y = 0; // Bird faces +Z
+            playerMesh.rotation.x = 0;
+        }
+
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            startGame();
+        }
+
+        // Animation loop
+        let lastTime = Date.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!gameStarted || gameOver) {
+                renderer.render(scene, camera);
+                return;
+            }
+            
+            const currentTime = Date.now();
+            const dt = Math.min((currentTime - lastTime) / 1000, 0.05);
+            lastTime = currentTime;
+            
+            // Physics
+            player.velocity.y += player.gravity * dt;
+            const oldPos = player.position.clone();
+            player.position.add(player.velocity.clone().multiplyScalar(dt));
+            
+            totalDistance += player.position.distanceTo(oldPos);
+            
+            // Update infinite world
+            updateGroundChunks();
+            updateObstacles();
+            
+            // Collision check
+            if (checkCollisions()) {
+                endGame();
+                return;
+            }
+            
+            // Update camera - place behind bird looking at where bird is looking
+            const camOffset = new THREE.Vector3(0, 2, -5); // Camera behind bird
+            const rotatedOffset = camOffset.clone();
+            rotatedOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraControl.yaw);
+            camera.position.copy(player.position).add(rotatedOffset);
+            
+            // Camera looks in the direction defined by yaw and pitch
+            const lookTarget = new THREE.Vector3();
+            lookTarget.x = player.position.x + Math.sin(cameraControl.yaw) * Math.cos(cameraControl.pitch) * 10;
+            lookTarget.y = player.position.y + Math.sin(cameraControl.pitch) * 10;
+            lookTarget.z = player.position.z + Math.cos(cameraControl.yaw) * Math.cos(cameraControl.pitch) * 10;
+            camera.lookAt(lookTarget);
+            
+            // Update player mesh - bird faces its velocity direction
+            playerMesh.position.copy(player.position);
+            
+            // Calculate bird rotation based on velocity
+            if (player.velocity.length() > 0.1) {
+                // Bird's front (+Z in local space) should point toward velocity
+                const velocityAngle = Math.atan2(player.velocity.x, player.velocity.z);
+                playerMesh.rotation.y = velocityAngle;
+            }
+            
+            // Tilt based on vertical velocity (pitch up/down)
+            const tiltAmount = Math.max(-0.5, Math.min(0.5, -player.velocity.y * 0.03));
+            playerMesh.rotation.x = tiltAmount;
+            
+            // Animate wings - flapping motion
+            playerMesh.userData.wingTime += dt * 15; // Wing flap speed
+            const wingFlap = Math.sin(playerMesh.userData.wingTime) * 0.6; // Flap angle
+            playerMesh.userData.wingL.rotation.z = wingFlap; // Left wing flaps up/down
+            playerMesh.userData.wingR.rotation.z = -wingFlap; // Right wing flaps opposite
+            
+            // Update UI
+            document.getElementById('time').textContent = ((currentTime - startTime) / 1000).toFixed(1);
+            document.getElementById('distance').textContent = totalDistance.toFixed(0);
+            document.getElementById('height').textContent = player.position.y.toFixed(0);
+            
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
