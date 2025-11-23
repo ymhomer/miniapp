@@ -65,102 +65,150 @@
         }
         #gameOverScreen {
             display: none;
-            background: linear-gradient(135deg, rgba(139,0,0,0.95) 0%, rgba(178,34,34,0.95) 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
         }
         .title-container {
             text-align: center;
             margin-bottom: 40px;
+            position: relative;
+        }
+        .title-container::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #FFD700, transparent);
         }
         h1 {
             color: #FFD700;
-            font-size: 64px;
-            font-weight: 800;
-            margin-bottom: 10px;
-            text-shadow: 4px 4px 12px rgba(0,0,0,0.9);
-            letter-spacing: 2px;
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 0 0 30px rgba(255,215,0,0.5), 5px 5px 15px rgba(0,0,0,0.9);
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .subtitle {
             color: rgba(255,255,255,0.9);
-            font-size: 20px;
-            font-weight: 300;
+            font-size: 18px;
+            font-weight: 400;
             letter-spacing: 4px;
             text-transform: uppercase;
+            opacity: 0.8;
         }
         .btn {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 18px 50px;
-            font-size: 26px;
+            padding: 16px 45px;
+            font-size: 18px;
             font-weight: 700;
             cursor: pointer;
             border-radius: 50px;
             margin: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            letter-spacing: 1px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 40px rgba(102,126,234,0.4);
+            letter-spacing: 2px;
             text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before {
+            left: 100%;
         }
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(102,126,234,0.6);
         }
         .btn:active {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .btn-secondary:hover {
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
         }
         .instructions {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            padding: 30px 40px;
-            margin: 20px;
-            max-width: 600px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 25px;
+            padding: 35px 45px;
+            margin: 25px;
+            max-width: 650px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
         }
         .instruction-item {
             color: white;
             font-size: 18px;
-            margin: 15px 0;
+            margin: 18px 0;
             display: flex;
             align-items: center;
-            line-height: 1.6;
+            line-height: 1.8;
         }
         .instruction-icon {
-            background: rgba(255,215,0,0.3);
+            background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,193,7,0.5));
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
-            font-size: 20px;
+            margin-right: 18px;
+            font-size: 22px;
             flex-shrink: 0;
+            box-shadow: 0 5px 15px rgba(255,215,0,0.3);
         }
         #finalStats {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            padding: 30px 50px;
-            margin: 30px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 25px;
+            padding: 30px 40px;
+            margin: 25px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            max-width: 600px;
         }
         .stat-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 15px 0;
-            color: white;
-            font-size: 24px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat-row:last-child {
+            border-bottom: none;
         }
         .stat-label {
-            font-weight: 300;
+            font-weight: 400;
             margin-right: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 18px;
         }
         .stat-value {
-            font-weight: 700;
+            font-weight: 900;
             color: #FFD700;
-            font-size: 28px;
+            font-size: 26px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
         }
         .crosshair {
             position: absolute;
@@ -208,22 +256,197 @@
             font-size: 14px;
             font-weight: 300;
         }
+        .easter-egg-btn {
+            background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,193,7,0.35));
+            border: 3px solid rgba(255,215,0,0.6);
+            color: #FFD700;
+            padding: 14px 35px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 40px rgba(255,215,0,0.3);
+        }
+        .easter-egg-btn:hover {
+            background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,193,7,0.5));
+            border-color: #FFD700;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(255,215,0,0.5);
+        }
+        #easterEggList {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 50px 20px;
+            overflow-y: auto;
+            pointer-events: all;
+        }
+        .egg-item {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 25px 35px;
+            margin: 12px 0;
+            max-width: 700px;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .egg-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255,215,0,0.5);
+        }
+        .egg-title {
+            color: #FFD700;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(255,215,0,0.5);
+        }
+        .egg-desc {
+            color: rgba(255,255,255,0.9);
+            font-size: 17px;
+            line-height: 1.6;
+        }
+        #coinCounter {
+            position: absolute;
+            top: 120px;
+            left: 30px;
+            background: rgba(255,215,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+            color: #FFD700;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            display: none;
+        }
+        #oneUpEffect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            color: #00FF00;
+            font-weight: 900;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.9);
+            display: none;
+            animation: oneUpAnim 2s ease-out;
+            pointer-events: none;
+            z-index: 200;
+        }
+        @keyframes oneUpAnim {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            80% { opacity: 1; transform: translate(-50%, -80%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -120%) scale(0.8); }
+        }
+        #tutorial {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 35px 50px;
+            border-radius: 25px;
+            border: 3px solid rgba(255,215,0,0.6);
+            text-align: center;
+            pointer-events: none;
+            animation: fadeIn 0.5s ease;
+            z-index: 100;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            max-width: 90%;
+        }
+        #tutorial h2 {
+            color: #FFD700;
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        #tutorial p {
+            color: white;
+            font-size: 20px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        #tutorial .hint {
+            color: rgba(255,215,0,0.8);
+            font-size: 16px;
+            margin-top: 20px;
+            font-style: italic;
+            font-weight: 400;
+        }
         @media (max-width: 768px) {
             h1 {
-                font-size: 42px;
+                font-size: 36px;
             }
             .subtitle {
-                font-size: 16px;
+                font-size: 14px;
+                letter-spacing: 3px;
             }
             .btn {
-                font-size: 20px;
-                padding: 15px 40px;
+                font-size: 16px;
+                padding: 14px 35px;
+            }
+            .easter-egg-btn {
+                font-size: 14px;
+                padding: 12px 28px;
             }
             .instructions {
-                padding: 20px 25px;
+                padding: 25px 30px;
             }
             .instruction-item {
                 font-size: 16px;
+            }
+            #tutorial {
+                padding: 25px 35px;
+                max-width: 85%;
+            }
+            #tutorial h2 {
+                font-size: 24px;
+            }
+            #tutorial p {
+                font-size: 16px;
+            }
+            #tutorial .hint {
+                font-size: 14px;
+            }
+            #finalStats {
+                padding: 25px 30px;
+                margin: 20px;
+            }
+            .stat-label {
+                font-size: 16px;
+            }
+            .stat-value {
+                font-size: 22px;
+            }
+            #stats {
+                font-size: 14px;
+                padding: 15px 20px;
+                min-width: 180px;
+            }
+            #stats .value {
+                font-size: 18px;
+            }
+            #stats .coin-row .value {
+                font-size: 24px;
             }
         }
     </style>
@@ -232,12 +455,20 @@
     <canvas id="canvas"></canvas>
     <div id="ui">
         <div id="stats">
-            <div>⏱️ Time: <span id="time">0.0</span>s</div>
-            <div>📏 Distance: <span id="distance">0</span>m</div>
-            <div>📈 Height: <span id="height">0</span>m</div>
+            <div><span class="label">⏱️ Time</span><span class="value"><span id="time">0.0</span>s</span></div>
+            <div><span class="label">📏 Distance</span><span class="value"><span id="distance">0</span>m</span></div>
+            <div><span class="label">📈 Height</span><span class="value"><span id="height">0</span>m</span></div>
+            <div class="coin-row"><span class="label">🪙 Coins</span><span class="value"><span id="coinCount">0</span></span></div>
         </div>
+        <div id="oneUpEffect">1-UP!</div>
         <div class="crosshair">
             <div class="crosshair-center"></div>
+        </div>
+        <div id="tutorial" style="display: none;">
+            <h2>How to Play</h2>
+            <p>🖱️ Hold & drag to look around</p>
+            <p>🚀 Release to jump forward</p>
+            <p class="hint">Move or jump to start playing!</p>
         </div>
         <div id="startScreen">
             <div class="title-container">
@@ -259,7 +490,36 @@
                 </div>
             </div>
             <button class="btn" onclick="startGame()">Start Flight</button>
+            <button class="easter-egg-btn" onclick="showEasterEggs()">🥚 Easter Eggs</button>
             <div class="credit">Created by Claude | Idea by ymhomer</div>
+        </div>
+        <div id="easterEggList">
+            <h1 style="margin-bottom: 30px;">🥚 Easter Egg Collection</h1>
+            <div class="egg-item">
+                <div class="egg-title">💤 Tutorial Sleeper</div>
+                <div class="egg-desc">Stay in the tutorial screen for 30 seconds without moving.</div>
+            </div>
+            <div class="egg-item">
+                <div class="egg-title">🎯 One Jump Wonder</div>
+                <div class="egg-desc">Complete the game with exactly one jump.</div>
+            </div>
+            <div class="egg-item">
+                <div class="egg-title">➡️ Straight Shooter</div>
+                <div class="egg-desc">Never change direction - fly straight into danger!</div>
+            </div>
+            <div class="egg-item">
+                <div class="egg-title">🚀 Space Explorer</div>
+                <div class="egg-desc">Reach a height of 500+ meters.</div>
+            </div>
+            <div class="egg-item">
+                <div class="egg-title">🎢 Epic Fall</div>
+                <div class="egg-desc">Fall from 300+ meters to the ground.</div>
+            </div>
+            <div class="egg-item">
+                <div class="egg-title">🪙 Coin Master</div>
+                <div class="egg-desc">Collect 100 coins in a single run to trigger 1-UP!</div>
+            </div>
+            <button class="btn" onclick="hideEasterEggs()" style="margin-top: 20px;">Back</button>
         </div>
         <div id="gameOverScreen">
             <div class="title-container">
@@ -268,6 +528,7 @@
             </div>
             <div id="finalStats"></div>
             <button class="btn" onclick="restartGame()">Try Again</button>
+            <button class="btn btn-secondary" onclick="backToMenu()">Main Menu</button>
         </div>
     </div>
 
@@ -288,6 +549,20 @@
         let mouseDown = false;
         let touchActive = false;
         let collisionType = 'unknown'; // Track what player collided with
+        let hasChangedDirection = false; // Track if player has turned
+        
+        // Tutorial state
+        let tutorialActive = false;
+        let tutorialStartTime = 0;
+        let gameReallyStarted = false; // Track if player actually started playing
+        
+        // Easter egg tracking
+        let jumpCount = 0;
+        let maxHeightReached = 0;
+        let lastJumpTime = 0;
+        let timeAtMaxHeight = 0;
+        let coinsCollected = 0;
+        let oneUpTriggered = false;
 
         // Player physics - INCREASED JUMP DISTANCE
         const player = {
@@ -423,6 +698,7 @@
 
         // Player visual (bird) - Simple round design with flapping wings
         // Bird model is designed to face +Z direction by default
+        // Bird model is designed to face +Z direction by default
         const playerMesh = new THREE.Group();
         
         // Body - simple sphere
@@ -532,12 +808,36 @@
                 rim.castShadow = true;
                 scene.add(rim);
                 
+                // 30% chance to spawn a coin on top of the pipe
+                const hasCoin = seedRandom(chunkX * 17, chunkZ * 23) < 0.3;
+                let coin = null;
+                
+                if (hasCoin) {
+                    // Create spinning coin - LARGER SIZE
+                    const coinGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.4, 20);
+                    const coinMat = new THREE.MeshLambertMaterial({ 
+                        color: 0xFFD700, 
+                        emissive: 0xFFAA00,
+                        emissiveIntensity: 0.5
+                    });
+                    coin = new THREE.Mesh(coinGeo, coinMat);
+                    coin.rotation.x = Math.PI / 2;
+                    coin.position.set(baseX, height + 3, baseZ);
+                    coin.castShadow = true;
+                    coin.userData.rotationSpeed = 3;
+                    coin.userData.bobSpeed = 2.5;
+                    coin.userData.bobOffset = seedRandom(chunkX * 13, chunkZ * 19) * Math.PI * 2;
+                    scene.add(coin);
+                }
+                
                 obsList.push({ 
                     meshes: [pipe, rim], 
                     position: new THREE.Vector3(baseX, height / 2, baseZ), 
                     radius: 2.5, 
                     height,
-                    type: pipeType
+                    type: pipeType,
+                    coin: coin,
+                    coinCollected: false
                 });
             } else {
                 // Create island with variations
@@ -674,6 +974,12 @@
                     mesh.geometry.dispose();
                     mesh.material.dispose();
                 });
+                // Remove coin if exists
+                if (obs.coin) {
+                    scene.remove(obs.coin);
+                    obs.coin.geometry.dispose();
+                    obs.coin.material.dispose();
+                }
             });
 
             obstacles.delete(key);
@@ -711,13 +1017,25 @@
             mouseDown = true;
             cameraControl.lastMouseX = e.clientX;
             cameraControl.lastMouseY = e.clientY;
+            
+            // Exit tutorial when player starts interacting
+            if (tutorialActive) {
+                exitTutorial();
+            }
         }
 
         function onMouseMove(e) {
-            if (!mouseDown || !gameStarted || gameOver) return;
+            if (!gameStarted || gameOver) return;
+            
+            if (!mouseDown) return;
             
             const deltaX = e.clientX - cameraControl.lastMouseX;
             const deltaY = e.clientY - cameraControl.lastMouseY;
+            
+            // Check if player is actually turning
+            if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                hasChangedDirection = true;
+            }
             
             cameraControl.yaw -= deltaX * cameraControl.sensitivity;
             cameraControl.pitch -= deltaY * cameraControl.sensitivity;
@@ -742,15 +1060,27 @@
             const touch = e.touches[0];
             cameraControl.lastMouseX = touch.clientX;
             cameraControl.lastMouseY = touch.clientY;
+            
+            // Exit tutorial when player starts interacting
+            if (tutorialActive) {
+                exitTutorial();
+            }
         }
 
         function onTouchMove(e) {
-            if (!touchActive || !gameStarted || gameOver) return;
+            if (!gameStarted || gameOver) return;
+            
+            if (!touchActive) return;
             e.preventDefault();
             
             const touch = e.touches[0];
             const deltaX = touch.clientX - cameraControl.lastMouseX;
             const deltaY = touch.clientY - cameraControl.lastMouseY;
+            
+            // Check if player is actually turning
+            if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                hasChangedDirection = true;
+            }
             
             cameraControl.yaw -= deltaX * cameraControl.sensitivity;
             cameraControl.pitch -= deltaY * cameraControl.sensitivity;
@@ -793,9 +1123,36 @@
             player.velocity.copy(player.jumpDirection).multiplyScalar(player.speed);
             player.velocity.y = player.jumpForce;
             player.isJumping = true;
+            
+            jumpCount++;
+            lastJumpTime = Date.now();
+            
+            // Exit tutorial on first jump
+            if (tutorialActive) {
+                exitTutorial();
+            }
+        }
+        
+        function exitTutorial() {
+            if (!tutorialActive) return;
+            tutorialActive = false;
+            gameReallyStarted = true;
+            document.getElementById('tutorial').style.display = 'none';
+            
+            // Give the bird initial velocity and jump when exiting tutorial
+            player.velocity.copy(player.nextJumpDirection).multiplyScalar(player.speed);
+            player.velocity.y = player.jumpForce;
+            player.jumpDirection.copy(player.nextJumpDirection);
+            jumpCount++;
+            lastJumpTime = Date.now();
         }
 
         function checkCollisions() {
+            // Don't check collisions during tutorial
+            if (tutorialActive || !gameReallyStarted) {
+                return false;
+            }
+            
             const playerPos = player.position;
             
             // Ground collision
@@ -804,7 +1161,7 @@
                 return true;
             }
             
-            // Obstacle collision - check nearby chunks only
+            // Obstacle collision and coin collection
             const playerChunkX = Math.floor(playerPos.x / obstacleChunkSize);
             const playerChunkZ = Math.floor(playerPos.z / obstacleChunkSize);
             
@@ -820,6 +1177,29 @@
                             playerPos.z - obs.position.z
                         ).length();
                         
+                        // Check coin collection - LARGER COLLECTION RADIUS
+                        if (obs.coin && !obs.coinCollected) {
+                            const coinDist = playerPos.distanceTo(obs.coin.position);
+                            if (coinDist < 5) { // Increased from 3 to 5
+                                // Collect coin!
+                                obs.coinCollected = true;
+                                scene.remove(obs.coin);
+                                coinsCollected++;
+                                document.getElementById('coinCount').textContent = coinsCollected;
+                                
+                                // Check for 100 coins (1-UP)
+                                if (coinsCollected >= 100 && !oneUpTriggered) {
+                                    oneUpTriggered = true;
+                                    const oneUpEl = document.getElementById('oneUpEffect');
+                                    oneUpEl.style.display = 'block';
+                                    setTimeout(() => {
+                                        oneUpEl.style.display = 'none';
+                                    }, 2000);
+                                }
+                            }
+                        }
+                        
+                        // Check obstacle collision
                         if (dist < obs.radius + 1.5) {
                             const heightDiff = Math.abs(playerPos.y - obs.position.y);
                             if (heightDiff < obs.height / 2 + 1.5) {
@@ -838,7 +1218,59 @@
             gameOver = true;
             const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
             const finalDist = totalDistance.toFixed(0);
-            const maxHeight = player.position.y.toFixed(0);
+            const maxHeight = maxHeightReached.toFixed(0);
+            
+            // Easter egg messages (HIGHEST PRIORITY)
+            const easterEggMessages = [];
+            
+            // Easter egg: Stayed frozen in tutorial for 30+ seconds
+            if (!gameReallyStarted && Date.now() - tutorialStartTime >= 30000) {
+                easterEggMessages.push("30 seconds frozen? Did you fall asleep? 😴💤");
+                easterEggMessages.push("Hello? Anyone there? The game is WAITING for you!");
+                easterEggMessages.push("Achievement Unlocked: Master of Standing Still!");
+                easterEggMessages.push("You just stared at instructions for 30 seconds. Impressive?");
+                easterEggMessages.push("The tutorial isn't THAT interesting... or is it? 🤔");
+            }
+            
+            // Easter egg: Never jumped after tutorial
+            if (!tutorialActive && jumpCount === 1) {
+                easterEggMessages.push("One jump and done? That's... a strategy? 🤔");
+                easterEggMessages.push("You know you can jump MORE than once, right?");
+                easterEggMessages.push("Minimalist approach: 1 jump. Not recommended.");
+            }
+            
+            // Easter egg: Reached 300m+ height then fell
+            if (gameReallyStarted && maxHeightReached >= 300 && player.position.y < 50 && collisionType === 'ground') {
+                easterEggMessages.push("From 300m+ to ground level... What a ride! 🎢");
+                easterEggMessages.push("That was one EPIC fall from the heavens!");
+                easterEggMessages.push("Icarus called, he wants his wings back!");
+            }
+            
+            // Easter egg: Flew above 500m
+            if (gameReallyStarted && maxHeightReached >= 500) {
+                easterEggMessages.push("500+ METERS?! Are you a rocket? 🚀");
+                easterEggMessages.push("You've entered the stratosphere! NASA wants your number.");
+                easterEggMessages.push("That's not flying, that's escaping the planet!");
+            }
+            
+            // Easter egg: Didn't jump for 15+ seconds after tutorial
+            if (gameReallyStarted && Date.now() - lastJumpTime > 15000 && jumpCount > 1) {
+                easterEggMessages.push("15 seconds without jumping? Taking a coffee break? ☕");
+                easterEggMessages.push("Did you forget the controls mid-flight?");
+                easterEggMessages.push("Pro tip: Jumping helps you stay airborne!");
+            }
+            
+            // Special easter egg messages if player never changed direction
+            const noTurnMessages = [
+                "Wait... you didn't even try to turn? 😅",
+                "Brave strategy: flying straight into danger!",
+                "Pro tip: You can actually look around!",
+                "That's one way to play... the WRONG way!",
+                "Did you know? The mouse/touch screen works for turning!",
+                "Straight shooter, aren't you? Too straight!",
+                "I admire your commitment to going forward... just forward.",
+                "Next time, try turning! It's fun, I promise!"
+            ];
             
             // Generate fun messages based on collision type
             const messages = {
@@ -892,8 +1324,21 @@
                 ]
             };
             
-            const messageArray = messages[collisionType] || messages['unknown'];
-            const randomMessage = messageArray[Math.floor(Math.random() * messageArray.length)];
+            let randomMessage;
+            
+            // Priority 1: Easter egg messages
+            if (easterEggMessages.length > 0) {
+                randomMessage = easterEggMessages[Math.floor(Math.random() * easterEggMessages.length)];
+            }
+            // Priority 2: No turn message
+            else if (!hasChangedDirection) {
+                randomMessage = noTurnMessages[Math.floor(Math.random() * noTurnMessages.length)];
+            }
+            // Priority 3: Normal collision messages
+            else {
+                const messageArray = messages[collisionType] || messages['unknown'];
+                randomMessage = messageArray[Math.floor(Math.random() * messageArray.length)];
+            }
             
             document.getElementById('finalStats').innerHTML = `
                 <div style="text-align: center; margin-bottom: 20px; font-size: 20px; color: #FFD700; font-style: italic;">
@@ -912,34 +1357,80 @@
                     <span class="stat-value">${maxHeight}m</span>
                 </div>
                 <div class="stat-row">
+                    <span class="stat-label">Total Jumps</span>
+                    <span class="stat-value">${jumpCount}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Coins Collected</span>
+                    <span class="stat-value">🪙 ${coinsCollected}</span>
+                </div>
+                <div class="stat-row">
                     <span class="stat-label">Collision</span>
                     <span class="stat-value" style="font-size: 20px;">${collisionType}</span>
                 </div>
             `;
             document.getElementById('gameOverScreen').style.display = 'flex';
         }
+        
+        function showEasterEggs() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('easterEggList').style.display = 'flex';
+        }
+        
+        function hideEasterEggs() {
+            document.getElementById('easterEggList').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+        
+        function backToMenu() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        }
 
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('easterEggList').style.display = 'none';
+            
+            // Show tutorial
+            document.getElementById('tutorial').style.display = 'block';
+            document.getElementById('stats').style.display = 'block';
+            tutorialActive = true;
+            tutorialStartTime = Date.now();
+            gameReallyStarted = false;
+            
             gameStarted = true;
             gameOver = false;
             startTime = Date.now();
             totalDistance = 0;
-            player.position.set(0, 35, 0); // Starting height raised to 35
-            player.velocity.set(0, 0, 1); // Start moving in +Z direction
-            player.jumpDirection.set(0, 0, 1); // Initial direction +Z
+            hasChangedDirection = false;
+            jumpCount = 0;
+            maxHeightReached = 0;
+            lastJumpTime = Date.now();
+            coinsCollected = 0;
+            oneUpTriggered = false;
+            document.getElementById('coinCount').textContent = '0';
+            
+            player.position.set(0, 35, 0);
+            player.velocity.set(0, 0, 0);
+            player.jumpDirection.set(0, 0, 1);
             player.nextJumpDirection.set(0, 0, 1);
-            cameraControl.yaw = Math.PI; // Camera looks in +Z direction (away from origin)
+            cameraControl.yaw = Math.PI;
             cameraControl.pitch = 0;
             
-            // Reset bird rotation to match initial velocity
-            playerMesh.rotation.y = 0; // Bird faces +Z
+            playerMesh.rotation.y = 0;
             playerMesh.rotation.x = 0;
         }
 
         function restartGame() {
             document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
             startGame();
+        }
+        
+        function backToMenu() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
         }
 
         // Animation loop
