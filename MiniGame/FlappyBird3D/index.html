@@ -69,26 +69,26 @@
         }
         .title-container {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
             position: relative;
         }
         .title-container::before {
             content: '';
             position: absolute;
-            top: -30px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
+            width: 80px;
+            height: 3px;
             background: linear-gradient(90deg, transparent, #FFD700, transparent);
         }
         h1 {
             color: #FFD700;
-            font-size: 56px;
+            font-size: 48px;
             font-weight: 900;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-shadow: 0 0 30px rgba(255,215,0,0.5), 5px 5px 15px rgba(0,0,0,0.9);
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -96,9 +96,9 @@
         }
         .subtitle {
             color: rgba(255,255,255,0.9);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 400;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             text-transform: uppercase;
             opacity: 0.8;
         }
@@ -106,18 +106,19 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 16px 45px;
-            font-size: 18px;
+            padding: 14px 35px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             border-radius: 50px;
-            margin: 10px;
+            margin: 8px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 10px 40px rgba(102,126,234,0.4);
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             position: relative;
             overflow: hidden;
+            min-width: 160px;
         }
         .btn::before {
             content: '';
@@ -151,29 +152,29 @@
             backdrop-filter: blur(20px);
             border: 2px solid rgba(255,255,255,0.15);
             border-radius: 25px;
-            padding: 35px 45px;
-            margin: 25px;
-            max-width: 650px;
+            padding: 25px 35px;
+            margin: 20px;
+            max-width: 600px;
             box-shadow: 0 15px 50px rgba(0,0,0,0.3);
         }
         .instruction-item {
             color: white;
-            font-size: 18px;
-            margin: 18px 0;
+            font-size: 16px;
+            margin: 15px 0;
             display: flex;
             align-items: center;
-            line-height: 1.8;
+            line-height: 1.6;
         }
         .instruction-icon {
             background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,193,7,0.5));
             border-radius: 50%;
-            width: 48px;
-            height: 48px;
+            width: 42px;
+            height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 18px;
-            font-size: 22px;
+            margin-right: 15px;
+            font-size: 20px;
             flex-shrink: 0;
             box-shadow: 0 5px 15px rgba(255,215,0,0.3);
         }
@@ -182,17 +183,18 @@
             backdrop-filter: blur(20px);
             border: 2px solid rgba(255,255,255,0.15);
             border-radius: 25px;
-            padding: 30px 40px;
-            margin: 25px;
+            padding: 25px 35px;
+            margin: 20px 20px 15px 20px;
             box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-            max-width: 600px;
+            max-width: 550px;
+            width: 90%;
         }
         .stat-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 15px 0;
-            padding: 12px 0;
+            margin: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .stat-row:last-child {
@@ -200,15 +202,23 @@
         }
         .stat-label {
             font-weight: 400;
-            margin-right: 30px;
+            margin-right: 20px;
             color: rgba(255,255,255,0.8);
-            font-size: 18px;
+            font-size: 16px;
         }
         .stat-value {
             font-weight: 900;
             color: #FFD700;
-            font-size: 26px;
+            font-size: 22px;
             text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        .buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 0 20px;
+            max-width: 600px;
         }
         .crosshair {
             position: absolute;
@@ -260,16 +270,17 @@
             background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,193,7,0.35));
             border: 3px solid rgba(255,215,0,0.6);
             color: #FFD700;
-            padding: 14px 35px;
-            font-size: 16px;
+            padding: 12px 30px;
+            font-size: 14px;
             font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
-            margin: 10px;
+            margin: 8px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             box-shadow: 0 10px 40px rgba(255,215,0,0.3);
+            min-width: 160px;
         }
         .easter-egg-btn:hover {
             background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,193,7,0.5));
@@ -303,11 +314,27 @@
             width: 100%;
             transition: all 0.3s ease;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .egg-item.completed {
+            border-color: rgba(76,175,80,0.6);
+            background: rgba(76,175,80,0.1);
+        }
+        .egg-item.locked {
+            opacity: 0.5;
         }
         .egg-item:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-            border-color: rgba(255,215,0,0.5);
+        }
+        .egg-item.completed:hover {
+            border-color: rgba(76,175,80,0.8);
+        }
+        .egg-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 32px;
         }
         .egg-title {
             color: #FFD700;
@@ -315,11 +342,19 @@
             font-weight: 800;
             margin-bottom: 12px;
             text-shadow: 0 0 15px rgba(255,215,0,0.5);
+            padding-right: 50px;
+        }
+        .egg-title.locked {
+            color: #999;
+            text-shadow: none;
         }
         .egg-desc {
             color: rgba(255,255,255,0.9);
             font-size: 17px;
             line-height: 1.6;
+        }
+        .egg-desc.locked {
+            color: rgba(255,255,255,0.5);
         }
         #coinCounter {
             position: absolute;
@@ -394,28 +429,36 @@
         }
         @media (max-width: 768px) {
             h1 {
-                font-size: 36px;
+                font-size: 32px;
             }
             .subtitle {
-                font-size: 14px;
-                letter-spacing: 3px;
+                font-size: 12px;
+                letter-spacing: 2px;
             }
             .btn {
-                font-size: 16px;
-                padding: 14px 35px;
-            }
-            .easter-egg-btn {
                 font-size: 14px;
                 padding: 12px 28px;
+                min-width: 140px;
+            }
+            .easter-egg-btn {
+                font-size: 12px;
+                padding: 10px 24px;
+                min-width: 140px;
             }
             .instructions {
-                padding: 25px 30px;
+                padding: 20px 25px;
+                margin: 15px;
             }
             .instruction-item {
-                font-size: 16px;
+                font-size: 14px;
+            }
+            .instruction-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
             }
             #tutorial {
-                padding: 25px 35px;
+                padding: 25px 30px;
                 max-width: 85%;
             }
             #tutorial h2 {
@@ -425,28 +468,29 @@
                 font-size: 16px;
             }
             #tutorial .hint {
-                font-size: 14px;
+                font-size: 13px;
             }
             #finalStats {
-                padding: 25px 30px;
-                margin: 20px;
+                padding: 20px 25px;
+                margin: 15px 15px 10px 15px;
+                width: 85%;
             }
             .stat-label {
-                font-size: 16px;
+                font-size: 14px;
             }
             .stat-value {
-                font-size: 22px;
-            }
-            #stats {
-                font-size: 14px;
-                padding: 15px 20px;
-                min-width: 180px;
-            }
-            #stats .value {
                 font-size: 18px;
             }
+            #stats {
+                font-size: 13px;
+                padding: 15px 18px;
+                min-width: 170px;
+            }
+            #stats .value {
+                font-size: 16px;
+            }
             #stats .coin-row .value {
-                font-size: 24px;
+                font-size: 20px;
             }
         }
     </style>
@@ -495,29 +539,8 @@
         </div>
         <div id="easterEggList">
             <h1 style="margin-bottom: 30px;">🥚 Easter Egg Collection</h1>
-            <div class="egg-item">
-                <div class="egg-title">💤 Tutorial Sleeper</div>
-                <div class="egg-desc">Stay in the tutorial screen for 30 seconds without moving.</div>
-            </div>
-            <div class="egg-item">
-                <div class="egg-title">🎯 One Jump Wonder</div>
-                <div class="egg-desc">Complete the game with exactly one jump.</div>
-            </div>
-            <div class="egg-item">
-                <div class="egg-title">➡️ Straight Shooter</div>
-                <div class="egg-desc">Never change direction - fly straight into danger!</div>
-            </div>
-            <div class="egg-item">
-                <div class="egg-title">🚀 Space Explorer</div>
-                <div class="egg-desc">Reach a height of 500+ meters.</div>
-            </div>
-            <div class="egg-item">
-                <div class="egg-title">🎢 Epic Fall</div>
-                <div class="egg-desc">Fall from 300+ meters to the ground.</div>
-            </div>
-            <div class="egg-item">
-                <div class="egg-title">🪙 Coin Master</div>
-                <div class="egg-desc">Collect 100 coins in a single run to trigger 1-UP!</div>
+            <div id="eggListContainer">
+                <!-- Eggs will be dynamically inserted here -->
             </div>
             <button class="btn" onclick="hideEasterEggs()" style="margin-top: 20px;">Back</button>
         </div>
@@ -527,8 +550,10 @@
                 <div class="subtitle">Mission Complete</div>
             </div>
             <div id="finalStats"></div>
-            <button class="btn" onclick="restartGame()">Try Again</button>
-            <button class="btn btn-secondary" onclick="backToMenu()">Main Menu</button>
+            <div class="buttons-container">
+                <button class="btn" onclick="restartGame()">Try Again</button>
+                <button class="btn btn-secondary" onclick="backToMenu()">Main Menu</button>
+            </div>
         </div>
     </div>
 
@@ -563,6 +588,16 @@
         let timeAtMaxHeight = 0;
         let coinsCollected = 0;
         let oneUpTriggered = false;
+        
+        // Easter egg completion tracking
+        const easterEggs = {
+            tutorialSleeper: false,
+            oneJump: false,
+            straightShooter: false,
+            spaceExplorer: false,
+            epicFall: false,
+            coinMaster: false
+        };
 
         // Player physics - INCREASED JUMP DISTANCE
         const player = {
@@ -1331,13 +1366,21 @@
                 randomMessage = easterEggMessages[Math.floor(Math.random() * easterEggMessages.length)];
             }
             // Priority 2: No turn message
-            else if (!hasChangedDirection) {
+            else if (!hasChangedDirection && gameReallyStarted) {
                 randomMessage = noTurnMessages[Math.floor(Math.random() * noTurnMessages.length)];
+                easterEggs.straightShooter = true;
             }
             // Priority 3: Normal collision messages
             else {
                 const messageArray = messages[collisionType] || messages['unknown'];
                 randomMessage = messageArray[Math.floor(Math.random() * messageArray.length)];
+            }
+            
+            // Save easter eggs to localStorage
+            try {
+                localStorage.setItem('flappyEasterEggs', JSON.stringify(easterEggs));
+            } catch (e) {
+                console.log('LocalStorage not available');
             }
             
             document.getElementById('finalStats').innerHTML = `
@@ -1374,6 +1417,65 @@
         
         function showEasterEggs() {
             document.getElementById('startScreen').style.display = 'none';
+            
+            // Load saved easter eggs
+            try {
+                const saved = localStorage.getItem('flappyEasterEggs');
+                if (saved) {
+                    const savedEggs = JSON.parse(saved);
+                    Object.assign(easterEggs, savedEggs);
+                }
+            } catch (e) {
+                // LocalStorage not available
+            }
+            
+            // Update Easter Egg list display
+            const eggListHTML = `
+                <div class="egg-item ${easterEggs.tutorialSleeper ? 'completed' : 'locked'}">
+                    <div class="egg-status">${easterEggs.tutorialSleeper ? '✅' : '❓'}</div>
+                    <div class="egg-title ${!easterEggs.tutorialSleeper ? 'locked' : ''}">${easterEggs.tutorialSleeper ? '💤 Tutorial Sleeper' : '❓❓❓'}</div>
+                    <div class="egg-desc ${!easterEggs.tutorialSleeper ? 'locked' : ''}">
+                        ${easterEggs.tutorialSleeper ? 'Stay in the tutorial screen for 30 seconds without moving.' : '???????????????????'}
+                    </div>
+                </div>
+                <div class="egg-item ${easterEggs.oneJump ? 'completed' : 'locked'}">
+                    <div class="egg-status">${easterEggs.oneJump ? '✅' : '❓'}</div>
+                    <div class="egg-title ${!easterEggs.oneJump ? 'locked' : ''}">${easterEggs.oneJump ? '🎯 One Jump Wonder' : '❓❓❓'}</div>
+                    <div class="egg-desc ${!easterEggs.oneJump ? 'locked' : ''}">
+                        ${easterEggs.oneJump ? 'Complete the game with exactly one jump.' : '???????????????????'}
+                    </div>
+                </div>
+                <div class="egg-item ${easterEggs.straightShooter ? 'completed' : 'locked'}">
+                    <div class="egg-status">${easterEggs.straightShooter ? '✅' : '❓'}</div>
+                    <div class="egg-title ${!easterEggs.straightShooter ? 'locked' : ''}">${easterEggs.straightShooter ? '➡️ Straight Shooter' : '❓❓❓'}</div>
+                    <div class="egg-desc ${!easterEggs.straightShooter ? 'locked' : ''}">
+                        ${easterEggs.straightShooter ? 'Never change direction - fly straight into danger!' : '???????????????????'}
+                    </div>
+                </div>
+                <div class="egg-item ${easterEggs.spaceExplorer ? 'completed' : 'locked'}">
+                    <div class="egg-status">${easterEggs.spaceExplorer ? '✅' : '❓'}</div>
+                    <div class="egg-title ${!easterEggs.spaceExplorer ? 'locked' : ''}">${easterEggs.spaceExplorer ? '🚀 Space Explorer' : '❓❓❓'}</div>
+                    <div class="egg-desc ${!easterEggs.spaceExplorer ? 'locked' : ''}">
+                        ${easterEggs.spaceExplorer ? 'Reach a height of 500+ meters.' : '???????????????????'}
+                    </div>
+                </div>
+                <div class="egg-item ${easterEggs.epicFall ? 'completed' : 'locked'}">
+                    <div class="egg-status">${easterEggs.epicFall ? '✅' : '❓'}</div>
+                    <div class="egg-title ${!easterEggs.epicFall ? 'locked' : ''}">${easterEggs.epicFall ? '🎢 Epic Fall' : '❓❓❓'}</div>
+                    <div class="egg-desc ${!easterEggs.epicFall ? 'locked' : ''}">
+                        ${easterEggs.epicFall ? 'Fall from 300+ meters to the ground.' : '???????????????????'}
+                    </div>
+                </div>
+                <div class="egg-item ${easterEggs.coinMaster ? 'completed' : 'locked'}">
+                    <div class="egg-status">${easterEggs.coinMaster ? '✅' : '❓'}</div>
+                    <div class="egg-title ${!easterEggs.coinMaster ? 'locked' : ''}">${easterEggs.coinMaster ? '🪙 Coin Master' : '❓❓❓'}</div>
+                    <div class="egg-desc ${!easterEggs.coinMaster ? 'locked' : ''}">
+                        ${easterEggs.coinMaster ? 'Collect 100 coins in a single run to trigger 1-UP!' : '???????????????????'}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('eggListContainer').innerHTML = eggListHTML;
             document.getElementById('easterEggList').style.display = 'flex';
         }
         
@@ -1390,6 +1492,17 @@
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('easterEggList').style.display = 'none';
+            
+            // Load saved easter eggs at start
+            try {
+                const saved = localStorage.getItem('flappyEasterEggs');
+                if (saved) {
+                    const savedEggs = JSON.parse(saved);
+                    Object.assign(easterEggs, savedEggs);
+                }
+            } catch (e) {
+                console.log('LocalStorage not available');
+            }
             
             // Show tutorial
             document.getElementById('tutorial').style.display = 'block';
