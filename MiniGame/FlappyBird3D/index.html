@@ -1253,7 +1253,16 @@
             gameOver = true;
             const finalTime = ((Date.now() - startTime) / 1000).toFixed(1);
             const finalDist = totalDistance.toFixed(0);
-            const maxHeight = maxHeightReached.toFixed(0);
+            const maxHeight = maxHeightReached.toFixed(0); // Use maxHeightReached, not current position
+            
+            console.log('Game Over Stats:', {
+                maxHeightReached: maxHeightReached,
+                currentHeight: player.position.y,
+                coinsCollected: coinsCollected,
+                jumpCount: jumpCount,
+                hasChangedDirection: hasChangedDirection,
+                gameReallyStarted: gameReallyStarted
+            });
             
             // Easter egg messages (HIGHEST PRIORITY)
             const easterEggMessages = [];
@@ -1369,6 +1378,7 @@
             else if (!hasChangedDirection && gameReallyStarted) {
                 randomMessage = noTurnMessages[Math.floor(Math.random() * noTurnMessages.length)];
                 easterEggs.straightShooter = true;
+                console.log('Easter Egg Unlocked: Straight Shooter');
             }
             // Priority 3: Normal collision messages
             else {
@@ -1379,8 +1389,9 @@
             // Save easter eggs to localStorage
             try {
                 localStorage.setItem('flappyEasterEggs', JSON.stringify(easterEggs));
+                console.log('Easter Eggs Saved:', easterEggs);
             } catch (e) {
-                console.log('LocalStorage not available');
+                console.log('LocalStorage not available:', e);
             }
             
             document.getElementById('finalStats').innerHTML = `
