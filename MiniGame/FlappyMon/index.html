@@ -1,0 +1,2706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FlappyMon - HTML5 GBA-style Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(#4d7fb8, #9fd0e3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #222;
+      overflow: hidden;
+    }
+    #game-frame {
+      width: 100vw;
+      height: 100vh;
+      max-width: 480px;
+      max-height: 860px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      border-radius: 16px;
+      border: 4px solid #1e3a5f;
+      background: linear-gradient(#f0f5ff, #e6f4ff);
+      box-shadow: 0 0 0 3px #fdf8e4, 0 10px 25px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    @media (orientation: landscape) {
+      #game-frame {
+        max-width: 900px;
+        max-height: 600px;
+      }
+    }
+
+    /* Top status */
+    #top-status {
+      flex: 0 0 80px;
+      display: flex;
+      padding: 4px 6px;
+      border-radius: 10px;
+      background: linear-gradient(#fdf7e0, #f4e7c5);
+      border: 3px solid #c7a66b;
+      box-shadow: inset 0 0 0 2px #fff7dc;
+      font-size: 11px;
+      gap: 4px;
+    }
+    @media (orientation: landscape) {
+      #top-status {
+        flex: 0 0 70px;
+        font-size: 10px;
+      }
+    }
+    .player-block {
+      flex: 0 0 35%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-right: 4px;
+      border-right: 2px solid #d4b47b;
+    }
+    .player-block #top-player-name {
+      font-weight: 700;
+      font-size: 12px;
+      text-shadow: 1px 1px #fff;
+    }
+    .coin-line {
+      font-size: 11px;
+    }
+    .coin-line span {
+      font-weight: 700;
+      color: #0e5b28;
+    }
+    .mon-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding-left: 4px;
+    }
+    .mon-main {
+      display: flex;
+      gap: 4px;
+      height: 100%;
+      align-items: center;
+    }
+    .mon-avatar {
+      flex: 0 0 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 2px solid #355c7d;
+      background: repeating-linear-gradient(
+        45deg,
+        #f6f7ff 0,
+        #f6f7ff 3px,
+        #d0d5ff 3px,
+        #d0d5ff 6px
+      );
+      box-shadow: inset 0 0 0 2px #ffffff;
+    }
+    .mon-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+    .mon-name-line {
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 1px;
+    }
+    .bar-row .label {
+      font-size: 9px;
+      min-width: 22px;
+    }
+    .bar {
+      flex: 1;
+      height: 8px;
+      border-radius: 5px;
+      border: 2px solid #355c7d;
+      background: #f7f8ff;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px #ffffff;
+    }
+    .bar div {
+      height: 100%;
+      width: 0%;
+      transition: width 0.25s;
+    }
+    .hp-bar div {
+      background: linear-gradient(#62c65a, #2f8c2b);
+    }
+    .exp-bar div {
+      background: linear-gradient(#6da6ff, #3c70c6);
+    }
+
+    /* Middle main */
+    #middle-main {
+      flex: 1 1 auto;
+      margin: 4px 0;
+      position: relative;
+      border-radius: 12px;
+      border: 3px solid #355c7d;
+      background: radial-gradient(circle at top, #b5e4c3, #6db48b);
+      overflow: hidden;
+    }
+
+    /* Playfield (Flappy) */
+    #playfield {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: linear-gradient(#78bde9, #b8e4ff);
+    }
+    #playfield::after {
+      content: "";
+      position: absolute;
+      left: -25%;
+      right: -25%;
+      bottom: -10px;
+      height: 40px;
+      background: repeating-linear-gradient(
+        90deg,
+        #9dd27a 0,
+        #9dd27a 6px,
+        #88bd65 6px,
+        #88bd65 12px
+      );
+      box-shadow: 0 -3px 0 #376327;
+    }
+    #pipes-layer {
+      position: absolute;
+      inset: 0;
+    }
+    .pipe {
+      position: absolute;
+      bottom: 0;
+      border: 3px solid #285021;
+      box-shadow: inset 0 0 0 2px #9ad88a;
+      border-radius: 4px;
+    }
+    .pipe-top {
+      top: 0;
+      bottom: auto;
+      border-radius: 0 0 4px 4px;
+    }
+    .pipe-bottom {
+      border-radius: 4px 4px 0 0;
+    }
+    .pipe.region0 {
+      background: linear-gradient(#62b352, #3f7c36);
+      border-color: #285021;
+      box-shadow: inset 0 0 0 2px #9ad88a;
+    }
+    .pipe.region1 {
+      background: linear-gradient(#f2d15a, #c99d1d);
+      border-color: #8a6a14;
+      box-shadow: inset 0 0 0 2px #ffe4a0;
+    }
+    .pipe.region2 {
+      background: linear-gradient(#f6ac5f, #c66d1c);
+      border-color: #8a4611;
+      box-shadow: inset 0 0 0 2px #ffd5a3;
+    }
+    .pipe.region3 {
+      background: linear-gradient(#f46a5a, #b03222);
+      border-color: #7a1c15;
+      box-shadow: inset 0 0 0 2px #ffc2b1;
+    }
+
+    .coin {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fffbe0, #f4c24d);
+      border: 2px solid #a76816;
+      box-shadow: 0 0 6px rgba(255, 230, 150, 0.9);
+    }
+
+    .encounter-icon {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #fff6f6, #f65a5a);
+      border: 2px solid #7b1111;
+      box-shadow: 0 0 8px rgba(250, 150, 150, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      color: #ffffff;
+      animation: encounterBob 1s ease-in-out infinite;
+    }
+    @keyframes encounterBob {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+      100% { transform: translateY(0); }
+    }
+
+    #flappy-bird {
+      position: absolute;
+      width: 28px;
+      height: 24px;
+      border-radius: 6px;
+      border: 3px solid #30415a;
+      background: linear-gradient(#ffdd5e, #f5a53d);
+      box-shadow:
+        inset 0 0 0 2px #fff6c8,
+        0 0 0 2px rgba(0, 0, 0, 0.2);
+    }
+    #flappy-bird::before {
+      content: "";
+      position: absolute;
+      right: 1px;
+      top: 7px;
+      width: 6px;
+      height: 4px;
+      background: #fefefe;
+      border-radius: 3px;
+      box-shadow: 0 0 0 1px #333;
+    }
+    #flappy-bird::after {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: 10px;
+      width: 10px;
+      height: 6px;
+      background: #fbe08d;
+      border-radius: 3px;
+      box-shadow: 0 0 0 2px #c98534;
+    }
+
+    /* Screens */
+    .screen {
+      position: absolute;
+      inset: 0;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+      background: linear-gradient(#b7dfb8, #7fb98d);
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* Title screen with GBA-style scene */
+    #title-screen {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(#7ac3f2, #cdeeff);
+      overflow: hidden;
+    }
+    .title-scene {
+      position: relative;
+      width: 100%;
+      height: 60%;
+      max-height: 260px;
+      border-radius: 12px;
+      border: 4px solid #294473;
+      background: linear-gradient(#7ac3f2, #b6e3ff);
+      box-shadow: inset 0 0 0 3px #fdf7e0;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .title-ground {
+      position: absolute;
+      left: -10%;
+      right: -10%;
+      bottom: -6px;
+      height: 40px;
+      background: repeating-linear-gradient(
+        90deg,
+        #9dd27a 0,
+        #9dd27a 6px,
+        #88bd65 6px,
+        #88bd65 12px
+      );
+      box-shadow: 0 -3px 0 #376327;
+    }
+    .title-hill {
+      position: absolute;
+      width: 90px;
+      height: 50px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 20%, #cfe9a8, #8cc46c);
+      bottom: 18px;
+      left: 8%;
+      box-shadow: 0 0 0 3px #4a7a39;
+    }
+    .title-hill.hill2 {
+      width: 110px;
+      height: 60px;
+      left: auto;
+      right: 4%;
+      bottom: 14px;
+      background: radial-gradient(circle at 40% 15%, #dbeea8, #93c071);
+      box-shadow: 0 0 0 3px #4a7a39;
+    }
+    .title-cloud {
+      position: absolute;
+      width: 54px;
+      height: 22px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow:
+        12px -4px 0 0 #ffffff,
+        26px 0 0 0 #ffffff;
+      opacity: 0.95;
+      animation: cloudDrift 20s linear infinite;
+    }
+    .title-cloud.c1 {
+      top: 20px;
+      left: -40px;
+      animation-delay: 0s;
+    }
+    .title-cloud.c2 {
+      top: 40px;
+      left: -80px;
+      transform: scale(0.9);
+      animation-duration: 24s;
+    }
+    .title-cloud.c3 {
+      top: 12px;
+      left: -120px;
+      transform: scale(1.1);
+      animation-duration: 26s;
+    }
+    @keyframes cloudDrift {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(260%); }
+    }
+    .title-flappy {
+      position: absolute;
+      width: 34px;
+      height: 28px;
+      left: 12%;
+      bottom: 42px;
+      border-radius: 8px;
+      border: 3px solid #2b3d5e;
+      background: linear-gradient(#ffe06a, #f7b54b);
+      box-shadow:
+        inset 0 0 0 2px #fff8c4,
+        0 0 0 2px rgba(0, 0, 0, 0.2);
+      animation: titleFlap 1.4s ease-in-out infinite;
+    }
+    .title-flappy::before {
+      content: "";
+      position: absolute;
+      right: 2px;
+      top: 8px;
+      width: 7px;
+      height: 5px;
+      background: #fefefe;
+      border-radius: 3px;
+      box-shadow: 0 0 0 1px #333;
+    }
+    .title-flappy::after {
+      content: "";
+      position: absolute;
+      left: -6px;
+      top: 11px;
+      width: 12px;
+      height: 8px;
+      background: #fbe08d;
+      border-radius: 4px;
+      box-shadow: 0 0 0 2px #c98534;
+    }
+    @keyframes titleFlap {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-8px); }
+      60% { transform: translateY(0); }
+      100% { transform: translateY(1px); }
+    }
+    .title-logo-wrap {
+      margin-bottom: 4px;
+    }
+    .title-logo {
+      font-size: 28px;
+      letter-spacing: 2px;
+      font-weight: 900;
+      padding: 8px 14px;
+      border-radius: 14px;
+      border: 4px solid #294473;
+      background: linear-gradient(#ffe88a, #f3b74c);
+      text-shadow: 2px 2px #c37d25, -1px -1px #fff6d4;
+      margin-bottom: 4px;
+    }
+    .title-sub {
+      font-size: 11px;
+      margin-top: 2px;
+      color: #143257;
+    }
+    .title-press-start {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #23406b;
+      font-weight: 700;
+      animation: blink 1s steps(2, start) infinite;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* Battle screen */
+    #battle-screen {
+      font-size: 11px;
+      background: linear-gradient(#9fd0e3, #e5f7ff);
+    }
+    .enemy-area,
+    .player-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .enemy-sprite,
+    .player-sprite {
+      width: 64px;
+      height: 48px;
+      border-radius: 8px;
+      border: 3px solid #30415a;
+      background: repeating-linear-gradient(
+        45deg,
+        #ffeaa7 0,
+        #ffeaa7 3px,
+        #f8c364 3px,
+        #f8c364 6px
+      );
+      box-shadow: inset 0 0 0 2px #fff7d1;
+    }
+    .enemy-sprite {
+      background: repeating-linear-gradient(
+        45deg,
+        #c2e0ff 0,
+        #c2e0ff 3px,
+        #7db4f5 3px,
+        #7db4f5 6px
+      );
+    }
+
+    .player-sprite.attacking {
+      animation: playerAttack 0.35s ease-out;
+    }
+    .enemy-sprite.attacking {
+      animation: enemyAttack 0.35s ease-out;
+    }
+    .enemy-sprite.hit,
+    .player-sprite.hit {
+      animation: monHit 0.35s ease-out;
+    }
+
+    @keyframes playerAttack {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes enemyAttack {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(10px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes monHit {
+      0% { transform: translateX(0); }
+      30% { transform: translateX(3px); }
+      60% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    .mon-panel {
+      flex: 1;
+      margin-left: 6px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      border: 3px solid #355c7d;
+      background: linear-gradient(#fdf7e0, #f4e7c5);
+      box-shadow: inset 0 0 0 2px #fff7dc;
+    }
+    .mon-name-level {
+      font-weight: 700;
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+    .hp-bar-small {
+      width: 100%;
+      height: 8px;
+      border-radius: 5px;
+      border: 2px solid #355c7d;
+      background: #f7f8ff;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px #ffffff;
+    }
+    .hp-bar-small div {
+      height: 100%;
+      background: linear-gradient(#62c65a, #2f8c2b);
+      width: 100%;
+      transition: width 0.25s;
+    }
+    .battle-message-box {
+      flex: 1;
+      margin-top: 4px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 3px solid #c88d4b;
+      background: linear-gradient(#fff7de, #f5e1bf);
+      box-shadow: inset 0 0 0 2px #fff3ce;
+      font-size: 11px;
+      line-height: 1.3;
+      white-space: pre-line;
+    }
+
+    /* Capture overlay */
+    .capture-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .capture-device {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #f6b36d);
+      border: 4px solid #7a3f11;
+      box-shadow: 0 0 10px rgba(255, 220, 150, 1);
+    }
+    .capture-overlay.shaking .capture-device {
+      animation: shake 0.4s linear infinite;
+    }
+    .capture-text {
+      margin-top: 10px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #fff7e0;
+      border: 2px solid #c88d4b;
+      font-size: 11px;
+    }
+    @keyframes shake {
+      0% { transform: translateX(-2px); }
+      25% { transform: translateX(2px); }
+      50% { transform: translateX(-2px); }
+      75% { transform: translateX(2px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Pokedex */
+    #pokedex-screen {
+      font-size: 11px;
+      background: linear-gradient(#e1f4e6, #badec0);
+    }
+    .pokedex-layout {
+      display: flex;
+      height: 100%;
+      gap: 6px;
+    }
+    .pokedex-list {
+      flex: 0 0 45%;
+      border-radius: 8px;
+      border: 3px solid #355c7d;
+      background: #fdf7e0;
+      box-shadow: inset 0 0 0 2px #fff7dc;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .pokedex-list-item {
+      padding: 4px 4px;
+      border-radius: 6px;
+      margin-bottom: 3px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .pokedex-list-item:hover {
+      border-color: #355c7d;
+      background: #fff2bf;
+    }
+    .pokedex-detail {
+      flex: 1;
+      border-radius: 8px;
+      border: 3px solid #355c7d;
+      background: linear-gradient(#fdf7e0, #f4e7c5);
+      box-shadow: inset 0 0 0 2px #fff7dc;
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .pokedex-portrait {
+      height: 70px;
+      border-radius: 8px;
+      border: 3px solid #30415a;
+      background: repeating-linear-gradient(
+        45deg,
+        #ffeaa7 0,
+        #ffeaa7 3px,
+        #f8c364 3px,
+        #f8c364 6px
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .pokedex-info-lines div {
+      font-size: 11px;
+      margin-bottom: 1px;
+    }
+    .pokedex-flavor {
+      margin-top: 4px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      background: #fff7e6;
+      border: 2px solid #d4b47b;
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    /* Team */
+    #team-screen {
+      font-size: 11px;
+      background: linear-gradient(#e1f0ff, #c4d8ff);
+    }
+    .team-list {
+      flex: 1;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 3px solid #355c7d;
+      background: #fdf7e0;
+      box-shadow: inset 0 0 0 2px #fff7dc;
+      padding: 4px;
+    }
+    .team-item {
+      padding: 4px 6px;
+      border-radius: 8px;
+      border: 2px solid #c7a66b;
+      margin-bottom: 4px;
+      background: #fff7df;
+      cursor: pointer;
+    }
+    .team-item.active {
+      border-color: #355c7d;
+      background: #fff0bb;
+      box-shadow: 0 0 0 2px #f6e2a6;
+    }
+    .team-name {
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .team-stats {
+      font-size: 10px;
+    }
+
+    /* Shop */
+    #shop-screen {
+      font-size: 11px;
+      background: linear-gradient(#f2f4ff, #dae1ff);
+    }
+    .shop-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      gap: 6px;
+    }
+    .shop-status {
+      border-radius: 8px;
+      border: 3px solid #355c7d;
+      background: linear-gradient(#fdf7e0, #f4e7c5);
+      box-shadow: inset 0 0 0 2px #fff7dc;
+      padding: 4px 6px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .shop-items {
+      flex: 1;
+      border-radius: 8px;
+      border: 3px solid #355c7d;
+      background: #fdf7e0;
+      box-shadow: inset 0 0 0 2px #fff7dc;
+      padding: 4px 6px;
+      font-size: 11px;
+    }
+    .shop-item {
+      margin-bottom: 4px;
+    }
+    .shop-item-name {
+      font-weight: 700;
+    }
+    .shop-item-desc {
+      font-size: 10px;
+    }
+
+    /* Result screen */
+    #result-screen {
+      font-size: 11px;
+      background: linear-gradient(#fbe6c3, #f6cf8b);
+      padding: 8px;
+    }
+    .result-title {
+      font-weight: 900;
+      font-size: 14px;
+      margin-bottom: 4px;
+      text-align: center;
+      text-shadow: 1px 1px #fff;
+    }
+    .result-line {
+      margin-bottom: 3px;
+    }
+    .result-newmons {
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 2px dotted #b37b28;
+    }
+    .result-subtitle {
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    #result-newmons-list div {
+      font-size: 10px;
+      margin-bottom: 1px;
+    }
+
+    /* Bottom command box */
+    #bottom-command {
+      flex: 0 0 122px;
+      margin-top: 2px;
+      border-radius: 12px;
+      border: 4px solid #2b4c79;
+      background: linear-gradient(#fff7de, #f4e0b9);
+      box-shadow: inset 0 0 0 3px #fff3c9;
+      padding: 4px 6px;
+      display: flex;
+    }
+    @media (orientation: landscape) {
+      #bottom-command {
+        flex: 0 0 110px;
+      }
+    }
+    #bottom-box {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+    .bottom-text {
+      flex: 0 0 auto;
+      min-height: 32px;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    .bottom-options {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      align-items: center;
+      justify-items: stretch;
+      margin-top: 4px;
+    }
+    .bottom-options.flap-mode {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      align-items: flex-start;
+    }
+    .cmd-button {
+      padding: 4px 6px;
+      font-size: 11px;
+      border-radius: 10px;
+      border: 3px solid #355c7d;
+      background: linear-gradient(#fdf7e0, #f4e7c5);
+      box-shadow: 0 2px 0 #c7a66b;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .cmd-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #c7a66b;
+    }
+    .cmd-button.selected {
+      border-color: #1a3252;
+      background: linear-gradient(#fff1b0, #f4cf76);
+    }
+    .cmd-button.flap-button {
+      background: radial-gradient(circle at 30% 20%, #ffb4b4, #c93434);
+      border-color: #7f1414;
+      color: #fff8f0;
+      font-weight: 900;
+      letter-spacing: 1px;
+      border-radius: 999px;
+      height: 56px;
+      width: 56%;
+      max-width: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .cmd-button.flap-button.selected {
+      border-color: #fff2c0;
+      box-shadow: 0 0 0 2px #ffd6a5;
+    }
+    .bottom-hints {
+      flex: 0 0 auto;
+      font-size: 9px;
+      margin-top: 2px;
+      color: #5b4a2b;
+      display: none;
+    }
+    @media (orientation: landscape) {
+      .bottom-hints {
+        display: block;
+      }
+    }
+
+    /* Fade & flash layers for GBA-style transition */
+    #fade-layer {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease-out;
+      z-index: 50;
+    }
+    #fade-layer.active {
+      opacity: 0.8;
+    }
+    #flash-layer {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease-out;
+      z-index: 60;
+    }
+    #flash-layer.active {
+      opacity: 0.95;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-frame">
+    <div id="top-status">
+      <div class="player-block">
+        <div id="top-player-name">New Trainer</div>
+        <div class="coin-line">Coins: <span id="top-coins">0</span></div>
+      </div>
+      <div class="mon-block">
+        <div class="mon-main">
+          <div class="mon-avatar"></div>
+          <div class="mon-text">
+            <div class="mon-name-line">
+              <span id="top-mon-name">---</span>
+              &nbsp;Lv <span id="top-mon-level">1</span>
+            </div>
+            <div class="bar-row">
+              <div class="label">HP</div>
+              <div class="bar hp-bar"><div id="top-hp-fill"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="label">EXP</div>
+              <div class="bar exp-bar"><div id="top-exp-fill"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="middle-main">
+      <!-- Flappy playfield -->
+      <div id="playfield" class="hidden">
+        <div id="pipes-layer"></div>
+        <div id="flappy-bird"></div>
+      </div>
+
+      <!-- Title screen -->
+      <div id="title-screen" class="screen">
+        <div class="title-scene">
+          <div class="title-cloud c1"></div>
+          <div class="title-cloud c2"></div>
+          <div class="title-cloud c3"></div>
+          <div class="title-hill"></div>
+          <div class="title-hill hill2"></div>
+          <div class="title-flappy"></div>
+          <div class="title-ground"></div>
+        </div>
+        <div class="title-logo-wrap">
+          <div class="title-logo">FlappyMon</div>
+          <div class="title-sub">Float through calm skies, meet tiny friends.</div>
+          <div class="title-press-start">Press START or tap an option below</div>
+        </div>
+      </div>
+
+      <!-- Battle screen -->
+      <div id="battle-screen" class="screen hidden">
+        <div class="enemy-area">
+          <div class="enemy-sprite" id="enemy-sprite"></div>
+          <div class="mon-panel">
+            <div class="mon-name-level">
+              <span id="battle-enemy-name">---</span>
+              &nbsp;Lv <span id="battle-enemy-level">1</span>
+            </div>
+            <div class="hp-bar-small"><div id="battle-enemy-hp"></div></div>
+          </div>
+        </div>
+        <div class="player-area">
+          <div class="mon-panel">
+            <div class="mon-name-level">
+              <span id="battle-player-name">---</span>
+              &nbsp;Lv <span id="battle-player-level">1</span>
+            </div>
+            <div class="hp-bar-small"><div id="battle-player-hp"></div></div>
+          </div>
+          <div class="player-sprite" id="player-sprite"></div>
+        </div>
+        <div id="battle-message" class="battle-message-box">
+          A wild FlappyMon appeared!
+        </div>
+        <div id="capture-overlay" class="capture-overlay hidden">
+          <div class="capture-device"></div>
+          <div id="capture-text" class="capture-text">Throwing capture device...</div>
+        </div>
+      </div>
+
+      <!-- Pokedex screen -->
+      <div id="pokedex-screen" class="screen hidden">
+        <div class="pokedex-layout">
+          <div id="pokedex-list" class="pokedex-list"></div>
+          <div class="pokedex-detail">
+            <div id="pokedex-portrait" class="pokedex-portrait">---</div>
+            <div id="pokedex-info-lines" class="pokedex-info-lines"></div>
+            <div id="pokedex-flavor" class="pokedex-flavor">
+              Explore the skies to meet more FlappyMon.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team screen -->
+      <div id="team-screen" class="screen hidden">
+        <div id="team-list" class="team-list"></div>
+      </div>
+
+      <!-- Shop screen -->
+      <div id="shop-screen" class="screen hidden">
+        <div class="shop-layout">
+          <div id="shop-status" class="shop-status"></div>
+          <div id="shop-items" class="shop-items"></div>
+        </div>
+      </div>
+
+      <!-- Result screen -->
+      <div id="result-screen" class="screen hidden">
+        <div class="result-title">Run Results</div>
+        <div id="result-distance" class="result-line">Distance: 0 m</div>
+        <div id="result-pipes" class="result-line">Pipes cleared: 0</div>
+        <div id="result-exp" class="result-line">EXP gained: 0</div>
+        <div id="result-coins" class="result-line">Coins from coins: 0</div>
+        <div class="result-newmons">
+          <div class="result-subtitle">New discoveries</div>
+          <div id="result-newmons-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom command box -->
+    <div id="bottom-command">
+      <div id="bottom-box">
+        <div id="bottom-text" class="bottom-text"></div>
+        <div id="bottom-options" class="bottom-options"></div>
+        <div id="bottom-hints" class="bottom-hints">
+          SPACE: Jump / Arrow keys: Move / ENTER: Confirm
+        </div>
+      </div>
+    </div>
+
+    <!-- Fade & flash layers -->
+    <div id="fade-layer"></div>
+    <div id="flash-layer"></div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const GameMode = {
+        TITLE: "title",
+        FLAPPY: "flappy",
+        BATTLE: "battle",
+        POKEDEX: "pokedex",
+        TEAM: "team",
+        SHOP: "shop",
+        RESULT: "result",
+        OPTIONS: "options"
+      };
+
+      const speciesData = [
+        {
+          id: 1,
+          name: "Breefin",
+          type: "Wind",
+          baseHp: 20,
+          baseAtk: 6,
+          baseSpd: 7,
+          description: "A light-hearted flier that rides every gentle breeze.",
+          captureDifficulty: 1.0
+        },
+        {
+          id: 2,
+          name: "Emberix",
+          type: "Flame",
+          baseHp: 18,
+          baseAtk: 8,
+          baseSpd: 5,
+          description: "Its tail glows warmly. It flaps faster when excited.",
+          captureDifficulty: 1.2
+        },
+        {
+          id: 3,
+          name: "Drizzlew",
+          type: "Mist",
+          baseHp: 22,
+          baseAtk: 5,
+          baseSpd: 6,
+          description: "A calm cloud-glider that leaves tiny droplets behind.",
+          captureDifficulty: 0.9
+        },
+        {
+          id: 4,
+          name: "Voltulo",
+          type: "Spark",
+          baseHp: 17,
+          baseAtk: 7,
+          baseSpd: 8,
+          description: "Crackling with static, it darts between storm clouds.",
+          captureDifficulty: 1.4
+        }
+      ];
+
+      const skills = [
+        { id: "gust", name: "Wing Gust", power: 4, desc: "A light but steady hit." },
+        { id: "pierce", name: "Sky Pierce", power: 7, desc: "A strong strike that may miss." },
+        { id: "breeze", name: "Calm Breeze", power: 3, heal: 3, desc: "Small damage and some healing." }
+      ];
+
+      const dom = {
+        topPlayerName: document.getElementById("top-player-name"),
+        topCoins: document.getElementById("top-coins"),
+        topMonName: document.getElementById("top-mon-name"),
+        topMonLevel: document.getElementById("top-mon-level"),
+        topHpFill: document.getElementById("top-hp-fill"),
+        topExpFill: document.getElementById("top-exp-fill"),
+
+        playfield: document.getElementById("playfield"),
+        pipesLayer: document.getElementById("pipes-layer"),
+        bird: document.getElementById("flappy-bird"),
+
+        titleScreen: document.getElementById("title-screen"),
+        battleScreen: document.getElementById("battle-screen"),
+        pokedexScreen: document.getElementById("pokedex-screen"),
+        teamScreen: document.getElementById("team-screen"),
+        shopScreen: document.getElementById("shop-screen"),
+        resultScreen: document.getElementById("result-screen"),
+
+        battleEnemyName: document.getElementById("battle-enemy-name"),
+        battleEnemyLevel: document.getElementById("battle-enemy-level"),
+        battleEnemyHp: document.getElementById("battle-enemy-hp"),
+        battlePlayerName: document.getElementById("battle-player-name"),
+        battlePlayerLevel: document.getElementById("battle-player-level"),
+        battlePlayerHp: document.getElementById("battle-player-hp"),
+        battleMessage: document.getElementById("battle-message"),
+        captureOverlay: document.getElementById("capture-overlay"),
+        captureText: document.getElementById("capture-text"),
+        playerSprite: document.getElementById("player-sprite"),
+        enemySprite: document.getElementById("enemy-sprite"),
+
+        pokedexList: document.getElementById("pokedex-list"),
+        pokedexPortrait: document.getElementById("pokedex-portrait"),
+        pokedexInfoLines: document.getElementById("pokedex-info-lines"),
+        pokedexFlavor: document.getElementById("pokedex-flavor"),
+
+        teamList: document.getElementById("team-list"),
+
+        shopStatus: document.getElementById("shop-status"),
+        shopItems: document.getElementById("shop-items"),
+
+        resultDistance: document.getElementById("result-distance"),
+        resultPipes: document.getElementById("result-pipes"),
+        resultExp: document.getElementById("result-exp"),
+        resultCoins: document.getElementById("result-coins"),
+        resultNewMonsList: document.getElementById("result-newmons-list"),
+
+        bottomText: document.getElementById("bottom-text"),
+        bottomOptions: document.getElementById("bottom-options"),
+        bottomHints: document.getElementById("bottom-hints"),
+
+        fadeLayer: document.getElementById("fade-layer"),
+        flashLayer: document.getElementById("flash-layer")
+      };
+
+      /* Web Audio: simple oscillator-based sounds, no files */
+      let audioCtx = null;
+      let bgmIntervalId = null;
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            audioCtx = new AudioContext();
+          }
+        }
+      }
+
+      function playTone(freq, duration, type, volume) {
+        if (!state.audioEnabled) return;
+        if (!window.AudioContext && !window.webkitAudioContext) return;
+        initAudio();
+        if (!audioCtx) return;
+        try {
+          const ctx = audioCtx;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type || "sine";
+          osc.frequency.value = freq || 440;
+          gain.gain.value = volume != null ? volume : 0.08;
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          const now = ctx.currentTime;
+          osc.start(now);
+          osc.stop(now + (duration || 0.1));
+        } catch (e) {
+          // ignore audio errors
+        }
+      }
+
+      function playMenuMoveSound() {
+        playTone(880, 0.05, "square", 0.05);
+      }
+      function playConfirmSound() {
+        playTone(660, 0.08, "square", 0.07);
+      }
+      function playJumpSound() {
+        playTone(900, 0.06, "triangle", 0.05);
+      }
+      function playHitSound() {
+        playTone(220, 0.12, "square", 0.08);
+      }
+      function playHurtSound() {
+        playTone(180, 0.1, "sawtooth", 0.06);
+      }
+      function playCaptureStartSound() {
+        playTone(700, 0.08, "triangle", 0.07);
+      }
+      function playCaptureSuccessSound() {
+        playTone(980, 0.16, "square", 0.08);
+        setTimeout(() => playTone(1240, 0.18, "triangle", 0.08), 120);
+      }
+      function playCaptureFailSound() {
+        playTone(260, 0.14, "sawtooth", 0.07);
+      }
+      function playLevelUpSound() {
+        playTone(880, 0.08, "square", 0.07);
+        setTimeout(() => playTone(1100, 0.12, "square", 0.07), 90);
+        setTimeout(() => playTone(1320, 0.16, "triangle", 0.07), 190);
+      }
+      function playTransitionSound() {
+        playTone(400, 0.05, "square", 0.05);
+        setTimeout(() => playTone(600, 0.05, "square", 0.05), 60);
+        setTimeout(() => playTone(800, 0.06, "square", 0.05), 120);
+      }
+
+      function stopBgm() {
+        if (bgmIntervalId) {
+          clearInterval(bgmIntervalId);
+          bgmIntervalId = null;
+        }
+      }
+
+      function startTitleBgm() {
+        stopBgm();
+        if (!state.audioEnabled) return;
+        bgmIntervalId = setInterval(() => {
+          playTone(440, 0.1, "square", 0.03);
+          setTimeout(() => playTone(660, 0.1, "triangle", 0.03), 120);
+          setTimeout(() => playTone(523, 0.12, "square", 0.03), 260);
+        }, 1900);
+      }
+
+      function startFlappyBgm() {
+        stopBgm();
+        if (!state.audioEnabled) return;
+        bgmIntervalId = setInterval(() => {
+          playTone(330, 0.06, "triangle", 0.02);
+          setTimeout(() => playTone(392, 0.06, "triangle", 0.02), 160);
+        }, 1500);
+      }
+
+      function startBattleBgm() {
+        stopBgm();
+        if (!state.audioEnabled) return;
+        bgmIntervalId = setInterval(() => {
+          playTone(520, 0.08, "square", 0.03);
+          setTimeout(() => playTone(620, 0.08, "square", 0.03), 120);
+          setTimeout(() => playTone(420, 0.08, "square", 0.03), 260);
+        }, 1600);
+      }
+
+      const state = {
+        mode: GameMode.TITLE,
+        audioEnabled: true,
+        player: {
+          name: "New Trainer",
+          coins: 0,
+          pokedex: {},
+          team: [],
+          activeIndex: 0,
+          inventory: {
+            healFeather: 0,
+            captureCharm: 0
+          }
+        },
+        flappy: null,
+        battle: null,
+        result: null,
+        recentDiscoveries: []
+      };
+
+      const bottomState = {
+        options: [],
+        selectedIndex: 0,
+        columns: 1
+      };
+
+      function isLandscape() {
+        return window.innerWidth > window.innerHeight;
+      }
+
+      function getSpecies(id) {
+        return speciesData.find(s => s.id === id);
+      }
+
+      function computeStats(species, level) {
+        return {
+          maxHp: species.baseHp + level * 5,
+          atk: species.baseAtk + level * 2,
+          spd: species.baseSpd + level * 1
+        };
+      }
+
+      function createMonInstance(speciesId, level) {
+        const spec = getSpecies(speciesId);
+        const stats = computeStats(spec, level);
+        return {
+          id: Date.now() + Math.random(),
+          speciesId,
+          level,
+          exp: 0,
+          nextExp: level * 20,
+          maxHp: stats.maxHp,
+          hp: stats.maxHp,
+          atk: stats.atk,
+          spd: stats.spd
+        };
+      }
+
+      function setPokedexStatus(speciesId, status) {
+        const prev = state.player.pokedex[speciesId];
+        if (prev === "caught") return;
+        const rank = { unseen: 0, seen: 1, caught: 2, undefined: 0 };
+        const prevRank = rank[prev];
+        const newRank = rank[status];
+        if (newRank > prevRank) {
+          state.player.pokedex[speciesId] = status;
+          state.recentDiscoveries.push({ speciesId, status });
+        }
+      }
+
+      function updateTopStatus() {
+        const p = state.player;
+        dom.topPlayerName.textContent = p.name;
+        dom.topCoins.textContent = p.coins.toString();
+        const active = p.team[p.activeIndex];
+        if (!active) {
+          dom.topMonName.textContent = "---";
+          dom.topMonLevel.textContent = "1";
+          dom.topHpFill.style.width = "0%";
+          dom.topExpFill.style.width = "0%";
+          return;
+        }
+        const spec = getSpecies(active.speciesId);
+        dom.topMonName.textContent = spec ? spec.name : "FlappyMon";
+        dom.topMonLevel.textContent = active.level.toString();
+        const hpPerc = active.maxHp > 0 ? (active.hp / active.maxHp) * 100 : 0;
+        const expPerc = active.nextExp > 0 ? (active.exp / active.nextExp) * 100 : 0;
+        dom.topHpFill.style.width = Math.max(0, Math.min(100, hpPerc)) + "%";
+        dom.topExpFill.style.width = Math.max(0, Math.min(100, expPerc)) + "%";
+      }
+
+      function hideAllScreens() {
+        dom.playfield.classList.add("hidden");
+        dom.titleScreen.classList.add("hidden");
+        dom.battleScreen.classList.add("hidden");
+        dom.pokedexScreen.classList.add("hidden");
+        dom.teamScreen.classList.add("hidden");
+        dom.shopScreen.classList.add("hidden");
+        dom.resultScreen.classList.add("hidden");
+        dom.captureOverlay.classList.add("hidden");
+        dom.captureOverlay.classList.remove("shaking");
+      }
+
+      function setBottomText(text) {
+        dom.bottomText.textContent = text || "";
+      }
+
+      function setBottomOptions(options, columns, hintText, extraClass) {
+        bottomState.options = options || [];
+        bottomState.columns = columns || 1;
+        bottomState.selectedIndex = 0;
+        dom.bottomOptions.innerHTML = "";
+        dom.bottomOptions.classList.remove("flap-mode");
+        if (extraClass) {
+          dom.bottomOptions.classList.add(extraClass);
+        }
+        bottomState.options.forEach((opt, index) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "cmd-button" + (opt.className ? " " + opt.className : "");
+          btn.textContent = opt.label;
+          btn.dataset.index = String(index);
+          dom.bottomOptions.appendChild(btn);
+        });
+        highlightSelectedOption();
+        if (typeof hintText === "string") {
+          dom.bottomHints.textContent = hintText;
+        }
+      }
+
+      function highlightSelectedOption() {
+        const buttons = dom.bottomOptions.querySelectorAll("button");
+        buttons.forEach(b => b.classList.remove("selected"));
+        const sel = buttons[bottomState.selectedIndex];
+        if (sel) sel.classList.add("selected");
+      }
+
+      function moveSelection(direction) {
+        if (!bottomState.options.length) return;
+        const cols = bottomState.columns;
+        let idx = bottomState.selectedIndex;
+        const len = bottomState.options.length;
+        if (direction === "left") {
+          if (idx % cols > 0) idx--;
+        } else if (direction === "right") {
+          if (idx % cols < cols - 1 && idx + 1 < len) idx++;
+        } else if (direction === "up") {
+          if (idx - cols >= 0) idx -= cols;
+        } else if (direction === "down") {
+          if (idx + cols < len) idx += cols;
+        }
+        if (idx !== bottomState.selectedIndex) {
+          bottomState.selectedIndex = idx;
+          highlightSelectedOption();
+          playMenuMoveSound();
+        }
+      }
+
+      function handleCommandAction(opt) {
+        if (!opt) return;
+        if (state.mode === GameMode.BATTLE && state.battle && state.battle.submode === "anim") {
+          if (
+            opt.action !== "afterBattle" &&
+            opt.action !== "battleContinueAfterIntro"
+          ) {
+            return;
+          }
+        }
+        switch (opt.action) {
+          case "startGame":
+            playConfirmSound();
+            gbaTransition(() => enterFlappyMode(true));
+            break;
+          case "openPokedex":
+            playConfirmSound();
+            gbaTransition(() => enterPokedexMode());
+            break;
+          case "openTeam":
+            playConfirmSound();
+            gbaTransition(() => enterTeamMode());
+            break;
+          case "openShop":
+            playConfirmSound();
+            gbaTransition(() => enterShopMode());
+            break;
+          case "openOptions":
+            playConfirmSound();
+            gbaTransition(() => enterOptionsMode());
+            break;
+          case "backToTitle":
+            playConfirmSound();
+            gbaTransition(() => enterTitleMode());
+            break;
+          case "backFromTeam":
+            playConfirmSound();
+            gbaTransition(() => enterTitleMode());
+            break;
+          case "backFromShop":
+            playConfirmSound();
+            gbaTransition(() => enterTitleMode());
+            break;
+          case "toggleSound":
+            state.audioEnabled = !state.audioEnabled;
+            if (!state.audioEnabled) stopBgm();
+            renderOptionsBottom();
+            break;
+          case "flap":
+            flap();
+            break;
+          case "battleContinueAfterIntro":
+            showBattleRootMenu();
+            break;
+          case "battleFight":
+            showBattleSkillsMenu();
+            break;
+          case "battleCatch":
+            attemptCapture();
+            break;
+          case "battleItem":
+            showBattleItemMenu();
+            break;
+          case "battleRun":
+            attemptRun();
+            break;
+          case "battleBackToRoot":
+            showBattleRootMenu();
+            break;
+          case "battleSkill":
+            playerUseSkill(opt.skillId);
+            break;
+          case "battleUseHeal":
+            useHealItem();
+            break;
+          case "battleUseCaptureBuff":
+            useCaptureBuff();
+            break;
+          case "afterBattle":
+            gbaTransition(() => enterFlappyMode(false));
+            break;
+          case "viewResultPlayAgain":
+            gbaTransition(() => enterFlappyMode(true));
+            break;
+          case "viewResultTitle":
+            gbaTransition(() => enterTitleMode());
+            break;
+          case "viewResultPokedex":
+            gbaTransition(() => enterPokedexMode());
+            break;
+          case "shopBuyHeal":
+            buyItem("healFeather");
+            break;
+          case "shopBuyCharm":
+            buyItem("captureCharm");
+            break;
+          default:
+            break;
+        }
+      }
+
+      dom.bottomOptions.addEventListener("click", function (e) {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const idx = Number(btn.dataset.index || "0");
+        bottomState.selectedIndex = idx;
+        highlightSelectedOption();
+        playConfirmSound();
+        handleCommandAction(bottomState.options[idx]);
+      });
+
+      function gbaTransition(fn) {
+        playTransitionSound();
+        dom.flashLayer.classList.add("active");
+        setTimeout(() => {
+          dom.flashLayer.classList.remove("active");
+          dom.fadeLayer.classList.add("active");
+          setTimeout(() => {
+            fn();
+          }, 220);
+          setTimeout(() => {
+            dom.fadeLayer.classList.remove("active");
+          }, 600);
+        }, 130);
+      }
+
+      function renderTitleBottom() {
+        setBottomText("Welcome to FlappyMon! Choose an option to begin.");
+        const options = [
+          { label: "START GAME", action: "startGame" },
+          { label: "FLAPPYDEX", action: "openPokedex" },
+          { label: "TEAM", action: "openTeam" },
+          { label: "SHOP", action: "openShop" },
+          { label: "OPTIONS", action: "openOptions" }
+        ];
+        const hint = isLandscape()
+          ? "SPACE/ENTER: Confirm · Arrows: Move"
+          : "Tap an option to start your journey.";
+        setBottomOptions(options, 2, hint);
+      }
+
+      function enterTitleMode() {
+        state.mode = GameMode.TITLE;
+        hideAllScreens();
+        dom.titleScreen.classList.remove("hidden");
+        renderTitleBottom();
+        updateTopStatus();
+        startTitleBgm();
+      }
+
+      function resetFlappyState() {
+        const height = dom.playfield.clientHeight || 260;
+        const width = dom.playfield.clientWidth || 180;
+        state.flappy = {
+          birdX: Math.round(width * 0.22),
+          birdY: height * 0.5,
+          birdVY: 0,
+          gravity: 460,
+          flapStrength: -230,
+          baseSpeed: 90,
+          speed: 90,
+          pipeWidth: 52,
+          pipes: [],
+          pipeCounter: 0,
+          basePipeInterval: 2.0,
+          pipeSpawnInterval: 2.0,
+          spawnTimer: 0,
+          distance: 0,
+          pipesPassed: 0,
+          coinsCollected: 0,
+          running: true,
+          safeTime: 1.5,
+          safeTimer: 0
+        };
+        dom.pipesLayer.innerHTML = "";
+        updateBirdElement();
+      }
+
+      function renderFlappyBottom() {
+        setBottomText("Tap the big button or the sky to flap. Collect coins and avoid pipes.");
+        const options = [
+          { label: "FLAP!", action: "flap", className: "flap-button" }
+        ];
+        const hint = isLandscape()
+          ? "SPACE: Jump · ESC: Back to Title"
+          : "Tap FLAP or anywhere in the sky.";
+        setBottomOptions(options, 1, hint, "flap-mode");
+      }
+
+      function enterFlappyMode(newRun) {
+        state.mode = GameMode.FLAPPY;
+        hideAllScreens();
+        dom.playfield.classList.remove("hidden");
+        if (newRun || !state.flappy) {
+          const active = state.player.team[state.player.activeIndex];
+          if (active) {
+            active.hp = active.maxHp; // new run: HP back to full
+          }
+          resetFlappyState();
+        } else {
+          state.flappy.running = true;
+        }
+        renderFlappyBottom();
+        updateTopStatus();
+        startFlappyBgm();
+      }
+
+      function updateBirdElement() {
+        if (!state.flappy) return;
+        const bird = state.flappy;
+        const h = dom.playfield.clientHeight || 260;
+        const birdHeight = 24;
+        const yClamped = Math.max(0, Math.min(h - birdHeight, bird.birdY));
+        dom.bird.style.left = bird.birdX + "px";
+        dom.bird.style.top = yClamped + "px";
+      }
+
+      function getPipeRegion(pipeCounter) {
+        if (pipeCounter <= 0) return 0;
+        const idx = Math.floor((pipeCounter - 1) / 10) % 4;
+        return idx;
+      }
+
+      function spawnObstacle() {
+        if (!state.flappy) return;
+        const pfHeight = dom.playfield.clientHeight || 260;
+        const pfWidth = dom.playfield.clientWidth || 180;
+
+        const gapHeight = 115 + Math.random() * 40;
+        const margin = 35;
+        const maxGapY = pfHeight - margin - gapHeight;
+        const gapY = margin + Math.random() * Math.max(20, maxGapY - margin);
+
+        state.flappy.pipeCounter += 1;
+        const regionIndex = getPipeRegion(state.flappy.pipeCounter);
+
+        const pipe = {
+          x: pfWidth + 10,
+          gapY,
+          gapHeight,
+          regionIndex,
+          counted: false,
+          elementTop: null,
+          elementBottom: null,
+          coinElement: null,
+          coinCollected: false,
+          coinOffsetX: 0,
+          coinOffsetY: 0,
+          coinSize: 16,
+          encounterElement: null,
+          encounterTriggered: false,
+          encounterOffsetX: 0,
+          encounterOffsetY: 0
+        };
+
+        const topDiv = document.createElement("div");
+        topDiv.className = "pipe pipe-top region" + regionIndex;
+        const bottomDiv = document.createElement("div");
+        bottomDiv.className = "pipe pipe-bottom region" + regionIndex;
+        dom.pipesLayer.appendChild(topDiv);
+        dom.pipesLayer.appendChild(bottomDiv);
+        pipe.elementTop = topDiv;
+        pipe.elementBottom = bottomDiv;
+
+        const roll = Math.random();
+        if (roll < 0.7) {
+          const coin = document.createElement("div");
+          coin.className = "coin";
+          dom.pipesLayer.appendChild(coin);
+          pipe.coinElement = coin;
+          pipe.coinSize = 16;
+          pipe.coinOffsetX = state.flappy.pipeWidth / 2 - pipe.coinSize / 2;
+          pipe.coinOffsetY = gapY + gapHeight / 2 - pipe.coinSize / 2;
+        } else if (roll < 0.88) {
+          const icon = document.createElement("div");
+          icon.className = "encounter-icon";
+          icon.textContent = "!";
+          dom.pipesLayer.appendChild(icon);
+          pipe.encounterElement = icon;
+          pipe.encounterOffsetX = state.flappy.pipeWidth / 2 - 9;
+          pipe.encounterOffsetY = gapY + gapHeight / 2 - 9;
+        }
+
+        updatePipeElement(pipe);
+        state.flappy.pipes.push(pipe);
+      }
+
+      function updatePipeElement(pipe) {
+        if (!state.flappy) return;
+        const pfHeight = dom.playfield.clientHeight || 260;
+        const pipeWidth = state.flappy.pipeWidth;
+        const topHeight = Math.max(0, pipe.gapY);
+        const bottomHeight = Math.max(0, pfHeight - (pipe.gapY + pipe.gapHeight));
+
+        pipe.elementTop.style.left = pipe.x + "px";
+        pipe.elementTop.style.width = pipeWidth + "px";
+        pipe.elementTop.style.height = topHeight + "px";
+
+        pipe.elementBottom.style.left = pipe.x + "px";
+        pipe.elementBottom.style.width = pipeWidth + "px";
+        pipe.elementBottom.style.height = bottomHeight + "px";
+        pipe.elementBottom.style.top = (pipe.gapY + pipe.gapHeight) + "px";
+
+        if (pipe.coinElement) {
+          pipe.coinElement.style.left = (pipe.x + pipe.coinOffsetX) + "px";
+          pipe.coinElement.style.top = pipe.coinOffsetY + "px";
+        }
+
+        if (pipe.encounterElement) {
+          pipe.encounterElement.style.left = (pipe.x + pipe.encounterOffsetX) + "px";
+          pipe.encounterElement.style.top = pipe.encounterOffsetY + "px";
+        }
+      }
+
+      function flap() {
+        if (state.mode !== GameMode.FLAPPY || !state.flappy || !state.flappy.running) return;
+        state.flappy.birdVY = state.flappy.flapStrength;
+        playJumpSound();
+      }
+
+      function triggerEncounter() {
+        if (!state.flappy) return;
+        state.flappy.running = false;
+        const dist = state.flappy.distance || 0;
+        gbaTransition(() => enterBattleMode(dist));
+      }
+
+      function endFlappyRun() {
+        if (!state.flappy) return;
+        state.flappy.running = false;
+        const pipes = state.flappy.pipesPassed;
+        const distance = Math.floor(state.flappy.distance);
+        const exp = Math.max(1, Math.floor(pipes * 1.2));
+        const coinsFromCoins = state.flappy.coinsCollected || 0;
+
+        state.result = {
+          pipes,
+          distance,
+          exp,
+          coinsFromCoins,
+          discoveries: state.recentDiscoveries.slice()
+        };
+        state.recentDiscoveries = [];
+
+        const active = state.player.team[state.player.activeIndex];
+        if (active) {
+          active.exp += exp;
+          while (active.exp >= active.nextExp) {
+            active.exp -= active.nextExp;
+            active.level += 1;
+            active.nextExp = active.level * 20;
+            const spec = getSpecies(active.speciesId);
+            const stats = computeStats(spec, active.level);
+            active.maxHp = stats.maxHp;
+            active.hp = active.maxHp;
+            active.atk = stats.atk;
+            active.spd = stats.spd;
+            playLevelUpSound();
+          }
+        }
+        updateTopStatus();
+        gbaTransition(() => enterResultMode());
+      }
+
+      function enterResultMode() {
+        state.mode = GameMode.RESULT;
+        hideAllScreens();
+        dom.resultScreen.classList.remove("hidden");
+        stopBgm();
+        const r = state.result || {
+          pipes: 0,
+          distance: 0,
+          exp: 0,
+          coinsFromCoins: 0,
+          discoveries: []
+        };
+        dom.resultDistance.textContent = "Distance: " + r.distance.toFixed(0) + " m";
+        dom.resultPipes.textContent = "Pipes cleared: " + r.pipes;
+        dom.resultExp.textContent = "EXP gained: " + r.exp;
+        dom.resultCoins.textContent = "Coins from coins: " + r.coinsFromCoins;
+
+        dom.resultNewMonsList.innerHTML = "";
+        if (!r.discoveries || !r.discoveries.length) {
+          const div = document.createElement("div");
+          div.textContent = "No new FlappyMon discovered this time.";
+          dom.resultNewMonsList.appendChild(div);
+        } else {
+          r.discoveries.forEach(d => {
+            const spec = getSpecies(d.speciesId);
+            if (!spec) return;
+            const div = document.createElement("div");
+            div.textContent = spec.name + " (" + d.status + ")";
+            dom.resultNewMonsList.appendChild(div);
+          });
+        }
+        setBottomText("Your FlappyMon can rest now.");
+        const options = [
+          { label: "PLAY AGAIN", action: "viewResultPlayAgain" },
+          { label: "TITLE", action: "viewResultTitle" },
+          { label: "FLAPPYDEX", action: "viewResultPokedex" }
+        ];
+        const hint = isLandscape()
+          ? "SPACE/ENTER: Confirm · Arrows: Move"
+          : "Tap to play again, return, or open the FlappyDex.";
+        setBottomOptions(options, 2, hint);
+      }
+
+      function updateFlappy(dt) {
+        if (state.mode !== GameMode.FLAPPY || !state.flappy || !state.flappy.running) return;
+        const f = state.flappy;
+        const pfHeight = dom.playfield.clientHeight || 260;
+        const pfWidth = dom.playfield.clientWidth || 180;
+        const birdHeight = 24;
+        const birdWidth = 28;
+
+        f.safeTimer += dt;
+
+        f.speed = f.baseSpeed + Math.min(70, f.distance * 0.03);
+        f.pipeSpawnInterval =
+          f.basePipeInterval - Math.min(0.8, f.distance * 0.0005);
+
+        f.birdVY += f.gravity * dt;
+        f.birdY += f.birdVY * dt;
+        if (f.birdY < 0) {
+          f.birdY = 0;
+          f.birdVY = 0;
+        }
+        if (f.birdY > pfHeight - birdHeight) {
+          f.birdY = pfHeight - birdHeight;
+          endFlappyRun();
+          return;
+        }
+        updateBirdElement();
+
+        if (f.safeTimer > f.safeTime) {
+          f.spawnTimer += dt;
+          if (f.spawnTimer >= f.pipeSpawnInterval) {
+            f.spawnTimer = 0;
+            spawnObstacle();
+          }
+        }
+
+        const pipes = f.pipes;
+        for (let i = pipes.length - 1; i >= 0; i--) {
+          const pipe = pipes[i];
+          pipe.x -= f.speed * dt;
+          updatePipeElement(pipe);
+
+          if (!pipe.counted && pipe.x + f.pipeWidth < f.birdX) {
+            pipe.counted = true;
+            f.pipesPassed += 1;
+          }
+
+          if (pipe.coinElement && !pipe.coinCollected) {
+            const coinSize = pipe.coinSize;
+            const coinX = pipe.x + pipe.coinOffsetX;
+            const coinY = pipe.coinOffsetY;
+            const birdX = f.birdX;
+            const birdY = f.birdY;
+            const overlap =
+              birdX < coinX + coinSize &&
+              birdX + birdWidth > coinX &&
+              birdY < coinY + coinSize &&
+              birdY + birdHeight > coinY;
+            if (overlap) {
+              pipe.coinCollected = true;
+              if (pipe.coinElement.parentNode) {
+                pipe.coinElement.parentNode.removeChild(pipe.coinElement);
+              }
+              pipe.coinElement = null;
+              const gain = 1 + Math.floor(Math.random() * 3);
+              state.player.coins += gain;
+              f.coinsCollected += gain;
+              updateTopStatus();
+            }
+          }
+
+          if (pipe.encounterElement && !pipe.encounterTriggered) {
+            const size = 18;
+            const encX = pipe.x + pipe.encounterOffsetX;
+            const encY = pipe.encounterOffsetY;
+            const birdX = f.birdX;
+            const birdY = f.birdY;
+            const overlap =
+              birdX < encX + size &&
+              birdX + birdWidth > encX &&
+              birdY < encY + size &&
+              birdY + birdHeight > encY;
+            if (overlap) {
+              pipe.encounterTriggered = true;
+              if (pipe.encounterElement.parentNode) {
+                pipe.encounterElement.parentNode.removeChild(pipe.encounterElement);
+              }
+              pipe.encounterElement = null;
+              triggerEncounter();
+              return;
+            }
+          }
+
+          if (pipe.x + f.pipeWidth < -20) {
+            if (pipe.elementTop && pipe.elementTop.parentNode) {
+              pipe.elementTop.parentNode.removeChild(pipe.elementTop);
+            }
+            if (pipe.elementBottom && pipe.elementBottom.parentNode) {
+              pipe.elementBottom.parentNode.removeChild(pipe.elementBottom);
+            }
+            if (pipe.coinElement && pipe.coinElement.parentNode) {
+              pipe.coinElement.parentNode.removeChild(pipe.coinElement);
+            }
+            if (pipe.encounterElement && pipe.encounterElement.parentNode) {
+              pipe.encounterElement.parentNode.removeChild(pipe.encounterElement);
+            }
+            pipes.splice(i, 1);
+            continue;
+          }
+        }
+
+        f.distance += f.speed * dt;
+
+        for (const pipe of pipes) {
+          const birdX = f.birdX;
+          const birdY = f.birdY;
+          const gapTop = pipe.gapY;
+          const gapBottom = pipe.gapY + pipe.gapHeight;
+          const overlapsX =
+            birdX + birdWidth > pipe.x && birdX < pipe.x + f.pipeWidth;
+          if (overlapsX) {
+            const hitsTop = birdY < gapTop;
+            const hitsBottom = birdY + birdHeight > gapBottom;
+            if (hitsTop || hitsBottom) {
+              endFlappyRun();
+              return;
+            }
+          }
+        }
+      }
+
+      function getRegionFromDistance(distance) {
+        if (distance < 400) return 0;
+        if (distance < 800) return 1;
+        if (distance < 1400) return 2;
+        return 3;
+      }
+
+      function enterBattleMode(distance) {
+        if (!state.player.team.length) {
+          enterTitleMode();
+          return;
+        }
+        const active = state.player.team[state.player.activeIndex];
+        const randSpec = speciesData[Math.floor(Math.random() * speciesData.length)];
+
+        const region = getRegionFromDistance(distance || 0);
+        let minLv, maxLv;
+        if (region === 0) {
+          minLv = 1; maxLv = 3;
+        } else if (region === 1) {
+          minLv = 3; maxLv = 6;
+        } else if (region === 2) {
+          minLv = 5; maxLv = 9;
+        } else {
+          minLv = 8; maxLv = 15;
+        }
+        const enemyLevel = Math.max(minLv, Math.min(maxLv, active.level + region));
+
+        const baseStats = computeStats(randSpec, enemyLevel);
+        const qualityMultiplier = 1 + region * 0.2;
+        const enemyMaxHp = Math.round(baseStats.maxHp * qualityMultiplier);
+        const enemyAtk = Math.round(baseStats.atk * qualityMultiplier);
+        const enemySpd = Math.round(baseStats.spd * qualityMultiplier);
+
+        state.battle = {
+          enemy: {
+            speciesId: randSpec.id,
+            level: enemyLevel,
+            maxHp: enemyMaxHp,
+            hp: enemyMaxHp,
+            atk: enemyAtk,
+            spd: enemySpd,
+            captureDifficulty: randSpec.captureDifficulty * (1 + region * 0.1),
+            region
+          },
+          captureBoost: 0,
+          submode: "intro"
+        };
+        setPokedexStatus(randSpec.id, "seen");
+        hideAllScreens();
+        dom.battleScreen.classList.remove("hidden");
+        state.mode = GameMode.BATTLE;
+        updateBattleHud();
+        dom.battleMessage.textContent =
+          "A wild " + randSpec.name + " from a distant sky appeared!";
+        setBottomText("A wild FlappyMon appears!");
+        const options = [
+          { label: "CONTINUE", action: "battleContinueAfterIntro" }
+        ];
+        const hint = isLandscape()
+          ? "SPACE/ENTER: Continue"
+          : "Tap to continue.";
+        setBottomOptions(options, 1, hint);
+        updateTopStatus();
+        startBattleBgm();
+      }
+
+      function updateBattleHud() {
+        if (!state.battle || !state.player.team.length) return;
+        const active = state.player.team[state.player.activeIndex];
+        const enemy = state.battle.enemy;
+        const enemySpec = getSpecies(enemy.speciesId);
+        const activeSpec = getSpecies(active.speciesId);
+
+        dom.battleEnemyName.textContent = enemySpec ? enemySpec.name : "Wild";
+        dom.battleEnemyLevel.textContent = enemy.level.toString();
+        const enemyHpPerc = (enemy.hp / enemy.maxHp) * 100;
+        dom.battleEnemyHp.style.width =
+          Math.max(0, Math.min(100, enemyHpPerc)) + "%";
+
+        dom.battlePlayerName.textContent = activeSpec ? activeSpec.name : "You";
+        dom.battlePlayerLevel.textContent = active.level.toString();
+        const playerHpPerc = (active.hp / active.maxHp) * 100;
+        dom.battlePlayerHp.style.width =
+          Math.max(0, Math.min(100, playerHpPerc)) + "%";
+      }
+
+      function showBattleRootMenu() {
+        if (!state.battle) return;
+        state.battle.submode = "root";
+        setBottomText("What will your FlappyMon do?");
+        const options = [
+          { label: "FIGHT", action: "battleFight" },
+          { label: "CATCH", action: "battleCatch" },
+          { label: "ITEM", action: "battleItem" },
+          { label: "RUN", action: "battleRun" }
+        ];
+        const hint = isLandscape()
+          ? "Arrows: Move · ENTER/SPACE: Confirm"
+          : "Tap a command.";
+        setBottomOptions(options, 2, hint);
+      }
+
+      function showBattleSkillsMenu() {
+        if (!state.battle) return;
+        state.battle.submode = "skills";
+        setBottomText("Choose a skill.");
+        const options = skills.map(sk => ({
+          label: sk.name,
+          action: "battleSkill",
+          skillId: sk.id
+        }));
+        options.push({ label: "BACK", action: "battleBackToRoot" });
+        const hint = isLandscape()
+          ? "Arrows: Move · ENTER: Confirm"
+          : "Tap a skill.";
+        setBottomOptions(options, 2, hint);
+      }
+
+      function computeDamage(attackerMon, enemy, power) {
+        const base = attackerMon.atk + power;
+        const variance = Math.random() * 4;
+        const dmg = Math.max(
+          1,
+          Math.floor((base - enemy.level * 1.2) * 0.5 + variance)
+        );
+        return dmg;
+      }
+
+      function animateSpriteOnce(element, className, duration) {
+        if (!element) return;
+        element.classList.add(className);
+        setTimeout(() => {
+          element.classList.remove(className);
+        }, duration || 350);
+      }
+
+      function enemyTurn() {
+        if (!state.battle || !state.player.team.length) return;
+        const active = state.player.team[state.player.activeIndex];
+        const enemy = state.battle.enemy;
+        if (active.hp <= 0) return;
+        state.battle.submode = "anim";
+
+        animateSpriteOnce(dom.enemySprite, "attacking", 350);
+        setTimeout(() => {
+          const raw = enemy.level * 2 + Math.random() * 4;
+          const dmg = Math.max(1, Math.floor(raw - active.level * 0.6));
+          active.hp = Math.max(0, active.hp - dmg);
+          const enemySpec = getSpecies(enemy.speciesId);
+          const name = enemySpec ? enemySpec.name : "Enemy";
+          dom.battleMessage.textContent +=
+            "\n" + name + " strikes back for " + dmg + " damage!";
+          playHurtSound();
+          animateSpriteOnce(dom.playerSprite, "hit", 350);
+          updateBattleHud();
+          updateTopStatus();
+
+          setTimeout(() => {
+            if (active.hp <= 0) {
+              dom.battleMessage.textContent += "\nYour FlappyMon fainted...";
+              setBottomText("Your FlappyMon fainted...");
+              const options = [
+                { label: "BACK TO TITLE", action: "backToTitle" }
+              ];
+              const hint = isLandscape()
+                ? "SPACE/ENTER: Back to Title"
+                : "Tap to go back.";
+              setBottomOptions(options, 1, hint);
+            } else {
+              showBattleRootMenu();
+            }
+          }, 300);
+        }, 220);
+      }
+
+      function playerUseSkill(skillId) {
+        if (!state.battle || !state.player.team.length) return;
+        const skill = skills.find(s => s.id === skillId);
+        if (!skill) return;
+        const active = state.player.team[state.player.activeIndex];
+        const enemy = state.battle.enemy;
+        const activeSpec = getSpecies(active.speciesId);
+        const attackerName = activeSpec ? activeSpec.name : "Your FlappyMon";
+
+        state.battle.submode = "anim";
+        animateSpriteOnce(dom.playerSprite, "attacking", 350);
+
+        setTimeout(() => {
+          const acc = skillId === "pierce" ? 0.75 : 0.95;
+          if (Math.random() > acc) {
+            dom.battleMessage.textContent =
+              attackerName + "'s " + skill.name + " missed!";
+            showBattleRootMenu();
+            return;
+          } else {
+            const dmg = computeDamage(active, enemy, skill.power);
+            enemy.hp = Math.max(0, enemy.hp - dmg);
+            dom.battleMessage.textContent =
+              attackerName + " used " + skill.name + "! It dealt " + dmg + " damage.";
+            if (skill.heal) {
+              const healAmt = skill.heal + Math.floor(active.level * 0.5);
+              active.hp = Math.min(active.maxHp, active.hp + healAmt);
+              dom.battleMessage.textContent +=
+                " It restored " + healAmt + " HP.";
+            }
+            playHitSound();
+            animateSpriteOnce(dom.enemySprite, "hit", 350);
+            updateBattleHud();
+            updateTopStatus();
+          }
+
+          setTimeout(() => {
+            if (enemy.hp <= 0) {
+              onBattleWin();
+            } else {
+              enemyTurn();
+            }
+          }, 350);
+        }, 200);
+      }
+
+      function onBattleWin() {
+        const enemy = state.battle.enemy;
+        const active = state.player.team[state.player.activeIndex];
+        const spec = getSpecies(enemy.speciesId);
+
+        const regionBonus = 1 + enemy.region * 0.35;
+        const exp = Math.round(enemy.level * 10 * regionBonus);
+        const coins = Math.round((4 + enemy.level * 2) * regionBonus);
+
+        state.player.coins += coins;
+        active.exp += exp;
+        let levelUps = 0;
+        while (active.exp >= active.nextExp) {
+          active.exp -= active.nextExp;
+          active.level += 1;
+          active.nextExp = active.level * 20;
+          const stats = computeStats(getSpecies(active.speciesId), active.level);
+          active.maxHp = stats.maxHp;
+          active.hp = active.maxHp;
+          active.atk = stats.atk;
+          active.spd = stats.spd;
+          levelUps += 1;
+          playLevelUpSound();
+        }
+        let msg = "You won! " + (spec ? spec.name : "Foe") + " fainted.\n";
+        msg += "Gained " + exp + " EXP and " + coins + " coins.";
+        if (levelUps > 0) {
+          msg += "\nYour FlappyMon grew " + levelUps + " level(s)!";
+        }
+        dom.battleMessage.textContent = msg;
+        updateBattleHud();
+        updateTopStatus();
+        setBottomText("Battle finished.");
+        const options = [
+          { label: "CONTINUE", action: "afterBattle" }
+        ];
+        const hint = isLandscape()
+          ? "SPACE/ENTER: Continue"
+          : "Tap to return to flight.";
+        setBottomOptions(options, 1, hint);
+        state.battle.submode = "result";
+      }
+
+      function attemptRun() {
+        if (!state.battle || !state.player.team.length) return;
+        const active = state.player.team[state.player.activeIndex];
+        const enemy = state.battle.enemy;
+        const baseChance = active.spd >= enemy.spd ? 0.9 : 0.65;
+        if (Math.random() < baseChance) {
+          dom.battleMessage.textContent = "You successfully ran away!";
+          setBottomText("You escaped the wild FlappyMon.");
+          const options = [
+            { label: "CONTINUE", action: "afterBattle" }
+          ];
+          const hint = isLandscape()
+            ? "SPACE/ENTER: Continue"
+            : "Tap to return to flight.";
+          setBottomOptions(options, 1, hint);
+          state.battle.submode = "result";
+        } else {
+          dom.battleMessage.textContent = "Couldn't get away!";
+          enemyTurn();
+        }
+      }
+
+      function showBattleItemMenu() {
+        if (!state.battle) return;
+        const inv = state.player.inventory;
+        state.battle.submode = "items";
+        setBottomText("Use which item from your bag?");
+        const options = [
+          {
+            label: "Heal Feather x" + inv.healFeather,
+            action: "battleUseHeal"
+          },
+          {
+            label: "Capture Charm x" + inv.captureCharm,
+            action: "battleUseCaptureBuff"
+          },
+          { label: "BACK", action: "battleBackToRoot" }
+        ];
+        const hint = isLandscape()
+          ? "Arrows: Move · ENTER: Confirm"
+          : "Tap an item.";
+        setBottomOptions(options, 1, hint);
+      }
+
+      function useHealItem() {
+        if (!state.battle || !state.player.team.length) return;
+        const inv = state.player.inventory;
+        if (inv.healFeather <= 0) {
+          dom.battleMessage.textContent = "You are out of Heal Feathers.";
+          showBattleItemMenu();
+          return;
+        }
+        inv.healFeather -= 1;
+        const active = state.player.team[state.player.activeIndex];
+        const healAmt = Math.floor(active.maxHp * 0.5);
+        active.hp = Math.min(active.maxHp, active.hp + healAmt);
+        const spec = getSpecies(active.speciesId);
+        dom.battleMessage.textContent =
+          (spec ? spec.name : "Your FlappyMon") +
+          " recovered " +
+          healAmt +
+          " HP!";
+        updateBattleHud();
+        updateTopStatus();
+        enemyTurn();
+      }
+
+      function useCaptureBuff() {
+        if (!state.battle) return;
+        const inv = state.player.inventory;
+        if (inv.captureCharm <= 0) {
+          dom.battleMessage.textContent = "You are out of Capture Charms.";
+          showBattleItemMenu();
+          return;
+        }
+        inv.captureCharm -= 1;
+        state.battle.captureBoost = (state.battle.captureBoost || 0) + 0.25;
+        dom.battleMessage.textContent =
+          "A soft glow surrounds your capture device. Capture chance boosted!";
+        updateTopStatus();
+        showBattleRootMenu();
+      }
+
+      function attemptCapture() {
+        if (!state.battle) return;
+        const enemy = state.battle.enemy;
+        if (enemy.hp <= 0) {
+          dom.battleMessage.textContent =
+            "This FlappyMon has already fainted. You cannot capture it.";
+          showBattleRootMenu();
+          return;
+        }
+        playCaptureStartSound();
+        dom.captureOverlay.classList.remove("hidden");
+        dom.captureOverlay.classList.add("shaking");
+        dom.captureText.textContent = "Throwing capture device...";
+        setBottomText("Trying to capture...");
+        setBottomOptions([], 1, "");
+        setTimeout(() => {
+          dom.captureText.textContent = "Shaking...";
+        }, 350);
+        setTimeout(() => {
+          dom.captureOverlay.classList.remove("shaking");
+          dom.captureOverlay.classList.add("hidden");
+          const hpFactor = 1 - enemy.hp / enemy.maxHp;
+          const baseChance = 0.3 + hpFactor * 0.5;
+          const boost = state.battle.captureBoost || 0;
+          const chance = (baseChance + boost) / enemy.captureDifficulty;
+          const roll = Math.random();
+          const enemySpec = getSpecies(enemy.speciesId);
+          const name = enemySpec ? enemySpec.name : "FlappyMon";
+          if (roll < chance) {
+            playCaptureSuccessSound();
+            dom.battleMessage.textContent =
+              "Gotcha! " + name + " was captured!";
+            onCaptureSuccess();
+          } else {
+            playCaptureFailSound();
+            dom.battleMessage.textContent =
+              name + " broke free of the device!";
+            enemyTurn();
+          }
+        }, 1100);
+      }
+
+      function onCaptureSuccess() {
+        if (!state.battle) return;
+        const enemy = state.battle.enemy;
+        setPokedexStatus(enemy.speciesId, "caught");
+        const newMon = createMonInstance(enemy.speciesId, enemy.level);
+        state.player.team.push(newMon);
+        updateTopStatus();
+        setBottomText("FlappyMon captured! It joined your team.");
+        const options = [
+          { label: "CONTINUE", action: "afterBattle" }
+        ];
+        const hint = isLandscape()
+          ? "SPACE/ENTER: Continue"
+          : "Tap to return to flight.";
+        setBottomOptions(options, 1, hint);
+        state.battle.submode = "result";
+      }
+
+      function renderPokedex() {
+        dom.pokedexList.innerHTML = "";
+        speciesData.forEach(spec => {
+          const status = state.player.pokedex[spec.id] || "unseen";
+          const item = document.createElement("div");
+          item.className = "pokedex-list-item";
+          item.dataset.id = String(spec.id);
+          item.textContent =
+            "#" +
+            String(spec.id).padStart(3, "0") +
+            " " +
+            spec.name +
+            " [" +
+            status +
+            "]";
+          item.addEventListener("click", () => {
+            renderPokedexDetail(spec.id);
+          });
+          dom.pokedexList.appendChild(item);
+        });
+        renderPokedexDetail(speciesData[0].id);
+      }
+
+      function renderPokedexDetail(id) {
+        const spec = getSpecies(id);
+        if (!spec) return;
+        const status = state.player.pokedex[id] || "unseen";
+        dom.pokedexPortrait.textContent = spec.name;
+        dom.pokedexInfoLines.innerHTML = "";
+        const lines = [
+          "ID: " + String(spec.id).padStart(3, "0"),
+          "Type: " + spec.type,
+          "Status: " + status,
+          "Base HP: " + spec.baseHp,
+          "Base ATK: " + spec.baseAtk,
+          "Base SPD: " + spec.baseSpd
+        ];
+        lines.forEach(txt => {
+          const d = document.createElement("div");
+          d.textContent = txt;
+          dom.pokedexInfoLines.appendChild(d);
+        });
+        dom.pokedexFlavor.textContent = spec.description;
+      }
+
+      function renderPokedexBottom() {
+        setBottomText("Browse entries and learn about each FlappyMon.");
+        const options = [
+          { label: "BACK", action: "backToTitle" },
+          { label: "TEAM", action: "openTeam" }
+        ];
+        const hint = isLandscape()
+          ? "Use mouse or touch to pick entries. SPACE/ENTER: Confirm menu."
+          : "Tap an entry to inspect. Tap a command to leave.";
+        setBottomOptions(options, 2, hint);
+      }
+
+      function enterPokedexMode() {
+        state.mode = GameMode.POKEDEX;
+        hideAllScreens();
+        dom.pokedexScreen.classList.remove("hidden");
+        renderPokedex();
+        renderPokedexBottom();
+        updateTopStatus();
+        startTitleBgm();
+      }
+
+      function setActiveMon(index) {
+        if (index >= 0 && index < state.player.team.length) {
+          state.player.activeIndex = index;
+        }
+      }
+
+      function renderTeam() {
+        dom.teamList.innerHTML = "";
+        const team = state.player.team;
+        if (!team.length) {
+          const div = document.createElement("div");
+          div.textContent = "You do not own any FlappyMon yet. Catch some!";
+          dom.teamList.appendChild(div);
+          return;
+        }
+        team.forEach((mon, idx) => {
+          const spec = getSpecies(mon.speciesId);
+          const item = document.createElement("div");
+          item.className =
+            "team-item" + (idx === state.player.activeIndex ? " active" : "");
+          const title = document.createElement("div");
+          title.className = "team-name";
+          title.textContent =
+            (spec ? spec.name : "FlappyMon") + " Lv " + mon.level;
+          const stats = document.createElement("div");
+          stats.className = "team-stats";
+          stats.textContent =
+            "HP " +
+            mon.hp +
+            "/" +
+            mon.maxHp +
+            " · ATK " +
+            mon.atk +
+            " · SPD " +
+            mon.spd;
+          item.appendChild(title);
+          item.appendChild(stats);
+          item.addEventListener("click", () => {
+            setActiveMon(idx);
+            renderTeam();
+            updateTopStatus();
+          });
+          dom.teamList.appendChild(item);
+        });
+      }
+
+      function renderTeamBottom() {
+        setBottomText("Tap a FlappyMon to set it as active.");
+        const options = [{ label: "BACK", action: "backFromTeam" }];
+        const hint = isLandscape()
+          ? "SPACE/ENTER: Back · Use mouse/touch for team selection."
+          : "Tap BACK to return.";
+        setBottomOptions(options, 1, hint);
+      }
+
+      function enterTeamMode() {
+        state.mode = GameMode.TEAM;
+        hideAllScreens();
+        dom.teamScreen.classList.remove("hidden");
+        renderTeam();
+        renderTeamBottom();
+        updateTopStatus();
+        stopBgm();
+      }
+
+      function renderShop() {
+        const inv = state.player.inventory;
+        dom.shopStatus.innerHTML =
+          "Coins: " + state.player.coins +
+          "<br/>Inventory:" +
+          "<br/>- Heal Feather: " + inv.healFeather +
+          "<br/>- Capture Charm: " + inv.captureCharm;
+        dom.shopItems.innerHTML = "";
+
+        const healDiv = document.createElement("div");
+        healDiv.className = "shop-item";
+        healDiv.innerHTML =
+          "<div class='shop-item-name'>Heal Feather (10c)</div>" +
+          "<div class='shop-item-desc'>Restores your active FlappyMon's HP in battle.</div>";
+        dom.shopItems.appendChild(healDiv);
+
+        const charmDiv = document.createElement("div");
+        charmDiv.className = "shop-item";
+        charmDiv.innerHTML =
+          "<div class='shop-item-name'>Capture Charm (15c)</div>" +
+          "<div class='shop-item-desc'>Boosts capture chance for one attempt.</div>";
+        dom.shopItems.appendChild(charmDiv);
+
+        const tipDiv = document.createElement("div");
+        tipDiv.className = "shop-item";
+        tipDiv.innerHTML =
+          "<div class='shop-item-name'>Tip</div>" +
+          "<div class='shop-item-desc'>Items are used from your bag in battle. They no longer spend coins when used.</div>";
+        dom.shopItems.appendChild(tipDiv);
+      }
+
+      function renderShopBottom() {
+        setBottomText("Buy items before you fly out. Coins are spent here only.");
+        const options = [
+          { label: "Buy Heal Feather (10c)", action: "shopBuyHeal" },
+          { label: "Buy Capture Charm (15c)", action: "shopBuyCharm" },
+          { label: "BACK", action: "backFromShop" }
+        ];
+        const hint = isLandscape()
+          ? "Arrows: Move · ENTER: Confirm"
+          : "Tap to buy or go back.";
+        setBottomOptions(options, 1, hint);
+      }
+
+      function buyItem(type) {
+        const prices = {
+          healFeather: 10,
+          captureCharm: 15
+        };
+        const price = prices[type] || 0;
+        if (state.player.coins < price) {
+          setBottomText("Not enough coins to buy this item.");
+          return;
+        }
+        state.player.coins -= price;
+        state.player.inventory[type] = (state.player.inventory[type] || 0) + 1;
+        updateTopStatus();
+        renderShop();
+        setBottomText("Purchase successful!");
+      }
+
+      function enterShopMode() {
+        state.mode = GameMode.SHOP;
+        hideAllScreens();
+        dom.shopScreen.classList.remove("hidden");
+        renderShop();
+        renderShopBottom();
+        updateTopStatus();
+        stopBgm();
+      }
+
+      function renderOptionsBottom() {
+        setBottomText("Adjust simple settings.");
+        const soundLabel = state.audioEnabled ? "Sound: ON" : "Sound: OFF";
+        const options = [
+          { label: soundLabel, action: "toggleSound" },
+          { label: "BACK TO TITLE", action: "backToTitle" }
+        ];
+        const hint = isLandscape()
+          ? "Arrows: Move · ENTER/SPACE: Confirm"
+          : "Tap to toggle sound or go back.";
+        setBottomOptions(options, 1, hint);
+      }
+
+      function enterOptionsMode() {
+        state.mode = GameMode.OPTIONS;
+        hideAllScreens();
+        dom.titleScreen.classList.remove("hidden");
+        renderOptionsBottom();
+        updateTopStatus();
+        stopBgm();
+      }
+
+      function initPlayer() {
+        const starter = createMonInstance(1, 3);
+        state.player.team.push(starter);
+        setPokedexStatus(1, "caught");
+        updateTopStatus();
+      }
+
+      let lastTime = null;
+      function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const dt = (timestamp - lastTime) / 1000;
+        lastTime = timestamp;
+        updateFlappy(dt);
+        requestAnimationFrame(loop);
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (state.mode === GameMode.FLAPPY) {
+          if (e.code === "Space") {
+            e.preventDefault();
+            flap();
+            return;
+          }
+          if (e.code === "Escape") {
+            e.preventDefault();
+            gbaTransition(() => enterTitleMode());
+            return;
+          }
+        }
+        if (
+          state.mode === GameMode.TITLE ||
+          state.mode === GameMode.BATTLE ||
+          state.mode === GameMode.POKEDEX ||
+          state.mode === GameMode.TEAM ||
+          state.mode === GameMode.RESULT ||
+          state.mode === GameMode.OPTIONS ||
+          state.mode === GameMode.SHOP
+        ) {
+          if (e.code === "ArrowLeft") {
+            e.preventDefault();
+            moveSelection("left");
+          } else if (e.code === "ArrowRight") {
+            e.preventDefault();
+            moveSelection("right");
+          } else if (e.code === "ArrowUp") {
+            e.preventDefault();
+            moveSelection("up");
+          } else if (e.code === "ArrowDown") {
+            e.preventDefault();
+            moveSelection("down");
+          } else if (e.code === "Enter" || e.code === "Space") {
+            e.preventDefault();
+            const opt = bottomState.options[bottomState.selectedIndex];
+            if (opt) {
+              playConfirmSound();
+              handleCommandAction(opt);
+            }
+          } else if (e.code === "Escape") {
+            if (
+              state.mode === GameMode.POKEDEX ||
+              state.mode === GameMode.TEAM ||
+              state.mode === GameMode.OPTIONS ||
+              state.mode === GameMode.SHOP
+            ) {
+              e.preventDefault();
+              gbaTransition(() => enterTitleMode());
+            }
+          }
+        }
+      });
+
+      dom.playfield.addEventListener("click", function () {
+        if (state.mode === GameMode.FLAPPY) {
+          flap();
+        }
+      });
+
+      window.addEventListener("resize", function () {
+        if (state.flappy && state.mode === GameMode.FLAPPY) {
+          const pfHeight = dom.playfield.clientHeight || 260;
+          const birdHeight = 24;
+          state.flappy.birdY = Math.max(
+            0,
+            Math.min(pfHeight - birdHeight, state.flappy.birdY)
+          );
+          updateBirdElement();
+        }
+      });
+
+      document.addEventListener("click", function () {
+        initAudio();
+      }, { once: true });
+
+      initPlayer();
+      enterTitleMode();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
