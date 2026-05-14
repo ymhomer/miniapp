@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Server Status Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<style>
+:root {
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --blue: #2563eb;
+    --green-bg: #dcfce7;
+    --green: #15803d;
+    --red-bg: #fee2e2;
+    --red: #b91c1c;
+    --yellow-bg: #fef3c7;
+    --yellow: #92400e;
+    --gray-bg: #e5e7eb;
+    --gray: #4b5563;
+    --toast-bg: #111827;
+    --toast-text: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.title h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.title div {
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    background: var(--blue);
+    color: white;
+}
+
+button.secondary {
+    background: #374151;
+}
+
+button.danger {
+    background: #dc2626;
+}
+
+button.light {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+button.warning {
+    background: #f59e0b;
+    color: #111827;
+}
+
+button:hover {
+    opacity: .9;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.summary-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+}
+
+.summary-label {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.summary-value {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.local-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.online {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.offline {
+    background: var(--red-bg);
+    color: var(--red);
+}
+
+.checking {
+    background: var(--yellow-bg);
+    color: var(--yellow);
+}
+
+.skipped {
+    background: var(--gray-bg);
+    color: var(--gray);
+}
+
+.server-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.server-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.server-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.server-name {
+    font-size: 18px;
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.server-url {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    word-break: break-all;
+}
+
+.server-time {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.empty {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 38px;
+    text-align: center;
+    color: var(--muted);
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+}
+
+.panel {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.06);
+}
+
+.panel-title {
+    font-weight: bold;
+    margin-bottom: 14px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto auto;
+    gap: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.manage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.manage-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto auto;
+    gap: 10px;
+    align-items: center;
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 14px;
+}
+
+.manage-name {
+    font-weight: bold;
+}
+
+.manage-url {
+    color: var(--muted);
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.log-panel {
+    margin-top: 20px;
+}
+
+.log-list {
+    max-height: 240px;
+    overflow-y: auto;
+    background: #f9fafb;
+    border-radius: 14px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.log-item {
+    margin-bottom: 6px;
+}
+
+.log-online { color: var(--green); }
+.log-offline { color: var(--red); }
+.log-error { color: var(--red); }
+.log-system { color: var(--gray); }
+
+.toast-container {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(360px, calc(100vw - 36px));
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--toast-bg);
+    color: var(--toast-text);
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.22);
+    pointer-events: auto;
+    animation: toastIn .18s ease-out;
+    border-left: 6px solid #9ca3af;
+}
+
+.toast.online { border-left-color: var(--green); }
+.toast.offline { border-left-color: var(--red); }
+.toast.error { border-left-color: var(--red); }
+.toast.system { border-left-color: var(--blue); }
+
+.toast-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.toast-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.toast-message {
+    color: #d1d5db;
+    font-size: 13px;
+    line-height: 1.45;
+    margin-top: 6px;
+    word-break: break-word;
+}
+
+.toast-close {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 8px;
+    background: rgba(255,255,255,.14);
+    color: #ffffff;
+    flex: 0 0 auto;
+}
+
+@keyframes toastIn {
+    from { transform: translateY(-8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 18px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 760px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .local-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .form-grid,
+    .manage-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="title">
+            <h1>Server Status Monitor</h1>
+            <div id="modeText">View Mode</div>
+        </div>
+
+        <div class="header-actions">
+            <button onclick="checkAllServers(true)">Refresh</button>
+            <button id="modeButton" class="secondary" onclick="toggleEditMode()">Edit Mode</button>
+        </div>
+    </div>
+
+    <div id="viewArea">
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Total Servers</div>
+                <div id="totalCount" class="summary-value">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Online</div>
+                <div id="onlineCount" class="summary-value">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Offline</div>
+                <div id="offlineCount" class="summary-value">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Unknown</div>
+                <div id="unknownCount" class="summary-value">0</div>
+            </div>
+        </div>
+
+        <div class="local-card">
+            <div>
+                <div class="server-name">Local Network</div>
+                <div id="localNetworkDetail" class="server-url">Browser network detection</div>
+            </div>
+            <div id="localStatus" class="status-pill checking">
+                <span class="dot"></span>Checking
+            </div>
+        </div>
+
+        <div id="serverGrid" class="server-grid"></div>
+    </div>
+
+    <div id="editArea" class="hidden">
+        <div class="panel">
+            <div class="panel-title">Add / Edit Server</div>
+            <div class="form-grid">
+                <input id="serverName" placeholder="Server name">
+                <input id="serverUrl" placeholder="Server URL, e.g. http://10.66.1.100:8080/">
+                <button onclick="saveServer()">Save</button>
+                <button class="light" onclick="cancelEdit()">Clear</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Server List</div>
+            <div id="manageList" class="manage-list"></div>
+        </div>
+    </div>
+
+    <div class="panel log-panel">
+        <div class="panel-title">Connection Log</div>
+        <div id="logList" class="log-list"></div>
+        <br>
+        <button class="light" onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div class="footer">
+        Last updated: <span id="lastUpdated">Never</span> |
+        Auto refresh every <span id="intervalText"></span> seconds
+    </div>
+
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+const refreshIntervalSeconds = 5;
+const timeoutMilliseconds = 3000;
+const pageHealthIntervalSeconds = 30;
+const storageKey = "serverStatusMonitor.servers.v2";
+const notificationStorageKey = "serverStatusMonitor.notifications.enabled.v1";
+
+let servers = [];
+let serverStates = {};
+let editingIndex = null;
+let localNetworkState = null;
+let editMode = false;
+let notificationsEnabled = false;
+let networkFingerprint = null;
+let pageProblemCount = 0;
+
+const stateNotificationMemory = {};
+const pageProblemMemory = {};
+
+function getTimeText() {
+    return new Date().toLocaleString();
+}
+
+function loadServers() {
+    servers = JSON.parse(localStorage.getItem(storageKey) || "[]");
+}
+
+function saveServersToStorage() {
+    localStorage.setItem(storageKey, JSON.stringify(servers));
+}
+
+function loadNotificationSetting() {
+    notificationsEnabled = "Notification" in window && Notification.permission === "granted";
+    saveNotificationSetting();
+    updateNotificationButton();
+}
+
+function saveNotificationSetting() {
+    localStorage.setItem(notificationStorageKey, String(notificationsEnabled));
+}
+
+function setupAutomaticSystemNotificationPermission() {
+    requestSystemNotificationPermission("page load").then(granted => {
+        if (!granted && "Notification" in window && Notification.permission === "default") {
+            setupFirstInteractionNotificationPermission();
+        }
+    });
+}
+
+function setupFirstInteractionNotificationPermission() {
+    const triggerEvents = ["click", "keydown", "touchstart"];
+
+    const requestOnce = () => {
+        triggerEvents.forEach(eventName => {
+            window.removeEventListener(eventName, requestOnce, true);
+        });
+        requestSystemNotificationPermission("first user interaction");
+    };
+
+    triggerEvents.forEach(eventName => {
+        window.addEventListener(eventName, requestOnce, { once: true, capture: true });
+    });
+
+    addLog("Browser may require the first user interaction before showing the system notification permission prompt", "system");
+}
+
+async function requestSystemNotificationPermission(source = "auto") {
+    if (!("Notification" in window)) {
+        notificationsEnabled = false;
+        saveNotificationSetting();
+        addLog("System notifications are not supported by this browser", "error");
+        return false;
+    }
+
+    if (Notification.permission === "granted") {
+        notificationsEnabled = true;
+        saveNotificationSetting();
+        return true;
+    }
+
+    if (Notification.permission === "denied") {
+        notificationsEnabled = false;
+        saveNotificationSetting();
+        addLog("System notifications are blocked by browser permission settings", "error");
+        showToast("System Notifications Blocked", "Please allow notifications in browser site settings.", "error");
+        return false;
+    }
+
+    try {
+        addLog(`Requesting system notification permission from ${source}`, "system");
+        const permission = await Notification.requestPermission();
+        notificationsEnabled = permission === "granted";
+        saveNotificationSetting();
+
+        if (notificationsEnabled) {
+            showSystemNotification(
+                "System Notifications Ready",
+                "You will only receive notifications when a status changes.",
+                "system",
+                { force: true, tag: "system-notifications-ready" }
+            );
+            addLog("System notifications enabled", "system");
+            return true;
+        }
+
+        addLog(`System notification permission result: ${permission}`, permission === "denied" ? "error" : "system");
+        return false;
+    } catch (error) {
+        notificationsEnabled = false;
+        saveNotificationSetting();
+        addLog(`System notification permission request failed: ${error.message || String(error)}`, "error");
+        showToast("Notification Permission Failed", error.message || String(error), "error");
+        return false;
+    }
+}
+
+function updateNotificationButton() {
+    const button = document.getElementById("notificationButton");
+    if (!button) return;
+
+    if (!("Notification" in window)) {
+        button.textContent = "System Notifications Unsupported";
+        button.disabled = true;
+        return;
+    }
+
+    if (Notification.permission === "denied") {
+        button.textContent = "System Notifications Blocked";
+        button.disabled = true;
+        return;
+    }
+
+    button.textContent = notificationsEnabled ? "System Notifications Enabled" : "System Notifications Pending";
+}
+
+function formatStatusText(status) {
+    if (status === "online") return "Online";
+    if (status === "offline") return "Offline";
+    if (status === "skipped") return "Skipped";
+    return "Checking";
+}
+
+function statusClass(status) {
+    if (status === "online") return "online";
+    if (status === "offline") return "offline";
+    if (status === "skipped") return "skipped";
+    return "checking";
+}
+
+function addLog(message, type = "system") {
+    const logList = document.getElementById("logList");
+    if (!logList) return;
+
+    const item = document.createElement("div");
+    item.className = `log-item log-${type}`;
+    item.textContent = `[${getTimeText()}] ${message}`;
+
+    logList.prepend(item);
+
+    while (logList.children.length > 100) {
+        logList.removeChild(logList.lastChild);
+    }
+}
+
+function showToast(title, message, type = "system") {
+    const toastContainer = document.getElementById("toastContainer");
+    if (!toastContainer) return;
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-head">
+            <div class="toast-title">${escapeHtml(title)}</div>
+            <button class="toast-close" type="button" aria-label="Close notification">×</button>
+        </div>
+        <div class="toast-message">${escapeHtml(message)}</div>
+    `;
+
+    const closeButton = toast.querySelector(".toast-close");
+    closeButton.addEventListener("click", () => toast.remove());
+
+    toastContainer.prepend(toast);
+
+    setTimeout(() => {
+        if (toast.isConnected) toast.remove();
+    }, type === "error" || type === "offline" ? 12000 : 7000);
+}
+
+function showSystemNotification(title, message, type = "system", options = {}) {
+    const tag = options.tag || `${type}:${title}`;
+
+    if (!notificationsEnabled || !("Notification" in window) || Notification.permission !== "granted") {
+        if (options.fallbackToast) {
+            showToast(title, message, type);
+        }
+        return false;
+    }
+
+    try {
+        const nativeNotification = new Notification(title, {
+            body: message,
+            tag,
+            requireInteraction: type === "error" || type === "offline"
+        });
+
+        nativeNotification.onclick = () => {
+            window.focus();
+            nativeNotification.close();
+        };
+
+        return true;
+    } catch (error) {
+        showToast("Notification Error", error.message || String(error), "error");
+        return false;
+    }
+}
+
+function notifyOnStateChange(key, nextState, title, message, type = "system", options = {}) {
+    if (!options.force && stateNotificationMemory[key] === nextState) {
+        return false;
+    }
+
+    stateNotificationMemory[key] = nextState;
+    return showSystemNotification(title, message, type, {
+        ...options,
+        tag: options.tag || `${key}:${nextState}`
+    });
+}
+
+function notifyPageProblemOnce(problemKey, title, detail) {
+    pageProblemCount++;
+    addLog(`${title}: ${detail}`, "error");
+
+    if (pageProblemMemory[problemKey] === "active") {
+        return;
+    }
+
+    pageProblemMemory[problemKey] = "active";
+    notifyOnStateChange(
+        `page-problem:${problemKey}`,
+        "active",
+        title,
+        detail,
+        "error"
+    );
+}
+
+function markPageProblemRecovered(problemKey, title, detail, notify = false) {
+    if (pageProblemMemory[problemKey] !== "active") {
+        return;
+    }
+
+    pageProblemMemory[problemKey] = "recovered";
+    addLog(`${title}: ${detail}`, "online");
+
+    if (notify) {
+        notifyOnStateChange(
+            `page-problem:${problemKey}`,
+            "recovered",
+            title,
+            detail,
+            "online"
+        );
+    }
+}
+
+function renderAll() {
+    renderServerGrid();
+    renderManageList();
+    updateSummary();
+}
+
+function renderServerGrid() {
+    const serverGrid = document.getElementById("serverGrid");
+    serverGrid.innerHTML = "";
+
+    if (servers.length === 0) {
+        serverGrid.innerHTML = `
+            <div class="empty">
+                No servers added yet.<br><br>
+                Click <b>Edit Mode</b> to add your first server.
+            </div>
+        `;
+        return;
+    }
+
+    servers.forEach((server, index) => {
+        if (!serverStates[index]) {
+            serverStates[index] = {
+                status: "checking",
+                firstCheck: true,
+                lastChanged: "Never"
+            };
+        }
+
+        const state = serverStates[index];
+
+        const card = document.createElement("div");
+        card.className = "server-card";
+
+        card.innerHTML = `
+            <div>
+                <div class="server-top">
+                    <div class="server-name">${escapeHtml(server.name)}</div>
+                    <div id="status-${index}" class="status-pill ${statusClass(state.status)}">
+                        <span class="dot"></span>${formatStatusText(state.status)}
+                    </div>
+                </div>
+                <div class="server-url">${escapeHtml(server.url)}</div>
+            </div>
+            <div id="time-${index}" class="server-time">
+                Last changed: ${state.lastChanged}
+            </div>
+        `;
+
+        serverGrid.appendChild(card);
+    });
+}
+
+function renderManageList() {
+    const manageList = document.getElementById("manageList");
+    manageList.innerHTML = "";
+
+    if (servers.length === 0) {
+        manageList.innerHTML = `<div class="empty">No servers added yet.</div>`;
+        return;
+    }
+
+    servers.forEach((server, index) => {
+        const row = document.createElement("div");
+        row.className = "manage-row";
+
+        row.innerHTML = `
+            <div class="manage-name">${escapeHtml(server.name)}</div>
+            <div class="manage-url">${escapeHtml(server.url)}</div>
+            <button class="light" onclick="editServer(${index})">Edit</button>
+            <button class="danger" onclick="deleteServer(${index})">Delete</button>
+        `;
+
+        manageList.appendChild(row);
+    });
+}
+
+function updateSummary() {
+    let online = 0;
+    let offline = 0;
+    let unknown = 0;
+
+    servers.forEach((server, index) => {
+        const status = serverStates[index]?.status || "checking";
+
+        if (status === "online") online++;
+        else if (status === "offline") offline++;
+        else unknown++;
+    });
+
+    document.getElementById("totalCount").textContent = servers.length;
+    document.getElementById("onlineCount").textContent = online;
+    document.getElementById("offlineCount").textContent = offline;
+    document.getElementById("unknownCount").textContent = unknown;
+}
+
+function getServerKey(server) {
+    return `${server.name || "server"}|${server.url || "url"}`;
+}
+
+function updateStatus(index, newStatus, options = {}) {
+    const currentState = serverStates[index];
+    const server = servers[index];
+    if (!currentState || !server) return;
+
+    const previousStatus = currentState.status;
+    const wasFirstCheck = currentState.firstCheck;
+
+    if (!wasFirstCheck && previousStatus === newStatus) {
+        return;
+    }
+
+    currentState.firstCheck = false;
+    currentState.status = newStatus;
+    currentState.lastChanged = getTimeText();
+
+    const statusElement = document.getElementById(`status-${index}`);
+    const timeElement = document.getElementById(`time-${index}`);
+
+    if (statusElement) {
+        statusElement.className = `status-pill ${statusClass(newStatus)}`;
+        statusElement.innerHTML = `<span class="dot"></span>${formatStatusText(newStatus)}`;
+    }
+
+    if (timeElement) {
+        timeElement.textContent = `Last changed: ${currentState.lastChanged}`;
+    }
+
+    const serverKey = `server:${getServerKey(server)}`;
+    const detail = options.detail || `URL: ${server.url}`;
+
+    if (newStatus === "online") {
+        addLog(`${server.name} is Online`, "online");
+
+        if (!wasFirstCheck && !options.silentNotification) {
+            notifyOnStateChange(
+                serverKey,
+                "online",
+                "Server Online",
+                `${server.name} is reachable again. ${detail}`,
+                "online"
+            );
+        }
+    } else if (newStatus === "offline") {
+        addLog(`${server.name} is Offline. ${detail}`, "offline");
+
+        if (!options.silentNotification) {
+            notifyOnStateChange(
+                serverKey,
+                "offline",
+                options.title || "Server Offline",
+                `${server.name} cannot be reached. ${detail}`,
+                "offline"
+            );
+        }
+    } else if (newStatus === "skipped") {
+        addLog(`${server.name} check skipped because local network is offline`, "system");
+    }
+
+    updateSummary();
+}
+
+function getConnectionObject() {
+    return navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
+}
+
+function getNetworkDetailText() {
+    const connection = getConnectionObject();
+    const details = [navigator.onLine ? "Browser online" : "Browser offline"];
+
+    if (!connection) {
+        details.push("Connection API not supported");
+        return details.join(" | ");
+    }
+
+    details.push(`type: ${connection.type || "unknown"}`);
+    details.push(`effectiveType: ${connection.effectiveType || "unknown"}`);
+
+    if (typeof connection.downlink === "number") {
+        details.push(`downlink: ${connection.downlink} Mbps`);
+    }
+
+    if (typeof connection.rtt === "number") {
+        details.push(`rtt: ${connection.rtt} ms`);
+    }
+
+    if (typeof connection.saveData === "boolean") {
+        details.push(`saveData: ${connection.saveData ? "on" : "off"}`);
+    }
+
+    return details.join(" | ");
+}
+
+function getNetworkFingerprintObject() {
+    const connection = getConnectionObject();
+
+    return {
+        online: navigator.onLine,
+        type: connection?.type || "unknown",
+        effectiveType: connection?.effectiveType || "unknown",
+        saveData: typeof connection?.saveData === "boolean" ? connection.saveData : null
+    };
+}
+
+function getNetworkFingerprint() {
+    return JSON.stringify(getNetworkFingerprintObject());
+}
+
+function refreshLocalNetworkDetail() {
+    const detailElement = document.getElementById("localNetworkDetail");
+    if (detailElement) {
+        detailElement.textContent = getNetworkDetailText();
+    }
+}
+
+function detectNetworkChange(reason = "periodic check") {
+    const previousFingerprint = networkFingerprint;
+    const nextFingerprint = getNetworkFingerprint();
+
+    networkFingerprint = nextFingerprint;
+    refreshLocalNetworkDetail();
+
+    if (!previousFingerprint || previousFingerprint === nextFingerprint) {
+        return;
+    }
+
+    const previous = JSON.parse(previousFingerprint);
+    const next = JSON.parse(nextFingerprint);
+    const detail = getNetworkDetailText();
+
+    if (previous.online !== next.online) {
+        addLog(`Local online/offline state changed by ${reason}. ${detail}`, "system");
+        return;
+    }
+
+    const message = `Local network details changed by ${reason}. ${detail}`;
+    addLog(message, "system");
+
+    notifyOnStateChange(
+        "local-network-detail",
+        nextFingerprint,
+        "Local Network Changed",
+        message,
+        "system"
+    );
+}
+
+function updateLocalNetworkStatus() {
+    const isOnline = navigator.onLine;
+    const localStatusElement = document.getElementById("localStatus");
+    const newState = isOnline ? "online" : "offline";
+    const isFirstState = localNetworkState === null;
+
+    refreshLocalNetworkDetail();
+
+    if (localNetworkState !== newState) {
+        localNetworkState = newState;
+
+        if (localStatusElement) {
+            localStatusElement.className = `status-pill ${newState}`;
+            localStatusElement.innerHTML = `<span class="dot"></span>${isOnline ? "Online" : "Offline"}`;
+        }
+
+        const message = isOnline
+            ? `Local network is Online. ${getNetworkDetailText()}`
+            : `Local network is Offline. ${getNetworkDetailText()}`;
+
+        addLog(message, isOnline ? "online" : "offline");
+
+        if (!isFirstState || !isOnline) {
+            notifyOnStateChange(
+                "local-network-status",
+                newState,
+                isOnline ? "Local Network Online" : "Local Network Offline",
+                message,
+                isOnline ? "online" : "offline"
+            );
+        }
+    }
+
+    return isOnline;
+}
+
+async function fetchWithTimeout(url, options = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMilliseconds);
+
+    try {
+        return await fetch(url, {
+            ...options,
+            cache: "no-store",
+            signal: controller.signal
+        });
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+function getErrorText(error) {
+    if (!error) return "Unknown error";
+    if (error.name === "AbortError") return `Timeout after ${timeoutMilliseconds} ms`;
+    return error.message || String(error);
+}
+
+async function checkServer(server, index) {
+    const serverProblemKey = `server-page:${getServerKey(server)}`;
+
+    try {
+        const response = await fetchWithTimeout(server.url, {
+            method: "GET",
+            mode: "cors"
+        });
+
+        if (!response.ok) {
+            const detail = `HTTP ${response.status} ${response.statusText || ""}. URL: ${server.url}`;
+
+            updateStatus(index, "offline", {
+                title: "Webpage Response Problem",
+                detail,
+                silentNotification: true
+            });
+
+            notifyOnStateChange(
+                serverProblemKey,
+                `http-${response.status}`,
+                "Webpage Response Problem",
+                `${server.name} returned ${detail}`,
+                "error"
+            );
+            return;
+        }
+
+        markPageProblemRecovered(serverProblemKey, "Webpage Recovered", `${server.name} is reachable again. URL: ${server.url}`, false);
+        updateStatus(index, "online");
+    } catch (corsOrNetworkError) {
+        try {
+            await fetchWithTimeout(server.url, {
+                method: "GET",
+                mode: "no-cors"
+            });
+
+            markPageProblemRecovered(serverProblemKey, "Webpage Recovered", `${server.name} is reachable again. URL: ${server.url}`, false);
+            updateStatus(index, "online");
+        } catch (networkError) {
+            const detail = `${getErrorText(networkError)}. URL: ${server.url}`;
+            updateStatus(index, "offline", { detail });
+        }
+    }
+}
+
+function checkAllServers(manual = false) {
+    detectNetworkChange(manual ? "manual refresh" : "auto refresh");
+
+    const localOnline = updateLocalNetworkStatus();
+
+    if (!localOnline) {
+        servers.forEach((server, index) => updateStatus(index, "skipped", { silentNotification: true }));
+        document.getElementById("lastUpdated").textContent = getTimeText();
+        return;
+    }
+
+    servers.forEach((server, index) => checkServer(server, index));
+
+    document.getElementById("lastUpdated").textContent = getTimeText();
+
+    if (manual) {
+        addLog("Manual refresh triggered", "system");
+    }
+}
+
+function runPageHealthCheck() {
+    const requiredElementIds = [
+        "modeText",
+        "totalCount",
+        "onlineCount",
+        "offlineCount",
+        "unknownCount",
+        "localStatus",
+        "localNetworkDetail",
+        "serverGrid",
+        "manageList",
+        "logList",
+        "lastUpdated",
+        "intervalText",
+        "toastContainer"
+    ];
+
+    const missingIds = requiredElementIds.filter(id => !document.getElementById(id));
+    const problemKey = "dashboard-health-missing-elements";
+
+    if (missingIds.length > 0) {
+        notifyPageProblemOnce(
+            problemKey,
+            "Dashboard Health Problem",
+            `Missing required element(s): ${missingIds.join(", ")}`
+        );
+    } else {
+        markPageProblemRecovered(problemKey, "Dashboard Health Recovered", "All required dashboard elements are present.", false);
+    }
+}
+
+function saveServer() {
+    const name = document.getElementById("serverName").value.trim();
+    const url = document.getElementById("serverUrl").value.trim();
+
+    if (!name || !url) {
+        alert("Please enter server name and URL.");
+        return;
+    }
+
+    const data = { name, url };
+
+    if (editingIndex === null) {
+        servers.push(data);
+        const newIndex = servers.length - 1;
+        serverStates[newIndex] = {
+            status: "checking",
+            firstCheck: true,
+            lastChanged: "Never"
+        };
+        addLog(`Server added: ${name}`, "system");
+    } else {
+        servers[editingIndex] = data;
+        serverStates[editingIndex] = {
+            status: "checking",
+            firstCheck: true,
+            lastChanged: "Never"
+        };
+        addLog(`Server updated: ${name}`, "system");
+    }
+
+    saveServersToStorage();
+    cancelEdit();
+    renderAll();
+    checkAllServers();
+}
+
+function editServer(index) {
+    editingIndex = index;
+    document.getElementById("serverName").value = servers[index].name;
+    document.getElementById("serverUrl").value = servers[index].url;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function deleteServer(index) {
+    const name = servers[index].name;
+
+    if (!confirm(`Delete "${name}"?`)) return;
+
+    servers.splice(index, 1);
+    rebuildServerStates();
+
+    saveServersToStorage();
+    renderAll();
+
+    addLog(`Server deleted: ${name}`, "system");
+}
+
+function rebuildServerStates() {
+    const newStates = {};
+
+    servers.forEach((server, index) => {
+        newStates[index] = {
+            status: "checking",
+            firstCheck: true,
+            lastChanged: "Never"
+        };
+    });
+
+    serverStates = newStates;
+}
+
+function cancelEdit() {
+    editingIndex = null;
+    document.getElementById("serverName").value = "";
+    document.getElementById("serverUrl").value = "";
+}
+
+function clearLogs() {
+    document.getElementById("logList").innerHTML = "";
+    addLog("Logs cleared", "system");
+}
+
+function toggleEditMode() {
+    editMode = !editMode;
+
+    document.getElementById("viewArea").classList.toggle("hidden", editMode);
+    document.getElementById("editArea").classList.toggle("hidden", !editMode);
+
+    document.getElementById("modeText").textContent = editMode ? "Edit Mode" : "View Mode";
+    document.getElementById("modeButton").textContent = editMode ? "View Mode" : "Edit Mode";
+
+    cancelEdit();
+}
+
+function handleBrowserNetworkEvent(event) {
+    detectNetworkChange(event.type);
+    checkAllServers();
+}
+
+function setupNetworkListeners() {
+    window.addEventListener("online", handleBrowserNetworkEvent);
+    window.addEventListener("offline", handleBrowserNetworkEvent);
+
+    const connection = getConnectionObject();
+    if (connection && typeof connection.addEventListener === "function") {
+        connection.addEventListener("change", () => {
+            detectNetworkChange("connection API change");
+            checkAllServers();
+        });
+    }
+}
+
+function setupPageProblemListeners() {
+    window.addEventListener("error", event => {
+        if (event.target && event.target !== window) {
+            const target = event.target;
+            const resource = target.currentSrc || target.src || target.href || target.tagName || "unknown resource";
+            const problemKey = `resource-error:${resource}`;
+
+            notifyPageProblemOnce(
+                problemKey,
+                "Resource Load Error",
+                `Failed to load resource: ${resource}`
+            );
+            return;
+        }
+
+        const filename = event.filename || "inline script";
+        const location = `${filename}:${event.lineno || 0}:${event.colno || 0}`;
+        const message = `${event.message || "Unknown JavaScript error"} (${location})`;
+
+        notifyPageProblemOnce(`javascript-error:${location}`, "JavaScript Error", message);
+    }, true);
+
+    window.addEventListener("unhandledrejection", event => {
+        const reason = event.reason instanceof Error
+            ? `${event.reason.name}: ${event.reason.message}`
+            : String(event.reason || "Unknown promise rejection");
+
+        notifyPageProblemOnce(`promise-rejection:${reason}`, "Unhandled Promise Rejection", reason);
+    });
+
+    window.addEventListener("securitypolicyviolation", event => {
+        const detail = `${event.violatedDirective || "Unknown directive"}: ${event.blockedURI || "unknown blocked URI"}`;
+        notifyPageProblemOnce(`csp:${event.violatedDirective}:${event.blockedURI}`, "Security Policy Violation", detail);
+    });
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+setupPageProblemListeners();
+setupNetworkListeners();
+loadServers();
+loadNotificationSetting();
+setupAutomaticSystemNotificationPermission();
+rebuildServerStates();
+renderAll();
+
+networkFingerprint = getNetworkFingerprint();
+refreshLocalNetworkDetail();
+
+document.getElementById("intervalText").textContent = refreshIntervalSeconds;
+
+addLog("Monitor started", "system");
+runPageHealthCheck();
+checkAllServers();
+
+setInterval(checkAllServers, refreshIntervalSeconds * 1000);
+setInterval(runPageHealthCheck, pageHealthIntervalSeconds * 1000);
+
+</script>
+
+</body>
+</html>
