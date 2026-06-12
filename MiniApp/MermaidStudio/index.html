@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mermaid Studio - Editor + Viewer</title>
+  <link rel="stylesheet" href="/miniapp/MiniApp/MermaidStudio/css/mermaid-studio.css" />
+</head>
+<body>
+  <div class="app-shell" data-layout="split">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">M</div>
+        <div>
+          <div class="brand-title">Mermaid Studio</div>
+          <div class="brand-subtitle">Professional Diagram Workbench</div>
+        </div>
+      </div>
+
+      <nav class="menu-bar" aria-label="Application menu">
+        <button class="menu-item" data-menu="file">File</button>
+        <button class="menu-item" data-menu="edit">Edit</button>
+        <button class="menu-item" data-menu="view">View</button>
+        <button class="menu-item" data-menu="insert">Insert</button>
+        <button class="menu-item" data-menu="export">Export</button>
+      </nav>
+
+      <div class="quick-actions">
+        <button class="action-button" id="newDiagramBtn" title="New diagram">New</button>
+        <button class="action-button" id="formatBtn" title="Clean basic spacing">Format</button>
+        <button class="action-button primary" id="renderBtn" title="Render now">Render</button>
+      </div>
+    </header>
+
+    <aside class="tool-rail" aria-label="Tools">
+      <button class="rail-button active" data-panel="templates" title="Templates">⌘</button>
+      <button class="rail-button" data-panel="snippets" title="Snippets">{ }</button>
+      <button class="rail-button" data-panel="history" title="History">↺</button>
+      <button class="rail-button" data-panel="settings" title="Settings">⚙</button>
+    </aside>
+
+    <aside class="left-panel panel" id="leftPanel">
+      <section class="panel-section panel-page active" data-page="templates">
+        <div class="panel-header">
+          <div>
+            <h2>Templates</h2>
+            <p>Choose a starting diagram.</p>
+          </div>
+        </div>
+        <div class="search-box">
+          <input id="templateSearch" type="search" placeholder="Search templates..." autocomplete="off" />
+        </div>
+        <div id="templateList" class="template-list"></div>
+      </section>
+
+      <section class="panel-section panel-page" data-page="snippets">
+        <div class="panel-header">
+          <div>
+            <h2>Snippets</h2>
+            <p>Insert reusable blocks.</p>
+          </div>
+        </div>
+        <div class="snippet-grid">
+          <button class="snippet-card" data-snippet="node">Node</button>
+          <button class="snippet-card" data-snippet="decision">Decision</button>
+          <button class="snippet-card" data-snippet="subgraph">Subgraph</button>
+          <button class="snippet-card" data-snippet="note">Note</button>
+          <button class="snippet-card" data-snippet="class">Class Def</button>
+          <button class="snippet-card" data-snippet="style">Style</button>
+        </div>
+      </section>
+
+      <section class="panel-section panel-page" data-page="history">
+        <div class="panel-header">
+          <div>
+            <h2>History</h2>
+            <p>Recent saved snapshots.</p>
+          </div>
+          <button class="ghost-button" id="clearHistoryBtn">Clear</button>
+        </div>
+        <div id="historyList" class="history-list empty-state">No snapshots yet.</div>
+      </section>
+
+      <section class="panel-section panel-page" data-page="settings">
+        <div class="panel-header">
+          <div>
+            <h2>Workspace</h2>
+            <p>Local editor preferences.</p>
+          </div>
+        </div>
+        <label class="toggle-line">
+          <input type="checkbox" id="autoRenderToggle" checked />
+          <span>Auto render while typing</span>
+        </label>
+        <label class="toggle-line">
+          <input type="checkbox" id="autoSaveToggle" checked />
+          <span>Auto save to browser</span>
+        </label>
+        <label class="toggle-line">
+          <input type="checkbox" id="gridToggle" checked />
+          <span>Show canvas grid</span>
+        </label>
+        <button class="full-button danger" id="resetWorkspaceBtn">Reset Workspace</button>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <section class="editor-pane panel">
+        <div class="pane-titlebar">
+          <div>
+            <span class="file-dot"></span>
+            <span id="currentFileName">untitled.mmd</span>
+          </div>
+          <div class="pane-actions">
+            <button class="mini-button" id="copyCodeBtn">Copy</button>
+            <button class="mini-button" id="saveSnapshotBtn">Snapshot</button>
+          </div>
+        </div>
+        <div class="editor-wrap">
+          <pre class="line-numbers" id="lineNumbers">1</pre>
+          <textarea id="codeEditor" spellcheck="false" aria-label="Mermaid code editor"></textarea>
+        </div>
+      </section>
+
+      <section class="preview-pane panel">
+        <div class="pane-titlebar preview-titlebar">
+          <div class="preview-tabs">
+            <button class="tab-button active" data-preview-mode="diagram">Diagram</button>
+            <button class="tab-button" data-preview-mode="source">SVG Source</button>
+          </div>
+          <div class="canvas-toolbar">
+            <button class="mini-button" id="zoomOutBtn">−</button>
+            <button class="mini-button readout" id="zoomReadout">100%</button>
+            <button class="mini-button" id="zoomInBtn">+</button>
+            <button class="mini-button" id="fitBtn">Fit</button>
+            <button class="mini-button" id="exportSvgBtn">SVG</button>
+            <button class="mini-button" id="exportPngBtn">PNG</button>
+          </div>
+        </div>
+        <div class="canvas-stage grid-on" id="canvasStage">
+          <div class="diagram-layer" id="diagramLayer">
+            <div class="diagram-placeholder">
+              <div class="placeholder-icon">◇</div>
+              <div>Diagram preview appears here</div>
+            </div>
+          </div>
+          <pre class="svg-source hidden" id="svgSource"></pre>
+        </div>
+      </section>
+    </main>
+
+    <aside class="right-panel panel">
+      <section class="panel-section">
+        <div class="panel-header compact">
+          <h2>Properties</h2>
+        </div>
+
+        <label class="field-line">
+          <span>Theme</span>
+          <select id="themeSelect">
+            <option value="dark" selected>Dark</option>
+            <option value="default">Default</option>
+            <option value="neutral">Neutral</option>
+            <option value="forest">Forest</option>
+            <option value="base">Base</option>
+          </select>
+        </label>
+
+        <label class="field-line">
+          <span>Security</span>
+          <select id="securitySelect">
+            <option value="strict" selected>Strict</option>
+            <option value="antiscript">Anti Script</option>
+            <option value="loose">Loose</option>
+          </select>
+        </label>
+
+        <label class="field-line">
+          <span>Flow curve</span>
+          <select id="curveSelect">
+            <option value="basis" selected>Basis</option>
+            <option value="linear">Linear</option>
+            <option value="cardinal">Cardinal</option>
+            <option value="monotoneX">Monotone X</option>
+            <option value="step">Step</option>
+          </select>
+        </label>
+
+        <label class="field-line">
+          <span>Font size</span>
+          <input id="fontSizeInput" type="number" min="10" max="28" value="16" />
+        </label>
+
+        <label class="field-line">
+          <span>Background</span>
+          <input id="backgroundInput" type="color" value="#111318" />
+        </label>
+      </section>
+
+      <section class="panel-section metrics-panel">
+        <div class="panel-header compact">
+          <h2>Inspector</h2>
+        </div>
+        <div class="metric-row"><span>Lines</span><strong id="metricLines">0</strong></div>
+        <div class="metric-row"><span>Characters</span><strong id="metricChars">0</strong></div>
+        <div class="metric-row"><span>Render time</span><strong id="metricRenderTime">–</strong></div>
+        <div class="metric-row"><span>Status</span><strong id="metricStatus">Idle</strong></div>
+      </section>
+    </aside>
+
+    <footer class="console-bar">
+      <div class="console-status" id="consoleStatus">Ready</div>
+      <div class="console-message" id="consoleMessage">Load a template or start typing Mermaid syntax.</div>
+    </footer>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script type="module" src="/miniapp/MiniApp/MermaidStudio/js/app.js"></script>
+</body>
+</html>
