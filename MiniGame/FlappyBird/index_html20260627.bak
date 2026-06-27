@@ -164,17 +164,11 @@
 
   <!-- FlappyBot info panel -->
   <div id="flappyBotInfo">
+    <div>FlappyBot Highest Score: <span id="flappyBotHighScore">0</span></div>
+    <div>FlappyBot Last Score: <span id="flappyBotLastScore">0</span></div>
     <div>FlappyBot Collision Type: <span id="flappyBotCollisionType">N/A</span></div>
-    <div>FlappyBot Mode: <span id="flappyBotMode">N/A</span></div>
-    <div>Highest Score: <span id="flappyBotHighScore">0</span></div>
-    <div>Last Score: <span id="flappyBotLastScore">0</span></div>
-    <div>Bot Runs: <span id="flappyBotGames">0</span></div>
-    <div>Target Bias: <span id="flappyBotTargetBias">0</span></div>
-    <div>Safety Margin: <span id="flappyBotSafetyMargin">0</span></div>
-    <div>Action: <span id="flappyBotLastAction">N/A</span></div>
-    <div>Cost Wait / Jump: <span id="flappyBotCost">N/A</span></div>
-    <div>Target Y: <span id="flappyBotTargetY">N/A</span></div>
-    <div>Collision: <span id="flappyBotCollisionType">N/A</span> / <span id="flappyBotVelocityState">N/A</span></div>
+    <div>FlappyBot Velocity State: <span id="flappyBotVelocityState">N/A</span></div>
+    <div>FlappyBot Memory Length: <span id="flappyBotMemoryLength">0</span></div>
   </div>
 
 <script>
@@ -288,106 +282,22 @@ function integrateFlappyBot() {
 
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-  // FlappyBot pilot brain - predictive physics + adaptive calibration.
-  // This is intentionally not pure Q-learning: this game is deterministic, so
-  // the strongest bot is one that predicts its future path and only learns small
-  // bias corrections from repeated crash patterns.
-  const FLAPPY_BOT_BRAIN_KEY = 'flappyBotPredictivePilot_v3';
-  const FLAPPY_BOT_OLD_KEYS = ['flappyBotQLearningBrain_v2', 'flappyBotMemory'];
-  const FLAPPY_BOT_PILOT = {
-    DECISION_INTERVAL_MS: 16,
-    PREDICTION_FRAMES: 96,
-    SHORT_HORIZON_FRAMES: 42,
-    JUMP_COOLDOWN_MS: 150,
-    DEFAULT_SAFETY_MARGIN: 14,
-    MIN_SAFETY_MARGIN: 8,
-    MAX_SAFETY_MARGIN: 28,
-    MIN_TARGET_BIAS: -30,
-    MAX_TARGET_BIAS: 90,
-    COST_MARGIN_TO_JUMP: 5.5,
-    JUMP_COST: 3.2,
-    CENTERING_WEIGHT: 0.34,
-    CLOSE_PIPE_WEIGHT: 2.8
-  };
-
-  let flappyBotMemory = createFreshPilotBrain();
-
-  function createFreshPilotBrain() {
-    return {
-      version: 3,
-      games: 0,
-      bestScore: parseInt(localStorage.getItem('flappyBotHighestScore') || '0'),
-      lastScore: 0,
-      targetBias: 64,
-      safetyMargin: FLAPPY_BOT_PILOT.DEFAULT_SAFETY_MARGIN,
-      cooldownBiasMs: 0,
-      lastAction: 'N/A',
-      lastMode: 'predictive',
-      lastWaitCost: 0,
-      lastJumpCost: 0,
-      lastTargetY: 0,
-      recentScores: [],
-      collisions: {
-        top_rising: 0,
-        top_falling: 0,
-        bottom_rising: 0,
-        bottom_falling: 0
-      }
-    };
-  }
-
-  function normalizePilotBrain(raw) {
-    const fresh = createFreshPilotBrain();
-    if(!raw || typeof raw !== 'object') return fresh;
-    return {
-      ...fresh,
-      ...raw,
-      version: 3,
-      targetBias: clamp(Number(raw.targetBias ?? 64), FLAPPY_BOT_PILOT.MIN_TARGET_BIAS, FLAPPY_BOT_PILOT.MAX_TARGET_BIAS),
-      safetyMargin: clamp(Number(raw.safetyMargin || FLAPPY_BOT_PILOT.DEFAULT_SAFETY_MARGIN), FLAPPY_BOT_PILOT.MIN_SAFETY_MARGIN, FLAPPY_BOT_PILOT.MAX_SAFETY_MARGIN),
-      cooldownBiasMs: clamp(Number(raw.cooldownBiasMs || 0), -25, 45),
-      collisions: {
-        ...fresh.collisions,
-        ...(raw.collisions || {})
-      },
-      recentScores: Array.isArray(raw.recentScores) ? raw.recentScores.slice(-30) : []
-    };
-  }
-
+  // FlappyBot memory
+  let flappyBotMemory = { experiences: [] };
   function loadFlappyBotMemory() {
-    const brainStr = localStorage.getItem(FLAPPY_BOT_BRAIN_KEY);
-    if(brainStr) {
+    let memoryStr = localStorage.getItem('flappyBotMemory');
+    if (memoryStr) {
       try {
-        flappyBotMemory = normalizePilotBrain(JSON.parse(brainStr));
-        return;
+        flappyBotMemory = JSON.parse(memoryStr);
       } catch(e) {
-        console.warn('FlappyBot pilot brain reset because stored data is invalid:', e);
+        flappyBotMemory = { experiences: [] };
       }
+    } else {
+      flappyBotMemory = { experiences: [] };
     }
-
-    // Keep only the high score from older bot versions. Their saved data is not
-    // used directly because the older policy learned noisy threshold/Q data.
-    for(const key of FLAPPY_BOT_OLD_KEYS) {
-      if(localStorage.getItem(key)) {
-        flappyBotMemory = createFreshPilotBrain();
-        return;
-      }
-    }
-    flappyBotMemory = createFreshPilotBrain();
   }
-
   function saveFlappyBotMemory() {
-    localStorage.setItem(FLAPPY_BOT_BRAIN_KEY, JSON.stringify(flappyBotMemory));
-  }
-
-  function resetFlappyBotBrain() {
-    flappyBotMemory = createFreshPilotBrain();
-    localStorage.removeItem(FLAPPY_BOT_BRAIN_KEY);
-    updateFlappyBotInfoPanel();
-  }
-
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+    localStorage.setItem('flappyBotMemory', JSON.stringify(flappyBotMemory));
   }
 
   loadFlappyBotMemory();
@@ -519,54 +429,67 @@ function integrateFlappyBot() {
   }
 
   function finalizeGameExperiences() {
-    if(flappyBotActive && activeGameExperiences.length > 0) {
-      endOfGameAnalysis(activeGameExperiences);
+    for (let e of activeGameExperiences) {
+      flappyBotMemory.experiences.push(e);
     }
-    activeGameExperiences = [];
+    if(flappyBotMemory.experiences.length > 1000) {
+      flappyBotMemory.experiences.splice(0, flappyBotMemory.experiences.length - 1000);
+    }
     saveFlappyBotMemory();
+
+    endOfGameAnalysis(activeGameExperiences);
+    activeGameExperiences = [];
   }
 
   function endOfGameAnalysis(gameSessionData) {
-    const lastCrash = [...gameSessionData].reverse().find(d => d.reward < 0 && d.collisionType);
-    const passes = gameSessionData.filter(d => d.reward > 0).length;
+    let collisionStats = {
+      top_rising: 0,
+      top_falling: 0,
+      bottom_rising: 0,
+      bottom_falling: 0,
+      passes: 0
+    };
 
-    flappyBotMemory.games++;
-    flappyBotMemory.lastScore = gameState.score;
-    flappyBotMemory.recentScores.push(gameState.score);
-    flappyBotMemory.recentScores = flappyBotMemory.recentScores.slice(-30);
-
-    if(lastCrash) {
-      const key = `${lastCrash.collisionType}_${lastCrash.velocityState || 'falling'}`;
-      flappyBotMemory.collisions[key] = (flappyBotMemory.collisions[key] || 0) + 1;
-
-      // Canvas Y grows downward. Top crash means the bird was too high, so the
-      // target line should move slightly lower. Bottom crash means the opposite.
-      if(lastCrash.collisionType === 'top') {
-        flappyBotMemory.targetBias += lastCrash.velocityState === 'rising' ? 4.2 : 2.4;
-        flappyBotMemory.cooldownBiasMs += 2;
-      } else if(lastCrash.collisionType === 'bottom') {
-        flappyBotMemory.targetBias -= lastCrash.velocityState === 'falling' ? 4.6 : 2.6;
-        flappyBotMemory.cooldownBiasMs -= 2;
+    for (let d of gameSessionData) {
+      if(d.collisionType === 'top') {
+        if(d.velocityState === 'rising') collisionStats.top_rising++;
+        else collisionStats.top_falling++;
+      } else if(d.collisionType === 'bottom') {
+        if(d.velocityState === 'rising') collisionStats.bottom_rising++;
+        else collisionStats.bottom_falling++;
       }
-
-      // Repeated low-score crashes usually mean the controller is cutting the
-      // gap too close, so temporarily widen its safety band.
-      if(gameState.score <= Math.max(2, flappyBotHighestScore * 0.35)) {
-        flappyBotMemory.safetyMargin += 1.2;
+      if(d.reward > 0) {
+        collisionStats.passes++;
       }
     }
 
-    // Good runs slowly relax the extra caution so the bot can handle narrow gaps
-    // without becoming too conservative forever.
-    if(passes >= 5 || gameState.score >= flappyBotHighestScore) {
-      flappyBotMemory.safetyMargin -= 0.45;
-      flappyBotMemory.targetBias *= 0.96;
-      flappyBotMemory.cooldownBiasMs *= 0.94;
+    let {top_rising, top_falling, bottom_rising, bottom_falling, passes} = collisionStats;
+    if(top_rising > 0) {
+      let factor = Math.min(1, top_rising / 5.0);
+      baseThreshold -= 0.1 * factor;
+    }
+    if(bottom_falling > 0) {
+      let factor = Math.min(1, bottom_falling / 5.0);
+      baseThreshold += 0.1 * factor;
+    }
+    if(top_falling > 0) {
+      let factor = Math.min(1, top_falling / 5.0);
+      microThreshold -= 0.05 * factor;
+    }
+    if(bottom_rising > 0) {
+      let factor = Math.min(1, bottom_rising / 5.0);
+      microThreshold -= 0.05 * factor;
+    }
+    if(passes > 3) {
+      let factor = Math.min(3, passes);
+      baseThreshold += 0.02 * factor;
+      microThreshold += 0.01 * factor;
     }
 
-    flappyBotMemory.targetBias = clamp(flappyBotMemory.targetBias, FLAPPY_BOT_PILOT.MIN_TARGET_BIAS, FLAPPY_BOT_PILOT.MAX_TARGET_BIAS);
-    flappyBotMemory.safetyMargin = clamp(flappyBotMemory.safetyMargin, FLAPPY_BOT_PILOT.MIN_SAFETY_MARGIN, FLAPPY_BOT_PILOT.MAX_SAFETY_MARGIN);
-    flappyBotMemory.cooldownBiasMs = clamp(flappyBotMemory.cooldownBiasMs, -25, 45);
+    baseThreshold = Math.max(1.0, Math.min(30.0, baseThreshold));
+    microThreshold = Math.max(1.0, Math.min(15.0, microThreshold));
+
+    saveThresholds();
   }
 
   function gameLoop() {
@@ -889,10 +812,9 @@ function integrateFlappyBot() {
 
   let idleTime = 0;
   let flappyBotActive = false;
-  let flappyBotHighestScore = parseInt(localStorage.getItem('flappyBotHighestScore') || flappyBotMemory.bestScore || '0');
-  let flappyBotLastScore = flappyBotMemory.lastScore || 0;
+  let flappyBotHighestScore = parseInt(localStorage.getItem('flappyBotHighestScore') || '0');
+  let flappyBotLastScore = 0;
   let flappyBotInterval = null;
-  let lastJumpTime = 0;
 
   function resetIdleTimer() {
     idleTime = 0;
@@ -905,9 +827,8 @@ function integrateFlappyBot() {
       clearInterval(flappyBotInterval);
       flappyBotInterval = null;
     }
-    resetGame();
     gameState.startScreen = true;
-    document.getElementById('score').textContent = '0';
+    resetGame();
   }
 
   function handleIdleTimer() {
@@ -921,7 +842,7 @@ function integrateFlappyBot() {
     flappyBotActive = true;
     showFlappyBotInfo();
     if(!flappyBotInterval) {
-      flappyBotInterval = setInterval(botLoop, FLAPPY_BOT_PILOT.DECISION_INTERVAL_MS);
+      flappyBotInterval = setInterval(botLoop, 50);
     }
   }
 
@@ -934,155 +855,52 @@ function integrateFlappyBot() {
     document.getElementById('flappyBotInfo').style.display = 'none';
   }
 
-  function setFlappyBotText(id, value) {
-    const el = document.getElementById(id);
-    if(el) el.textContent = value;
-  }
-
   function updateFlappyBotInfoPanel() {
     if(!flappyBotActive) return;
-    setFlappyBotText('flappyBotHighScore', flappyBotHighestScore);
-    setFlappyBotText('flappyBotLastScore', flappyBotLastScore);
-    setFlappyBotText('flappyBotGames', flappyBotMemory.games || 0);
-    setFlappyBotText('flappyBotTargetBias', Number(flappyBotMemory.targetBias || 0).toFixed(1));
-    setFlappyBotText('flappyBotSafetyMargin', Number(flappyBotMemory.safetyMargin || 0).toFixed(1));
-    setFlappyBotText('flappyBotLastAction', flappyBotMemory.lastAction || 'N/A');
-    setFlappyBotText('flappyBotMode', flappyBotMemory.lastMode || 'predictive');
-    setFlappyBotText('flappyBotCost', `${Number(flappyBotMemory.lastWaitCost || 0).toFixed(0)} / ${Number(flappyBotMemory.lastJumpCost || 0).toFixed(0)}`);
-    setFlappyBotText('flappyBotTargetY', Number(flappyBotMemory.lastTargetY || 0).toFixed(0));
-    setFlappyBotText('flappyBotCollisionType', gameState.collisionInfo.type || 'N/A');
-    setFlappyBotText('flappyBotVelocityState', gameState.collisionInfo.velocityState || 'N/A');
+    document.getElementById('flappyBotHighScore').textContent = flappyBotHighestScore;
+    document.getElementById('flappyBotLastScore').textContent = flappyBotLastScore;
+    document.getElementById('flappyBotCollisionType').textContent = gameState.collisionInfo.type || 'N/A';
+    document.getElementById('flappyBotVelocityState').textContent = gameState.collisionInfo.velocityState || 'N/A';
+    document.getElementById('flappyBotMemoryLength').textContent = flappyBotMemory.experiences.length;
   }
 
-  function getNextPipeForBot() {
-    for(let i = 0; i < gameState.pipes.length; i++) {
-      if(gameState.pipes[i].x + CONFIG.PIPE.WIDTH > gameState.bird.x - 4) {
-        return gameState.pipes[i];
+  let lastJumpTime = 0;
+  const jumpCooldown = 200;
+
+  let baseThreshold = parseFloat(localStorage.getItem('flappyBot_baseThreshold')) || 12.5;
+  let microThreshold = parseFloat(localStorage.getItem('flappyBot_microThreshold')) || 5.0;
+  let historicalAvgScore = parseFloat(localStorage.getItem('flappyBot_avgScore')) || 0;
+  let updatedLearningThisGame = false;
+
+  function saveThresholds() {
+    localStorage.setItem('flappyBot_baseThreshold', baseThreshold.toFixed(2));
+    localStorage.setItem('flappyBot_microThreshold', microThreshold.toFixed(2));
+  }
+
+  function getDesiredAltitude(bird, canvas, pipes, config) {
+    if(!canvas) return 0;
+    let middle = canvas.height/2;
+    let targetPipe = null;
+    for(let i=0; i<pipes.length; i++) {
+      if(pipes[i].x + config.PIPE.WIDTH > bird.x) {
+        targetPipe = pipes[i];
+        break;
       }
     }
-    return null;
-  }
-
-  function predictCenterAfterFrames(centerY, velocity, frames) {
-    // update() uses discrete physics: velocity += gravity, then y += velocity.
-    return centerY + velocity * frames + CONFIG.GRAVITY * frames * (frames + 1) / 2;
-  }
-
-  function getAdaptiveTargetY(pipe, birdCenterY, velocity) {
-    if(!pipe) return canvas.height * 0.52;
-
-    const birdRight = gameState.bird.x + CONFIG.BIRD.SIZE;
-    const dx = pipe.x - birdRight;
-    const rawGapCenter = (pipe.topHeight + pipe.bottomY) / 2;
-    const biasedGapCenter = rawGapCenter + (flappyBotMemory.targetBias || 0);
-    const approach = clamp(1 - Math.max(dx, 0) / 320, 0, 1);
-
-    // A falling bird needs a slightly higher planned line, while a rising bird
-    // is allowed to aim lower. The strong default bias is deliberate: with this
-    // jump force, aiming at the visual middle tends to hit the upper pipe lip.
-    const velocityLead = clamp(velocity * 1.1, -12, 12);
-    const pipeTarget = biasedGapCenter + velocityLead;
-    return canvas.height * 0.52 + (pipeTarget - canvas.height * 0.52) * Math.pow(approach, 0.65);
-  }
-
-  function evaluateOneStepRisk(pipe, centerY, velocity) {
-    if(!pipe) {
-      const idleTarget = canvas.height * 0.52;
-      return Math.abs(centerY - idleTarget);
-    }
-
-    const speed = gameState.currentPipeSpeed || CONFIG.BASE_PIPE_SPEED;
-    const birdRight = gameState.bird.x + CONFIG.BIRD.SIZE;
-    const dx = pipe.x - birdRight;
-    const entryFrames = clamp(dx / speed, 0, 42);
-    const midFrames = clamp((dx + CONFIG.PIPE.WIDTH / 2) / speed, 0, 42);
-    const safety = flappyBotMemory.safetyMargin || FLAPPY_BOT_PILOT.DEFAULT_SAFETY_MARGIN;
-    const topSafeCenter = pipe.topHeight + safety + CONFIG.BIRD.SIZE / 2;
-    const bottomSafeCenter = pipe.bottomY - safety - CONFIG.BIRD.SIZE / 2;
-
-    const predictedEntry = predictCenterAfterFrames(centerY, velocity, entryFrames);
-    const predictedMid = predictCenterAfterFrames(centerY, velocity, midFrames);
-
-    const highRisk = Math.max(topSafeCenter - predictedEntry, topSafeCenter - predictedMid, 0);
-    const lowRisk = Math.max(predictedEntry - bottomSafeCenter, predictedMid - bottomSafeCenter, 0);
-    return lowRisk - highRisk;
-  }
-
-  function decideBotAction() {
-    const now = Date.now();
-    const cooldown = FLAPPY_BOT_PILOT.JUMP_COOLDOWN_MS + (flappyBotMemory.cooldownBiasMs || 0);
-    const canJump = now - lastJumpTime >= cooldown;
-    const bird = gameState.bird;
-    const birdCenterY = bird.y + CONFIG.BIRD.SIZE / 2;
-    const birdBottom = bird.y + CONFIG.BIRD.SIZE;
-    const pipe = getNextPipeForBot();
-    const speed = gameState.currentPipeSpeed || CONFIG.BASE_PIPE_SPEED;
-    const safety = flappyBotMemory.safetyMargin || FLAPPY_BOT_PILOT.DEFAULT_SAFETY_MARGIN;
-
-    let action = 'wait';
-    let mode = 'predictive-wait';
-    let targetY = canvas.height * 0.52;
-    let waitRisk = 0;
-    let jumpRisk = 0;
-
-    if(canJump) {
-      if(!pipe) {
-        targetY = canvas.height * 0.52;
-        waitRisk = birdCenterY - targetY;
-        jumpRisk = predictCenterAfterFrames(birdCenterY, CONFIG.JUMP_FORCE, 18) - targetY;
-
-        if(birdCenterY > canvas.height * 0.58 && bird.velocity > -7) {
-          action = 'jump';
-          mode = 'idle-leveling';
-        }
-      } else {
-        const birdRight = bird.x + CONFIG.BIRD.SIZE;
-        const dx = pipe.x - birdRight;
-        const gapCenter = (pipe.topHeight + pipe.bottomY) / 2 + (flappyBotMemory.targetBias || 0);
-        targetY = getAdaptiveTargetY(pipe, birdCenterY, bird.velocity);
-        waitRisk = evaluateOneStepRisk(pipe, birdCenterY, bird.velocity);
-        jumpRisk = evaluateOneStepRisk(pipe, birdCenterY, CONFIG.JUMP_FORCE);
-
-        const entryFrames = clamp(dx / speed, 0, 42);
-        const midFrames = clamp((dx + CONFIG.PIPE.WIDTH / 2) / speed, 0, 42);
-        const predictedEntry = predictCenterAfterFrames(birdCenterY, bird.velocity, entryFrames);
-        const predictedMid = predictCenterAfterFrames(birdCenterY, bird.velocity, midFrames);
-        const bottomSafeCenter = pipe.bottomY - safety - CONFIG.BIRD.SIZE / 2;
-
-        const predictedTooLow = dx < 275 && (predictedEntry > bottomSafeCenter || predictedMid > bottomSafeCenter);
-        const currentlyBelowTarget = birdCenterY > targetY + 28 && bird.velocity > -6 && dx > 70;
-        const closeToBottomLip = dx < 95 && birdBottom > pipe.bottomY - safety * 1.65 && bird.velocity > -9;
-        const emergencyLow = birdBottom > canvas.height - 52 && bird.velocity > 0;
-
-        if(predictedTooLow || currentlyBelowTarget || closeToBottomLip || emergencyLow) {
-          action = 'jump';
-          mode = emergencyLow ? 'emergency-jump' : (predictedTooLow ? 'forecast-jump' : 'target-jump');
-        }
-
-        // High guards. They intentionally override the low forecast because a
-        // late unnecessary flap near the pipe mouth is the main cause of top hits.
-        const tooHighForTarget = birdCenterY < targetY - 20;
-        const tooCloseToTopLip = dx < 120 && bird.y < pipe.topHeight + safety + 8;
-        const risingTooFast = bird.velocity < -8.8;
-        const screenTopGuard = bird.y < 48;
-        if(action === 'jump' && (tooHighForTarget || tooCloseToTopLip || risingTooFast || screenTopGuard)) {
-          action = 'wait';
-          mode = tooCloseToTopLip ? 'top-lip-guard' : 'high-guard';
-        }
-      }
+    if(!targetPipe) {
+      return middle;
     } else {
-      mode = 'cooldown-wait';
-      if(pipe) targetY = getAdaptiveTargetY(pipe, birdCenterY, bird.velocity);
-      waitRisk = evaluateOneStepRisk(pipe, birdCenterY, bird.velocity);
-      jumpRisk = evaluateOneStepRisk(pipe, birdCenterY, CONFIG.JUMP_FORCE);
+      let gapCenter = (targetPipe.topHeight + targetPipe.bottomY)/2;
+      let horizontalDistance = (targetPipe.x + config.PIPE.WIDTH) - bird.x;
+      let maxDist = 400;
+      if(horizontalDistance > maxDist) {
+        return middle;
+      } else {
+        let ratio = 1 - (horizontalDistance / maxDist);
+        let factor = Math.pow(ratio, 1.2);
+        return middle + factor*(gapCenter - middle);
+      }
     }
-
-    flappyBotMemory.lastAction = action;
-    flappyBotMemory.lastMode = mode;
-    flappyBotMemory.lastTargetY = targetY;
-    flappyBotMemory.lastWaitCost = waitRisk;
-    flappyBotMemory.lastJumpCost = jumpRisk;
-    return action;
   }
 
   function simulateAction() {
@@ -1103,34 +921,56 @@ function integrateFlappyBot() {
     if(typeof gameState === 'undefined') return;
 
     if(gameState.startScreen) {
-      flappyBotMemory.lastAction = 'start';
-      flappyBotMemory.lastMode = 'auto-start';
       simulateAction();
-      updateFlappyBotInfoPanel();
       return;
     }
 
     if(gameState.gameOver) {
-      flappyBotLastScore = gameState.score;
-      if(gameState.score > flappyBotHighestScore) {
-        flappyBotHighestScore = gameState.score;
-        flappyBotMemory.bestScore = flappyBotHighestScore;
-        localStorage.setItem('flappyBotHighestScore', flappyBotHighestScore);
+      if(!updatedLearningThisGame) {
+        if(historicalAvgScore === 0) {
+          historicalAvgScore = gameState.score;
+        } else {
+          historicalAvgScore = (historicalAvgScore + gameState.score)/2;
+        }
+        localStorage.setItem('flappyBot_avgScore', historicalAvgScore.toFixed(2));
+
+        if(gameState.score < historicalAvgScore) {
+          baseThreshold = Math.max(3.0, baseThreshold - 0.7);
+          microThreshold = Math.max(1.0, microThreshold - 0.3);
+        } else {
+          baseThreshold = Math.min(30.0, baseThreshold + 0.5);
+          microThreshold = Math.min(15.0, microThreshold + 0.2);
+        }
+        saveThresholds();
+        updatedLearningThisGame = true;
       }
-      saveFlappyBotMemory();
-      updateFlappyBotInfoPanel();
       if(gameState.cooldownTimer <= 0) {
         simulateAction();
+        updatedLearningThisGame = false;
       }
       return;
     }
 
-    const action = decideBotAction();
-    if(action === 'jump') {
-      simulateAction();
-    }
+    let bird = gameState.bird;
+    if(!bird) return;
 
-    updateFlappyBotInfoPanel();
+    let config = CONFIG;
+    let pipes = gameState.pipes;
+    let desiredAltitude = getDesiredAltitude(bird, canvas, pipes, config);
+    let birdCenterY = bird.y + config.BIRD.SIZE/2;
+    let verticalDiff = birdCenterY - desiredAltitude;
+    let now = Date.now();
+
+    if(verticalDiff > baseThreshold) {
+      if(now - lastJumpTime > jumpCooldown) {
+        simulateAction();
+      }
+    } else if(verticalDiff > microThreshold) {
+      let microCooldown = jumpCooldown * 0.8;
+      if(now - lastJumpTime > microCooldown) {
+        simulateAction();
+      }
+    }
   }
 
   drawStartScreen();
