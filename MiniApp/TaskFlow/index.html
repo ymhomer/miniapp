@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>TaskFlow - Work Control System</title>
+  <style>
+    :root {
+      --bg: #f3f5f9;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --surface-3: #eef2f7;
+      --text: #111827;
+      --muted: #64748b;
+      --muted-2: #94a3b8;
+      --line: #e2e8f0;
+      --line-strong: #cbd5e1;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --primary-deep: #1d4ed8;
+      --success: #059669;
+      --success-soft: #d1fae5;
+      --warning: #d97706;
+      --warning-soft: #fef3c7;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --violet: #7c3aed;
+      --violet-soft: #ede9fe;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --shadow-sm: 0 8px 22px rgba(15, 23, 42, 0.06);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --sidebar: #0f172a;
+      --sidebar-soft: rgba(255, 255, 255, 0.08);
+      --focus: rgba(37, 99, 235, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 288px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 18px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(37, 99, 235, 0.28), transparent 30%),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 6px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .brand-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #3b82f6, #14b8a6);
+      font-weight: 900;
+      box-shadow: 0 16px 36px rgba(37, 99, 235, 0.32);
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      margin-top: 4px;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .nav-group-title {
+      margin: 10px 10px 4px;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .nav { display: grid; gap: 5px; }
+
+    .nav button {
+      border: 0;
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 13px;
+      color: #cbd5e1;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      text-align: left;
+      font-weight: 750;
+      transition: 0.16s ease;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      color: #fff;
+      background: var(--sidebar-soft);
+    }
+
+    .nav-ico {
+      width: 24px;
+      height: 24px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      font-size: 13px;
+    }
+
+    .sidebar-card {
+      margin-top: auto;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.06);
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .sidebar-card strong {
+      color: #fff;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .title-row { display: grid; gap: 5px; }
+
+    .title-row h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: -0.055em;
+      line-height: 1.05;
+    }
+
+    .title-row p {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      min-height: 40px;
+      padding: 9px 13px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 850;
+      text-decoration: none;
+      transition: 0.16s ease;
+      box-shadow: 0 1px 0 rgba(15,23,42,0.02);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--line-strong);
+    }
+
+    .btn.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover { background: var(--primary-deep); }
+
+    .btn.soft {
+      background: var(--primary-soft);
+      border-color: #bfdbfe;
+      color: var(--primary-deep);
+    }
+
+    .btn.danger {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: var(--danger);
+    }
+
+    .btn.success {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+      color: var(--success);
+    }
+
+    .btn.warning {
+      border-color: #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .btn.small {
+      min-height: 34px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--text);
+      display: inline-grid;
+      place-items: center;
+      font-weight: 900;
+      transition: 0.14s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .grid { display: grid; gap: 16px; }
+    .grid.two { grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr); align-items: start; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .card.flat { box-shadow: none; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 950;
+      letter-spacing: -0.025em;
+    }
+
+    .card-subtitle {
+      color: var(--muted);
+      margin: 3px 0 0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .stat-card {
+      min-height: 118px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      right: -24px;
+      bottom: -28px;
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-weight: 850;
+      font-size: 13px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-value {
+      font-size: 34px;
+      font-weight: 980;
+      letter-spacing: -0.06em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-foot {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(230px, 1.4fr) repeat(4, minmax(135px, 0.55fr));
+      gap: 10px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+
+    .toolbar.compact {
+      grid-template-columns: minmax(230px, 1.2fr) repeat(3, minmax(140px, 0.5fr));
+    }
+
+    label {
+      color: #334155;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      padding: 10px 11px;
+      transition: 0.14s ease;
+    }
+
+    textarea { min-height: 92px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 4px var(--focus);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+    }
+
+    .field { display: grid; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    .field.inline { display: flex; align-items: center; gap: 10px; }
+
+    .schedule-setting.hidden { display: none !important; }
+
+    .weekday-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .check-option {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 9px 8px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 850;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .check-option input { width: auto; accent-color: var(--primary); }
+
+    .schedule-note {
+      border: 1px dashed var(--line-strong);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .list { display: grid; gap: 12px; }
+
+    .badge-row, .meta-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .badge.primary { background: var(--primary-soft); border-color: #bfdbfe; color: var(--primary-deep); }
+    .badge.success { background: var(--success-soft); border-color: #a7f3d0; color: #047857; }
+    .badge.warning { background: var(--warning-soft); border-color: #fde68a; color: #92400e; }
+    .badge.danger { background: var(--danger-soft); border-color: #fecaca; color: #b91c1c; }
+    .badge.violet { background: var(--violet-soft); border-color: #ddd6fe; color: #6d28d9; }
+    .badge.dark { background: #e2e8f0; border-color: #cbd5e1; color: #334155; }
+
+    .task-card, .check-card, .issue-card, .project-card, .record-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 18px;
+      padding: 15px;
+      display: grid;
+      gap: 11px;
+      box-shadow: 0 2px 0 rgba(15, 23, 42, 0.02);
+    }
+
+    .task-card.alerted,
+    .issue-card.critical {
+      border-color: #fecaca;
+      background: linear-gradient(0deg, #fff, #fff7f7);
+    }
+
+    .task-main, .issue-main, .check-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .item-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: -0.015em;
+      word-break: break-word;
+    }
+
+    .item-desc {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .progress-wrap {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 9px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #2563eb, #14b8a6);
+      width: 0%;
+    }
+
+    .progress-label {
+      width: 42px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .empty {
+      border: 1px dashed var(--line-strong);
+      background: var(--surface-2);
+      border-radius: 18px;
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 900;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .chart {
+      display: grid;
+      gap: 10px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: minmax(105px, 0.9fr) minmax(120px, 2.2fr) 48px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .chart-label { color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chart-value { color: var(--muted); text-align: right; }
+
+    .bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      min-width: 4px;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #2563eb, #14b8a6);
+    }
+
+    .mini-calendar {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .day-cell {
+      min-height: 112px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px;
+      background: #fff;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .day-cell.today { border-color: #93c5fd; background: #eff6ff; }
+    .day-num { font-weight: 950; color: #1e293b; }
+
+    .report-box {
+      min-height: 330px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-color: #1e293b;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      background: rgba(15, 23, 42, 0.48);
+      padding: 20px;
+      overflow: auto;
+    }
+
+    .modal-backdrop.show {
+      display: grid;
+      place-items: start center;
+    }
+
+    .modal {
+      width: min(920px, 100%);
+      margin: 26px auto;
+      background: #fff;
+      border-radius: 26px;
+      box-shadow: 0 30px 90px rgba(15, 23, 42, 0.30);
+      overflow: hidden;
+    }
+
+    .modal.narrow { width: min(660px, 100%); }
+    .modal.wide { width: min(1100px, 100%); }
+
+    .modal-header {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 950;
+      letter-spacing: -0.035em;
+    }
+
+    .modal-body { padding: 22px; }
+
+    .modal-footer {
+      padding: 16px 22px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--surface-2);
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .choice-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fff;
+      text-align: left;
+      transition: 0.16s ease;
+    }
+
+    .choice-card:hover {
+      border-color: #93c5fd;
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .choice-icon { font-size: 24px; margin-bottom: 8px; }
+    .choice-title { font-weight: 950; margin-bottom: 4px; }
+    .choice-desc { color: var(--muted); font-size: 13px; font-weight: 600; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detail-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: var(--surface-2);
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .detail-value { font-weight: 800; word-break: break-word; }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+    }
+
+    .checkline {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-2);
+      font-weight: 750;
+    }
+
+    .mobile-menu { display: none; }
+
+    @media (max-width: 1180px) {
+      .grid.five, .grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar, .toolbar.compact { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        z-index: 55;
+        inset: 0 auto 0 0;
+        width: 290px;
+        transform: translateX(-105%);
+        transition: 0.2s ease;
+      }
+      .sidebar.show { transform: translateX(0); }
+      .mobile-menu { display: inline-flex; }
+      .main { padding: 18px; }
+      .topbar { flex-direction: column; }
+      .top-actions { justify-content: flex-start; }
+      .grid.two, .grid.three, .grid.four, .grid.five, .form-grid, .detail-grid, .choice-grid { grid-template-columns: 1fr; }
+      .toolbar, .toolbar.compact { grid-template-columns: 1fr; }
+      .task-main, .issue-main, .check-main { flex-direction: column; }
+      .item-actions { justify-content: flex-start; }
+      .mini-calendar { grid-template-columns: 1fr; }
+      .chart-row { grid-template-columns: 90px 1fr 38px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">TF</div>
+        <div>
+          <div class="brand-title">TaskFlow</div>
+          <div class="brand-subtitle">Work Control System</div>
+        </div>
+      </div>
+
+      <div class="nav-group-title">Control</div>
+      <nav class="nav" id="navControl">
+        <button class="active" data-page="dashboard"><span class="nav-ico">⌂</span>Dashboard</button>
+        <button data-page="today"><span class="nav-ico">◎</span>Today</button>
+        <button data-page="analytics"><span class="nav-ico">▦</span>Analytics</button>
+        <button data-page="reports"><span class="nav-ico">▣</span>Reports</button>
+      </nav>
+
+      <div class="nav-group-title">Work Objects</div>
+      <nav class="nav" id="navObjects">
+        <button data-page="tasks"><span class="nav-ico">✓</span>Tasks</button>
+        <button data-page="checkins"><span class="nav-ico">↻</span>Check-ins</button>
+        <button data-page="issues"><span class="nav-ico">!</span>Issues</button>
+        <button data-page="projects"><span class="nav-ico">□</span>Projects</button>
+      </nav>
+
+      <div class="nav-group-title">System</div>
+      <nav class="nav" id="navSystem">
+        <button data-page="calendar"><span class="nav-ico">◫</span>Calendar</button>
+        <button data-page="archive"><span class="nav-ico">◴</span>Archive</button>
+        <button data-page="settings"><span class="nav-ico">⚙</span>Settings</button>
+        <button data-page="about"><span class="nav-ico">?</span>About</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <strong>Design rule</strong>
+        Task = work to finish. Check-in = recurring observation. Issue = risk or abnormal finding.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-row">
+          <button class="btn mobile-menu" id="mobileMenuBtn">☰ Menu</button>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Observe today’s work, recurring checks, follow-ups, and active risks.</p>
+        </div>
+        <div class="top-actions">
+          <button class="btn soft" onclick="switchPage('today')">◎ Today</button>
+          <button class="btn" onclick="switchPage('reports')">▣ Report</button>
+          <button class="btn primary" onclick="openCreateHub()">＋ New</button>
+        </div>
+      </header>
+
+      <section class="page active" id="page-dashboard">
+        <div class="grid five" id="dashboardStats"></div>
+        <div class="grid two" style="margin-top:16px;">
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title">Today focus</h2><p class="card-subtitle">Tasks, follow-ups, due check-ins, and active issues that need attention.</p></div>
+              <button class="btn small" onclick="switchPage('today')">Open Today</button>
+            </div>
+            <div class="list" id="dashboardFocus"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title">Work health</h2><p class="card-subtitle">Current workload and risk signals.</p></div>
+            </div>
+            <div class="grid" id="dashboardCharts"></div>
+          </div>
+        </div>
+        <div class="grid three" style="margin-top:16px;">
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Due check-ins</h2><p class="card-subtitle">Recurring observations scheduled for today.</p></div></div><div class="list" id="dashboardCheckins"></div></div>
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Active issues</h2><p class="card-subtitle">Open, investigating, waiting, or escalated issues.</p></div></div><div class="list" id="dashboardIssues"></div></div>
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Project snapshot</h2><p class="card-subtitle">Workload by project.</p></div></div><div class="list" id="dashboardProjects"></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-today">
+        <div class="tabs">
+          <button class="tab-btn active" data-today-tab="tasks">Tasks</button>
+          <button class="tab-btn" data-today-tab="checkins">Check-ins</button>
+          <button class="tab-btn" data-today-tab="followups">Follow-ups</button>
+          <button class="tab-btn" data-today-tab="issues">Issues</button>
+        </div>
+        <div class="card" id="todayContent"></div>
+      </section>
+
+      <section class="page" id="page-tasks">
+        <div class="card">
+          <div class="card-header">
+            <div><h2 class="card-title">Task board</h2><p class="card-subtitle">Goal-based work that needs progress, next action, and completion.</p></div>
+            <button class="btn primary small" onclick="openTaskModal()">＋ Add Task</button>
+          </div>
+          <div class="toolbar">
+            <input id="taskSearch" placeholder="Search task, stakeholder, next action..." />
+            <select id="taskStatusFilter"></select>
+            <select id="taskProjectFilter"></select>
+            <select id="taskPriorityFilter"></select>
+            <select id="taskSort"></select>
+          </div>
+          <div class="list" id="taskList"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-checkins">
+        <div class="grid two">
+          <div class="card">
+            <div class="card-header">
+              <div><h2 class="card-title">Check-in control</h2><p class="card-subtitle">Recurring observations with lightweight execution and history.</p></div>
+              <button class="btn primary small" onclick="openCheckTemplateModal()">＋ Add Check-in</button>
+            </div>
+            <div class="tabs">
+              <button class="tab-btn active" data-check-tab="due">Due today</button>
+              <button class="tab-btn" data-check-tab="templates">Templates</button>
+              <button class="tab-btn" data-check-tab="history">History</button>
+              <button class="tab-btn" data-check-tab="missed">Missed</button>
+            </div>
+            <div id="checkinContent"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">Check-in trend</h2><p class="card-subtitle">Last 7 days execution result.</p></div></div>
+            <div id="checkinTrend"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-issues">
+        <div class="card">
+          <div class="card-header">
+            <div><h2 class="card-title">Issue & alert center</h2><p class="card-subtitle">Abnormal findings, risks, blockers, and escalations.</p></div>
+            <button class="btn primary small" onclick="openIssueModal()">＋ Add Issue</button>
+          </div>
+          <div class="toolbar compact">
+            <input id="issueSearch" placeholder="Search issue, source, action..." />
+            <select id="issueStatusFilter"></select>
+            <select id="issueSeverityFilter"></select>
+            <select id="issueProjectFilter"></select>
+          </div>
+          <div class="list" id="issueList"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-projects">
+        <div class="grid two">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">Projects</h2><p class="card-subtitle">Group tasks, check-ins, and issues by work stream.</p></div></div>
+            <div class="grid two" id="projectList"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">Add project</h2><p class="card-subtitle">Create a new work stream.</p></div></div>
+            <div class="form-grid">
+              <div class="field full"><label>Project name</label><input id="newProjectName" placeholder="Example: ESD / Audit" /></div>
+              <div class="field full"><label>Description</label><textarea id="newProjectDesc" placeholder="Optional notes"></textarea></div>
+              <div class="field"><label>Color</label><input type="color" id="newProjectColor" value="#2563eb" /></div>
+              <div class="field" style="align-self:end;"><button class="btn primary" onclick="addProject()">Add Project</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-analytics">
+        <div class="grid two">
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Tasks by status</h2><p class="card-subtitle">Progress state of active tasks.</p></div></div><div id="chartTaskStatus"></div></div>
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Issues by severity</h2><p class="card-subtitle">Risk concentration by severity.</p></div></div><div id="chartIssueSeverity"></div></div>
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Project workload</h2><p class="card-subtitle">Tasks, check-ins, and issues per project.</p></div></div><div id="chartProjectWorkload"></div></div>
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Check-in compliance</h2><p class="card-subtitle">Last 7 days due vs actual records.</p></div></div><div id="chartCheckCompliance"></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-reports">
+        <div class="card">
+          <div class="card-header">
+            <div><h2 class="card-title">Report builder</h2><p class="card-subtitle">Generate daily, weekly, HOD, or issue summaries from current data.</p></div>
+            <div class="badge-row">
+              <button class="btn small" onclick="generateReport('daily')">Daily</button>
+              <button class="btn small" onclick="generateReport('weekly')">Weekly</button>
+              <button class="btn small" onclick="generateReport('hod')">HOD</button>
+              <button class="btn small" onclick="generateReport('issue')">Issues</button>
+              <button class="btn primary small" onclick="copyReport()">Copy</button>
+            </div>
+          </div>
+          <textarea id="reportOutput" class="report-box" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <section class="page" id="page-calendar">
+        <div class="card">
+          <div class="card-header">
+            <div><h2 class="card-title">Calendar</h2><p class="card-subtitle">Monthly view of tasks, follow-ups, check-ins, and issue dates.</p></div>
+            <div class="badge-row"><input type="month" id="calendarMonth" style="width:auto;" /></div>
+          </div>
+          <div class="mini-calendar" id="calendarGrid"></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-archive">
+        <div class="grid two">
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Archived tasks</h2><p class="card-subtitle">Completed, cancelled, or manually archived tasks.</p></div></div><div class="list" id="archiveTasks"></div></div>
+          <div class="card"><div class="card-header"><div><h2 class="card-title">Closed issues</h2><p class="card-subtitle">Resolved, closed, or archived issues.</p></div></div><div class="list" id="archiveIssues"></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-settings">
+        <div class="grid two">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">Preferences</h2><p class="card-subtitle">Default landing page and work behavior.</p></div></div>
+            <div class="form-grid">
+              <div class="field"><label>Default view</label><select id="defaultViewSetting"></select></div>
+              <div class="field"><label>Week starts on</label><select id="weekStartsSetting"><option value="monday">Monday</option><option value="sunday">Sunday</option></select></div>
+              <div class="field full"><button class="btn primary" onclick="saveSettings()">Save Settings</button></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">Data management</h2><p class="card-subtitle">Single-browser local data with JSON backup.</p></div></div>
+            <div class="form-grid">
+              <div class="field full"><label>Import JSON</label><input type="file" id="importFile" accept="application/json" /></div>
+              <div class="field"><button class="btn" onclick="exportData()">Export JSON</button></div>
+              <div class="field"><button class="btn" onclick="importData()">Import Data</button></div>
+              <div class="field full"><button class="btn danger" onclick="clearData()">Clear All Local Data</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-about">
+        <div class="grid two">
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">About TaskFlow</h2><p class="card-subtitle">Version details and design notes for this local work control system.</p></div></div>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="detail-label">Version</div><div class="detail-value">3.1 Work Control System</div></div>
+              <div class="detail-item"><div class="detail-label">Data model</div><div class="detail-value">Task / Check-in / Issue / Project / Report</div></div>
+              <div class="detail-item"><div class="detail-label">Storage</div><div class="detail-value">Local browser storage with JSON import and export</div></div>
+              <div class="detail-item"><div class="detail-label">Default data</div><div class="detail-value">No sample tasks, check-ins, or issues are created by default</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div><h2 class="card-title">Version notes</h2><p class="card-subtitle">Changes in this revision.</p></div></div>
+            <div class="list">
+              <div class="record-card"><h3 class="item-title">Cleaner default state</h3><div class="item-desc">Fresh data starts empty, except for a neutral Work Inbox project so new records have a place to belong.</div></div>
+              <div class="record-card"><h3 class="item-title">Corrected check-in missed logic</h3><div class="item-desc">A check-in only counts as missed from its effective start date onward, so creating a template today will not create historical missed records.</div></div>
+              <div class="record-card"><h3 class="item-title">Frequency-specific settings</h3><div class="item-desc">Daily and weekdays use simple schedules, weekly shows weekday selection, and monthly shows the day-of-month setting.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="createHubModal">
+    <div class="modal narrow">
+      <div class="modal-header"><h2 class="modal-title">Create new work object</h2><button class="btn ghost" onclick="closeModal('createHubModal')">✕</button></div>
+      <div class="modal-body">
+        <div class="choice-grid">
+          <button class="choice-card" onclick="closeModal('createHubModal'); openTaskModal();"><div class="choice-icon">✓</div><div class="choice-title">Task</div><div class="choice-desc">Goal-based work with progress, next action, and completion.</div></button>
+          <button class="choice-card" onclick="closeModal('createHubModal'); openCheckTemplateModal();"><div class="choice-icon">↻</div><div class="choice-title">Check-in</div><div class="choice-desc">Recurring observation with lightweight OK / abnormal records.</div></button>
+          <button class="choice-card" onclick="closeModal('createHubModal'); openIssueModal();"><div class="choice-icon">!</div><div class="choice-title">Issue</div><div class="choice-desc">Risk, blocker, or abnormal finding that needs tracking.</div></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="taskModal">
+    <div class="modal wide">
+      <div class="modal-header"><h2 class="modal-title" id="taskModalTitle">Add Task</h2><button class="btn ghost" onclick="closeModal('taskModal')">✕</button></div>
+      <div class="modal-body">
+        <form class="form-grid" id="taskForm">
+          <input type="hidden" id="taskId" />
+          <div class="field full"><label>Title</label><input id="taskTitle" required placeholder="Example: Validate PM2 auto-start after reboot" /></div>
+          <div class="field"><label>Project</label><select id="taskProject"></select></div>
+          <div class="field"><label>Type</label><select id="taskType"></select></div>
+          <div class="field"><label>Status</label><select id="taskStatus"></select></div>
+          <div class="field"><label>Priority</label><select id="taskPriority"></select></div>
+          <div class="field"><label>Stakeholder / PIC</label><input id="taskStakeholder" placeholder="Example: IT / PO / Karen / Siti" /></div>
+          <div class="field"><label>Progress %</label><input id="taskProgress" type="number" min="0" max="100" value="0" /></div>
+          <div class="field"><label>Start date</label><input id="taskStartDate" type="date" /></div>
+          <div class="field"><label>Target date</label><input id="taskTargetDate" type="date" /></div>
+          <div class="field"><label>Expire date</label><input id="taskExpireDate" type="date" /></div>
+          <div class="field"><label>Follow-up date</label><input id="taskFollowDate" type="date" /></div>
+          <div class="field full"><label>Next action</label><input id="taskNextAction" placeholder="The next concrete action to move this forward" /></div>
+          <div class="field full"><label>Description</label><textarea id="taskDescription" placeholder="Background, requirements, references, context..."></textarea></div>
+          <div class="field"><label>Tags</label><input id="taskTags" placeholder="Example: FAI, UAT, server" /></div>
+          <div class="field"><label>Links</label><input id="taskLinks" placeholder="Title|URL, Title|URL" /></div>
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn" onclick="closeModal('taskModal')">Cancel</button><button class="btn primary" onclick="saveTask()">Save Task</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="taskUpdateModal">
+    <div class="modal">
+      <div class="modal-header"><h2 class="modal-title" id="taskUpdateTitle">Update Task</h2><button class="btn ghost" onclick="closeModal('taskUpdateModal')">✕</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="taskUpdateId" />
+        <div class="form-grid">
+          <div class="field"><label>Status</label><select id="taskUpdateStatus"></select></div>
+          <div class="field"><label>Progress %</label><input id="taskUpdateProgress" type="number" min="0" max="100" /></div>
+          <div class="field"><label>Follow-up date</label><input id="taskUpdateFollow" type="date" /></div>
+          <div class="field"><label>Priority</label><select id="taskUpdatePriority"></select></div>
+          <div class="field full"><label>Next action</label><input id="taskUpdateNext" /></div>
+          <div class="field full"><label>Update note / personal note</label><textarea id="taskUpdateNote" placeholder="What changed? What was done? What should you remember?"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn" onclick="closeModal('taskUpdateModal')">Cancel</button><button class="btn primary" onclick="saveTaskUpdate()">Save Update</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="checkTemplateModal">
+    <div class="modal wide">
+      <div class="modal-header"><h2 class="modal-title" id="checkTemplateTitle">Add Check-in Template</h2><button class="btn ghost" onclick="closeModal('checkTemplateModal')">✕</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="checkTemplateId" />
+        <div class="form-grid">
+          <div class="field full"><label>Name</label><input id="checkName" placeholder="Example: Daily EPM kiosk check" /></div>
+          <div class="field"><label>Project</label><select id="checkProject"></select></div>
+          <div class="field"><label>Status</label><select id="checkStatus"><option value="active">Active</option><option value="paused">Paused</option><option value="archived">Archived</option></select></div>
+          <div class="field"><label>Frequency</label><select id="checkFrequency"><option value="daily">Daily</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+          <div class="field"><label>Effective start date</label><input id="checkStartDate" type="date" /></div>
+          <div class="field"><label>End date <span style="color:var(--muted);font-weight:700;">optional</span></label><input id="checkEndDate" type="date" /></div>
+          <div class="field full schedule-setting" id="checkWeeklySetting">
+            <label>Weekly days</label>
+            <div class="weekday-grid">
+              <label class="check-option"><input type="checkbox" data-check-day="sun" />Sun</label>
+              <label class="check-option"><input type="checkbox" data-check-day="mon" />Mon</label>
+              <label class="check-option"><input type="checkbox" data-check-day="tue" />Tue</label>
+              <label class="check-option"><input type="checkbox" data-check-day="wed" />Wed</label>
+              <label class="check-option"><input type="checkbox" data-check-day="thu" />Thu</label>
+              <label class="check-option"><input type="checkbox" data-check-day="fri" />Fri</label>
+              <label class="check-option"><input type="checkbox" data-check-day="sat" />Sat</label>
+            </div>
+          </div>
+          <div class="field schedule-setting" id="checkMonthlySetting"><label>Monthly day</label><input id="checkMonthlyDay" type="number" min="1" max="31" value="1" /></div>
+          <div class="field full"><div class="schedule-note" id="checkFrequencyHint"></div></div>
+          <div class="field"><label>Default PIC</label><input id="checkPic" placeholder="Example: Alan" /></div>
+          <div class="field"><label>Priority</label><select id="checkPriority"></select></div>
+          <div class="field full"><label>Expected result</label><textarea id="checkExpected" placeholder="What does normal look like?"></textarea></div>
+          <div class="field full"><label>Checklist items</label><textarea id="checkItems" placeholder="One item per line, e.g.\nApp is running\nNetwork connected\nReader responding"></textarea></div>
+          <div class="field full inline"><input type="checkbox" id="checkAutoIssue" style="width:auto;" checked /><label for="checkAutoIssue">Suggest creating an Issue when result is abnormal</label></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn" onclick="closeModal('checkTemplateModal')">Cancel</button><button class="btn primary" onclick="saveCheckTemplate()">Save Check-in</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="runCheckModal">
+    <div class="modal">
+      <div class="modal-header"><h2 class="modal-title" id="runCheckTitle">Run Check-in</h2><button class="btn ghost" onclick="closeModal('runCheckModal')">✕</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="runCheckTemplateId" />
+        <div class="form-grid">
+          <div class="field"><label>Check date</label><input id="runCheckDate" type="date" /></div>
+          <div class="field"><label>Result</label><select id="runCheckResult"><option value="ok">OK</option><option value="abnormal">Abnormal</option><option value="skipped">Skipped</option></select></div>
+          <div class="field full"><label>Checklist</label><div class="checklist" id="runCheckItems"></div></div>
+          <div class="field full"><label>Finding / note</label><textarea id="runCheckFinding" placeholder="Anything observed during this check?"></textarea></div>
+          <div class="field full"><label>Action taken</label><textarea id="runCheckAction" placeholder="What did you do after the check?"></textarea></div>
+          <div class="field"><label>Evidence link</label><input id="runCheckEvidence" placeholder="Screenshot, log, ticket, URL..." /></div>
+          <div class="field inline" style="align-self:end;"><input type="checkbox" id="runCheckCreateIssue" style="width:auto;" /><label for="runCheckCreateIssue">Create linked issue</label></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn" onclick="closeModal('runCheckModal')">Cancel</button><button class="btn primary" onclick="saveCheckRecord()">Save Check-in Record</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="issueModal">
+    <div class="modal wide">
+      <div class="modal-header"><h2 class="modal-title" id="issueModalTitle">Add Issue</h2><button class="btn ghost" onclick="closeModal('issueModal')">✕</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="issueId" />
+        <input type="hidden" id="issueSourceType" />
+        <input type="hidden" id="issueSourceId" />
+        <div class="form-grid">
+          <div class="field full"><label>Title</label><input id="issueTitle" placeholder="Example: EPM kiosk not auto-start after reboot" /></div>
+          <div class="field"><label>Project</label><select id="issueProject"></select></div>
+          <div class="field"><label>Severity</label><select id="issueSeverity"></select></div>
+          <div class="field"><label>Status</label><select id="issueStatus"></select></div>
+          <div class="field"><label>Owner / Stakeholder</label><input id="issueOwner" placeholder="Example: Alan / IT" /></div>
+          <div class="field"><label>Detected date</label><input id="issueDetectedDate" type="date" /></div>
+          <div class="field"><label>Follow-up date</label><input id="issueFollowDate" type="date" /></div>
+          <div class="field"><label>Source</label><input id="issueSourceText" placeholder="Manual / Check-in / Task" /></div>
+          <div class="field full"><label>Next action</label><input id="issueNextAction" /></div>
+          <div class="field full"><label>Description / finding</label><textarea id="issueDescription"></textarea></div>
+          <div class="field full"><label>Resolution / root cause</label><textarea id="issueResolution"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn" onclick="closeModal('issueModal')">Cancel</button><button class="btn primary" onclick="saveIssue()">Save Issue</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal wide">
+      <div class="modal-header"><h2 class="modal-title" id="detailTitle">Details</h2><button class="btn ghost" onclick="closeModal('detailModal')">✕</button></div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "taskflow_work_control_system_3_1";
+    const LEGACY_KEYS = [];
+
+    const TASK_STATUSES = [
+      ["not_started", "Not Started"], ["in_progress", "In Progress"], ["waiting", "Waiting"],
+      ["blocked", "Blocked"], ["need_review", "Need Review"], ["completed", "Completed"], ["cancelled", "Cancelled"]
+    ];
+    const TASK_TYPES = ["Task", "Issue Support", "Request", "Project Work", "Meeting", "Report", "Validation", "Research"];
+    const PRIORITIES = [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["urgent", "Urgent"]];
+    const ISSUE_STATUSES = [["open", "Open"], ["investigating", "Investigating"], ["waiting", "Waiting"], ["escalated", "Escalated"], ["resolved", "Resolved"], ["closed", "Closed"]];
+    const SEVERITIES = [["low", "Low"], ["medium", "Medium"], ["high", "High"], ["critical", "Critical"]];
+    const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+    const PAGE_INFO = {
+      dashboard: ["Dashboard", "Observe today’s work, recurring checks, follow-ups, and active risks."],
+      today: ["Today", "Daily execution center for tasks, check-ins, follow-ups, and issues."],
+      tasks: ["Tasks", "Goal-based work with progress, next action, and completion."],
+      checkins: ["Check-ins", "Recurring observations with lightweight execution and history."],
+      issues: ["Issues", "Abnormal findings, risks, blockers, and escalations."],
+      projects: ["Projects", "Organize work streams across tasks, check-ins, and issues."],
+      analytics: ["Analytics", "Charts for workload, compliance, and risk observation."],
+      reports: ["Reports", "Generate daily, weekly, HOD, and issue summaries."],
+      calendar: ["Calendar", "Monthly view of tasks, follow-ups, check-ins, and issue dates."],
+      archive: ["Archive", "Closed, completed, cancelled, or archived records."],
+      settings: ["Settings", "Preferences and local data management."],
+      about: ["About", "Version details, storage notes, and design changes."]
+    };
+
+    const state = {
+      data: loadData(),
+      page: "dashboard",
+      todayTab: "tasks",
+      checkTab: "due"
+    };
+
+    function todayISO() { return formatISO(new Date()); }
+    function nowISO() { return new Date().toISOString(); }
+    function uid(prefix) { return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`; }
+    function formatISO(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    function parseISO(value) {
+      if (!value) return null;
+      const [y,m,d] = value.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function addDays(dateISO, amount) {
+      const d = parseISO(dateISO) || new Date();
+      d.setDate(d.getDate() + amount);
+      return formatISO(d);
+    }
+    function daysBetween(a, b) {
+      const da = parseISO(a); const db = parseISO(b);
+      if (!da || !db) return 0;
+      return Math.round((db - da) / 86400000);
+    }
+    function dateLabel(value) {
+      if (!value) return "-";
+      const d = parseISO(value);
+      return d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
+    }
+    function shortDate(value) {
+      if (!value) return "-";
+      const d = parseISO(value);
+      return d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-";
+    }
+    function escapeHTML(value) {
+      return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+    function byId(id) { return document.getElementById(id); }
+    function clamp(n, min = 0, max = 100) { return Math.max(min, Math.min(max, Number(n || 0))); }
+
+    function defaultData() {
+      const now = nowISO();
+      return {
+        version: "3.1",
+        projects: [
+          { id: "p_inbox", name: "Work Inbox", description: "Default place for uncategorized work records.", color: "#2563eb", createdAt: now, archived: false }
+        ],
+        tasks: [],
+        checkTemplates: [],
+        checkRecords: [],
+        issues: [],
+        settings: { defaultView: "dashboard", weekStartsOn: "monday" }
+      };
+    }
+
+    function normalizeData(data) {
+      const base = defaultData();
+      const merged = { ...base, ...data };
+      merged.projects = Array.isArray(data.projects) ? data.projects.map(p => ({ archived: false, ...p })) : base.projects;
+      merged.tasks = Array.isArray(data.tasks) ? data.tasks.map(t => ({
+        type: t.type || "Task",
+        status: convertLegacyStatus(t.status),
+        stakeholder: t.stakeholder || "",
+        startDate: t.startDate || t.dates?.startDate || "",
+        targetDate: t.targetDate || t.dates?.targetDate || "",
+        expireDate: t.expireDate || t.dates?.expireDate || "",
+        followUpDate: t.followUpDate || t.dates?.reminderDate || "",
+        progress: clamp(t.progress || (t.status === "completed" ? 100 : 0)),
+        nextAction: t.nextAction || "",
+        updates: Array.isArray(t.updates) ? t.updates : [],
+        tags: Array.isArray(t.tags) ? t.tags : [],
+        links: Array.isArray(t.links) ? t.links : [],
+        alerted: Boolean(t.alerted),
+        archived: Boolean(t.archived),
+        ...t,
+        status: convertLegacyStatus(t.status),
+        projectId: t.projectId || merged.projects?.[0]?.id || "p_inbox"
+      })) : base.tasks;
+      merged.checkTemplates = Array.isArray(data.checkTemplates) ? data.checkTemplates.map(c => ({
+        status: c.status || "active",
+        frequency: c.frequency || "weekdays",
+        weeklyDays: Array.isArray(c.weeklyDays) ? c.weeklyDays : ["mon","tue","wed","thu","fri"],
+        monthlyDay: Number(c.monthlyDay || 1),
+        startDate: c.startDate || (c.createdAt ? String(c.createdAt).slice(0, 10) : todayISO()),
+        endDate: c.endDate || "",
+        checklist: Array.isArray(c.checklist) ? c.checklist : [],
+        autoIssue: c.autoIssue ?? true,
+        archived: Boolean(c.archived),
+        ...c
+      })) : base.checkTemplates;
+      merged.checkRecords = Array.isArray(data.checkRecords) ? data.checkRecords : [];
+      merged.issues = Array.isArray(data.issues) ? data.issues : base.issues;
+      merged.settings = { ...base.settings, ...(data.settings || {}) };
+      return merged;
+    }
+
+    function convertLegacyStatus(status) {
+      if (!status || status === "pending") return "not_started";
+      if (status === "in_progress") return "in_progress";
+      if (status === "completed") return "completed";
+      return status;
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return normalizeData(JSON.parse(raw));
+        for (const key of LEGACY_KEYS) {
+          const legacy = localStorage.getItem(key);
+          if (legacy) return normalizeData(JSON.parse(legacy));
+        }
+      } catch (e) {
+        console.warn("Load data failed", e);
+      }
+      return defaultData();
+    }
+
+    function saveData() {
+      state.data.version = "3.1";
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+    }
+
+    function getProject(id) { return state.data.projects.find(p => p.id === id) || state.data.projects[0] || null; }
+    function activeProjects() { return state.data.projects.filter(p => !p.archived); }
+    function activeTasks() { return state.data.tasks.filter(t => !t.archived && !["completed", "cancelled"].includes(t.status)); }
+    function archivedTasks() { return state.data.tasks.filter(t => t.archived || ["completed", "cancelled"].includes(t.status)); }
+    function activeIssues() { return state.data.issues.filter(i => !i.archived && !["resolved", "closed"].includes(i.status)); }
+    function archivedIssues() { return state.data.issues.filter(i => i.archived || ["resolved", "closed"].includes(i.status)); }
+    function activeCheckTemplates() { return state.data.checkTemplates.filter(c => !c.archived && c.status !== "archived"); }
+
+    function priorityClass(p) { return p === "urgent" || p === "high" ? "danger" : p === "medium" ? "warning" : "success"; }
+    function severityClass(s) { return s === "critical" || s === "high" ? "danger" : s === "medium" ? "warning" : "success"; }
+    function statusClass(s) {
+      if (["completed", "resolved", "closed", "ok"].includes(s)) return "success";
+      if (["blocked", "critical", "abnormal", "escalated"].includes(s)) return "danger";
+      if (["waiting", "need_review", "skipped", "missed"].includes(s)) return "warning";
+      return "primary";
+    }
+    function labelOf(list, value) { return (list.find(x => x[0] === value) || [value, value])[1]; }
+
+    function initOptions() {
+      fillSelect("taskStatusFilter", [["all", "All Status"], ...TASK_STATUSES]);
+      fillSelect("taskProjectFilter", [["all", "All Projects"], ...activeProjects().map(p => [p.id, p.name])]);
+      fillSelect("taskPriorityFilter", [["all", "All Priority"], ...PRIORITIES]);
+      fillSelect("taskSort", [["follow", "Follow-up First"], ["target", "Target Date"], ["priority", "Priority"], ["newest", "Newest"], ["oldest", "Oldest"]]);
+      fillSelect("issueStatusFilter", [["all", "All Status"], ...ISSUE_STATUSES]);
+      fillSelect("issueSeverityFilter", [["all", "All Severity"], ...SEVERITIES]);
+      fillSelect("issueProjectFilter", [["all", "All Projects"], ...activeProjects().map(p => [p.id, p.name])]);
+      fillSelect("taskProject", activeProjects().map(p => [p.id, p.name]));
+      fillSelect("taskType", TASK_TYPES.map(x => [x, x]));
+      fillSelect("taskStatus", TASK_STATUSES);
+      fillSelect("taskPriority", PRIORITIES);
+      fillSelect("taskUpdateStatus", TASK_STATUSES);
+      fillSelect("taskUpdatePriority", PRIORITIES);
+      fillSelect("checkProject", activeProjects().map(p => [p.id, p.name]));
+      fillSelect("checkPriority", PRIORITIES);
+      fillSelect("issueProject", activeProjects().map(p => [p.id, p.name]));
+      fillSelect("issueSeverity", SEVERITIES);
+      fillSelect("issueStatus", ISSUE_STATUSES);
+      fillSelect("defaultViewSetting", Object.keys(PAGE_INFO).map(k => [k, PAGE_INFO[k][0]]));
+    }
+
+    function fillSelect(id, options) {
+      const el = byId(id);
+      if (!el) return;
+      const current = el.value;
+      el.innerHTML = options.map(([value, label]) => `<option value="${escapeHTML(value)}">${escapeHTML(label)}</option>`).join("");
+      if ([...el.options].some(o => o.value === current)) el.value = current;
+    }
+
+    function switchPage(page) {
+      state.page = page;
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      byId(`page-${page}`).classList.add("active");
+      document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+      const [title, subtitle] = PAGE_INFO[page];
+      byId("pageTitle").textContent = title;
+      byId("pageSubtitle").textContent = subtitle;
+      byId("sidebar").classList.remove("show");
+      render();
+    }
+
+    function render() {
+      initOptions();
+      renderDashboard(); renderToday(); renderTasks(); renderCheckins(); renderIssues(); renderProjects(); renderAnalytics(); renderReportsDefault(); renderCalendar(); renderArchive(); renderSettingsView();
+    }
+
+    function renderDashboard() {
+      const today = todayISO();
+      const dueCheckins = getDueTemplates(today);
+      const missed = getMissedCheckins(14);
+      const followups = getFollowUpTasks(today).length + getFollowUpIssues(today).length;
+      const stats = [
+        ["Active Tasks", activeTasks().length, "Goal-based work"],
+        ["Check-ins Due", dueCheckins.length, "Scheduled today"],
+        ["Follow-ups", followups, "Due today or overdue"],
+        ["Active Issues", activeIssues().length, "Open risks"],
+        ["Missed Checks", missed.length, "Last 14 days"]
+      ];
+      byId("dashboardStats").innerHTML = stats.map(([label, value, foot]) => `<div class="card stat-card"><div class="stat-label">${label}</div><div class="stat-value">${value}</div><div class="stat-foot">${foot}</div></div>`).join("");
+
+      const focus = [
+        ...getTodayTasks().slice(0, 4).map(t => focusLine("✓", t.title, `${labelOf(TASK_STATUSES, t.status)} · ${getProject(t.projectId)?.name || "-"}`, "task", t.id)),
+        ...getFollowUpTasks(today).slice(0, 3).map(t => focusLine("↗", t.title, `Follow-up ${shortDate(t.followUpDate)} · ${t.nextAction || "No next action"}`, "task", t.id)),
+        ...activeIssues().filter(i => ["critical", "high"].includes(i.severity)).slice(0, 3).map(i => focusLine("!", i.title, `${labelOf(SEVERITIES, i.severity)} · ${labelOf(ISSUE_STATUSES, i.status)}`, "issue", i.id))
+      ];
+      byId("dashboardFocus").innerHTML = focus.length ? focus.join("") : emptyHTML("No urgent focus items for today.");
+
+      byId("dashboardCheckins").innerHTML = dueCheckins.slice(0, 5).map(template => compactCheckCard(template)).join("") || emptyHTML("No check-ins due today.");
+      byId("dashboardIssues").innerHTML = activeIssues().slice(0, 5).map(issue => compactIssueCard(issue)).join("") || emptyHTML("No active issues.");
+      byId("dashboardProjects").innerHTML = activeProjects().slice(0, 6).map(project => compactProjectCard(project)).join("") || emptyHTML("No projects yet.");
+      byId("dashboardCharts").innerHTML = chartHTML(taskStatusData(), "status", "count") + chartHTML(issueSeverityData(), "severity", "count");
+    }
+
+    function focusLine(icon, title, sub, type, id) {
+      return `<div class="record-card"><div class="task-main"><div><h3 class="item-title"><span class="badge primary">${icon}</span> ${escapeHTML(title)}</h3><div class="item-desc">${escapeHTML(sub)}</div></div><div class="item-actions"><button class="btn small" onclick="showDetails('${type}','${id}')">Details</button></div></div></div>`;
+    }
+
+    function getTodayTasks() {
+      const today = todayISO();
+      return activeTasks().filter(t => t.targetDate === today || t.followUpDate === today || (t.expireDate && t.expireDate <= today) || ["urgent"].includes(t.priority)).sort(sortByFollowPriority);
+    }
+    function getFollowUpTasks(date) { return activeTasks().filter(t => t.followUpDate && t.followUpDate <= date).sort(sortByFollowPriority); }
+    function getFollowUpIssues(date) { return activeIssues().filter(i => i.followUpDate && i.followUpDate <= date).sort((a,b) => (a.followUpDate || "9999").localeCompare(b.followUpDate || "9999")); }
+    function sortByFollowPriority(a,b) {
+      const pw = { urgent: 4, high: 3, medium: 2, low: 1 };
+      return (a.followUpDate || a.targetDate || "9999").localeCompare(b.followUpDate || b.targetDate || "9999") || (pw[b.priority] || 0) - (pw[a.priority] || 0);
+    }
+
+    function renderToday() {
+      const container = byId("todayContent");
+      const tab = state.todayTab;
+      if (tab === "tasks") {
+        const tasks = getTodayTasks();
+        container.innerHTML = sectionHeader("Today tasks", "Target today, follow-up today, overdue, or urgent.", `<button class="btn primary small" onclick="openTaskModal()">＋ Task</button>`) + `<div class="list">${tasks.map(taskCard).join("") || emptyHTML("No task requires attention today.")}</div>`;
+      } else if (tab === "checkins") {
+        const checks = getDueTemplates(todayISO());
+        container.innerHTML = sectionHeader("Today check-ins", "Execute scheduled observations without opening the full task form.", `<button class="btn primary small" onclick="openCheckTemplateModal()">＋ Check-in</button>`) + `<div class="list">${checks.map(checkCard).join("") || emptyHTML("No check-ins due today.")}</div>`;
+      } else if (tab === "followups") {
+        const items = [
+          ...getFollowUpTasks(todayISO()).map(t => taskCard(t)),
+          ...getFollowUpIssues(todayISO()).map(i => issueCard(i))
+        ];
+        container.innerHTML = sectionHeader("Due follow-ups", "Waiting, blocked, review, and open issues due for follow-up.", "") + `<div class="list">${items.join("") || emptyHTML("No follow-up due today.")}</div>`;
+      } else {
+        const issues = activeIssues().sort((a,b) => severityWeight(b.severity) - severityWeight(a.severity));
+        container.innerHTML = sectionHeader("Active issues", "Risks and abnormal findings to watch.", `<button class="btn primary small" onclick="openIssueModal()">＋ Issue</button>`) + `<div class="list">${issues.map(issueCard).join("") || emptyHTML("No active issues.")}</div>`;
+      }
+    }
+
+    function sectionHeader(title, subtitle, actionHTML = "") {
+      return `<div class="card-header"><div><h2 class="card-title">${escapeHTML(title)}</h2><p class="card-subtitle">${escapeHTML(subtitle)}</p></div><div>${actionHTML}</div></div>`;
+    }
+
+    function renderTasks() {
+      let tasks = state.data.tasks.filter(t => !t.archived && !["completed", "cancelled"].includes(t.status));
+      const q = byId("taskSearch")?.value.trim().toLowerCase() || "";
+      const status = byId("taskStatusFilter")?.value || "all";
+      const project = byId("taskProjectFilter")?.value || "all";
+      const priority = byId("taskPriorityFilter")?.value || "all";
+      const sort = byId("taskSort")?.value || "follow";
+      if (q) tasks = tasks.filter(t => [t.title, t.description, t.nextAction, t.stakeholder, t.tags?.join(" "), getProject(t.projectId)?.name].join(" ").toLowerCase().includes(q));
+      if (status !== "all") tasks = tasks.filter(t => t.status === status);
+      if (project !== "all") tasks = tasks.filter(t => t.projectId === project);
+      if (priority !== "all") tasks = tasks.filter(t => t.priority === priority);
+      tasks = sortTasks(tasks, sort);
+      byId("taskList").innerHTML = tasks.map(taskCard).join("") || emptyHTML("No active tasks found.");
+    }
+
+    function sortTasks(tasks, sort) {
+      const copy = [...tasks];
+      if (sort === "priority") return copy.sort((a,b) => priorityWeight(b.priority) - priorityWeight(a.priority));
+      if (sort === "target") return copy.sort((a,b) => (a.targetDate || "9999").localeCompare(b.targetDate || "9999"));
+      if (sort === "newest") return copy.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+      if (sort === "oldest") return copy.sort((a,b) => a.createdAt.localeCompare(b.createdAt));
+      return copy.sort(sortByFollowPriority);
+    }
+
+    function priorityWeight(p) { return { urgent: 4, high: 3, medium: 2, low: 1 }[p] || 0; }
+    function severityWeight(s) { return { critical: 4, high: 3, medium: 2, low: 1 }[s] || 0; }
+
+    function taskCard(t) {
+      const p = getProject(t.projectId);
+      const overdue = t.expireDate && t.expireDate < todayISO() && t.status !== "completed";
+      return `<article class="task-card ${t.alerted || overdue ? "alerted" : ""}">
+        <div class="task-main">
+          <div>
+            <h3 class="item-title">${escapeHTML(t.title)}</h3>
+            <div class="item-desc">Next: ${escapeHTML(t.nextAction || "No next action yet")}</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn success small" title="Done with note" onclick="openTaskUpdate('${t.id}', 'completed')">✓ Done</button>
+            <button class="icon-btn" title="Update / follow-up" onclick="openTaskUpdate('${t.id}')">✎</button>
+            <button class="icon-btn" title="Raise issue" onclick="raiseIssueFromTask('${t.id}')">!</button>
+            <button class="icon-btn" title="Details" onclick="showDetails('task','${t.id}')">◉</button>
+            <button class="icon-btn" title="Edit" onclick="openTaskModal('${t.id}')">⚙</button>
+            <button class="icon-btn" title="Archive" onclick="archiveTask('${t.id}')">▣</button>
+            <button class="icon-btn" title="Delete" onclick="deleteTask('${t.id}')">×</button>
+          </div>
+        </div>
+        <div class="meta-row">
+          <span class="badge primary">${escapeHTML(p?.name || "No Project")}</span>
+          <span class="badge ${statusClass(t.status)}">${labelOf(TASK_STATUSES, t.status)}</span>
+          <span class="badge ${priorityClass(t.priority)}">${labelOf(PRIORITIES, t.priority)}</span>
+          ${t.type ? `<span class="badge violet">${escapeHTML(t.type)}</span>` : ""}
+          ${t.stakeholder ? `<span class="badge dark">PIC: ${escapeHTML(t.stakeholder)}</span>` : ""}
+          ${t.followUpDate ? `<span class="badge ${t.followUpDate <= todayISO() ? "warning" : ""}">Follow: ${shortDate(t.followUpDate)}</span>` : ""}
+          ${t.targetDate ? `<span class="badge">Target: ${shortDate(t.targetDate)}</span>` : ""}
+          ${overdue ? `<span class="badge danger">Overdue</span>` : ""}
+        </div>
+        <div class="progress-wrap"><div class="progress-track"><div class="progress-fill" style="width:${clamp(t.progress)}%"></div></div><div class="progress-label">${clamp(t.progress)}%</div></div>
+      </article>`;
+    }
+
+    function compactIssueCard(issue) {
+      return `<div class="record-card"><div class="task-main"><div><h3 class="item-title">${escapeHTML(issue.title)}</h3><div class="item-desc">${labelOf(SEVERITIES, issue.severity)} · ${labelOf(ISSUE_STATUSES, issue.status)} · Follow ${shortDate(issue.followUpDate)}</div></div><button class="btn small" onclick="showDetails('issue','${issue.id}')">Details</button></div></div>`;
+    }
+    function compactCheckCard(template) {
+      const status = getCheckDisplayStatus(template, todayISO());
+      return `<div class="record-card"><div class="task-main"><div><h3 class="item-title">${escapeHTML(template.name)}</h3><div class="item-desc">${escapeHTML(template.expected || "No expected result defined")}</div></div><button class="btn success small" onclick="openRunCheck('${template.id}')">Run</button></div><div class="meta-row"><span class="badge ${statusClass(status.status)}">${status.label}</span><span class="badge primary">${escapeHTML(getProject(template.projectId)?.name || "-")}</span></div></div>`;
+    }
+    function compactProjectCard(project) {
+      const count = state.data.tasks.filter(t => t.projectId === project.id && !t.archived).length + state.data.issues.filter(i => i.projectId === project.id && !i.archived).length + state.data.checkTemplates.filter(c => c.projectId === project.id && !c.archived).length;
+      return `<div class="record-card"><div class="meta-row"><span class="badge" style="border-color:${escapeHTML(project.color)};color:${escapeHTML(project.color)}">●</span><strong>${escapeHTML(project.name)}</strong><span class="badge primary">${count} records</span></div><div class="item-desc">${escapeHTML(project.description || "")}</div></div>`;
+    }
+
+    function renderCheckins() {
+      const content = byId("checkinContent");
+      if (!content) return;
+      if (state.checkTab === "due") {
+        const items = getDueTemplates(todayISO()).map(checkCard).join("");
+        content.innerHTML = `<div class="list">${items || emptyHTML("No check-ins due today.")}</div>`;
+      } else if (state.checkTab === "templates") {
+        content.innerHTML = `<div class="list">${activeCheckTemplates().map(checkCard).join("") || emptyHTML("No active check-in templates.")}</div>`;
+      } else if (state.checkTab === "history") {
+        const records = [...state.data.checkRecords].sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 50);
+        content.innerHTML = `<div class="list">${records.map(checkRecordCard).join("") || emptyHTML("No check-in records yet.")}</div>`;
+      } else {
+        const missed = getMissedCheckins(30);
+        content.innerHTML = `<div class="list">${missed.map(m => missedCard(m)).join("") || emptyHTML("No missed check-ins in the last 30 days.")}</div>`;
+      }
+      byId("checkinTrend").innerHTML = chartHTML(checkComplianceData(), "date", "count");
+    }
+
+    function checkCard(c) {
+      const p = getProject(c.projectId);
+      const status = getCheckDisplayStatus(c, todayISO());
+      const last = lastCheckRecord(c.id);
+      return `<article class="check-card">
+        <div class="check-main">
+          <div><h3 class="item-title">${escapeHTML(c.name)}</h3><div class="item-desc">Expected: ${escapeHTML(c.expected || "No expected result defined")}</div></div>
+          <div class="item-actions">
+            <button class="btn success small" onclick="openRunCheck('${c.id}', 'ok')">✓ OK</button>
+            <button class="btn warning small" onclick="openRunCheck('${c.id}', 'abnormal')">⚠ Abnormal</button>
+            <button class="icon-btn" title="History" onclick="showDetails('check','${c.id}')">◉</button>
+            <button class="icon-btn" title="Edit" onclick="openCheckTemplateModal('${c.id}')">⚙</button>
+            <button class="icon-btn" title="Archive" onclick="archiveCheckTemplate('${c.id}')">▣</button>
+          </div>
+        </div>
+        <div class="meta-row">
+          <span class="badge primary">${escapeHTML(p?.name || "No Project")}</span>
+          <span class="badge ${statusClass(status.status)}">${status.label}</span>
+          <span class="badge ${priorityClass(c.priority)}">${labelOf(PRIORITIES, c.priority)}</span>
+          <span class="badge dark">${escapeHTML(frequencyLabel(c))}</span>
+          ${last ? `<span class="badge">Last: ${shortDate(last.date)} · ${escapeHTML(last.result.toUpperCase())}</span>` : `<span class="badge">No record yet</span>`}
+        </div>
+      </article>`;
+    }
+
+    function checkRecordCard(r) {
+      const c = state.data.checkTemplates.find(x => x.id === r.templateId);
+      return `<div class="record-card"><div class="task-main"><div><h3 class="item-title">${escapeHTML(c?.name || "Deleted Check-in")}</h3><div class="item-desc">${dateLabel(r.date)} · ${escapeHTML(r.finding || "No note")}</div></div><span class="badge ${statusClass(r.result)}">${escapeHTML(r.result.toUpperCase())}</span></div>${r.actionTaken ? `<div class="item-desc">Action: ${escapeHTML(r.actionTaken)}</div>` : ""}</div>`;
+    }
+    function missedCard(m) {
+      return `<div class="record-card"><div class="task-main"><div><h3 class="item-title">${escapeHTML(m.template.name)}</h3><div class="item-desc">Missed check-in date: ${dateLabel(m.date)}</div></div><button class="btn small" onclick="openRunCheck('${m.template.id}', 'ok', '${m.date}')">Record Now</button></div></div>`;
+    }
+
+    function renderIssues() {
+      let issues = activeIssues();
+      const q = byId("issueSearch")?.value.trim().toLowerCase() || "";
+      const status = byId("issueStatusFilter")?.value || "all";
+      const severity = byId("issueSeverityFilter")?.value || "all";
+      const project = byId("issueProjectFilter")?.value || "all";
+      if (q) issues = issues.filter(i => [i.title, i.description, i.nextAction, i.owner, i.sourceText, getProject(i.projectId)?.name].join(" ").toLowerCase().includes(q));
+      if (status !== "all") issues = issues.filter(i => i.status === status);
+      if (severity !== "all") issues = issues.filter(i => i.severity === severity);
+      if (project !== "all") issues = issues.filter(i => i.projectId === project);
+      issues = issues.sort((a,b) => severityWeight(b.severity) - severityWeight(a.severity) || (a.followUpDate || "9999").localeCompare(b.followUpDate || "9999"));
+      byId("issueList").innerHTML = issues.map(issueCard).join("") || emptyHTML("No active issues found.");
+    }
+
+    function issueCard(i) {
+      const p = getProject(i.projectId);
+      return `<article class="issue-card ${i.severity === "critical" ? "critical" : ""}">
+        <div class="issue-main">
+          <div><h3 class="item-title">${escapeHTML(i.title)}</h3><div class="item-desc">Next: ${escapeHTML(i.nextAction || "No next action yet")}</div></div>
+          <div class="item-actions">
+            <button class="icon-btn" title="Details" onclick="showDetails('issue','${i.id}')">◉</button>
+            <button class="icon-btn" title="Edit" onclick="openIssueModal('${i.id}')">⚙</button>
+            <button class="icon-btn" title="Resolve" onclick="resolveIssue('${i.id}')">✓</button>
+            <button class="icon-btn" title="Archive" onclick="archiveIssue('${i.id}')">▣</button>
+            <button class="icon-btn" title="Delete" onclick="deleteIssue('${i.id}')">×</button>
+          </div>
+        </div>
+        <div class="meta-row">
+          <span class="badge primary">${escapeHTML(p?.name || "No Project")}</span>
+          <span class="badge ${severityClass(i.severity)}">${labelOf(SEVERITIES, i.severity)}</span>
+          <span class="badge ${statusClass(i.status)}">${labelOf(ISSUE_STATUSES, i.status)}</span>
+          ${i.owner ? `<span class="badge dark">Owner: ${escapeHTML(i.owner)}</span>` : ""}
+          ${i.followUpDate ? `<span class="badge ${i.followUpDate <= todayISO() ? "warning" : ""}">Follow: ${shortDate(i.followUpDate)}</span>` : ""}
+          <span class="badge violet">${escapeHTML(i.sourceText || i.sourceType || "Manual")}</span>
+        </div>
+      </article>`;
+    }
+
+    function renderProjects() {
+      byId("projectList").innerHTML = activeProjects().map(p => {
+        const tasks = state.data.tasks.filter(t => t.projectId === p.id && !t.archived).length;
+        const checks = state.data.checkTemplates.filter(c => c.projectId === p.id && !c.archived).length;
+        const issues = state.data.issues.filter(i => i.projectId === p.id && !i.archived && !["resolved","closed"].includes(i.status)).length;
+        return `<div class="project-card"><div class="meta-row"><span style="width:12px;height:12px;border-radius:999px;background:${escapeHTML(p.color)};display:inline-block"></span><h3 class="item-title">${escapeHTML(p.name)}</h3></div><div class="item-desc">${escapeHTML(p.description || "")}</div><div class="meta-row"><span class="badge primary">${tasks} Tasks</span><span class="badge success">${checks} Check-ins</span><span class="badge ${issues ? "danger" : ""}">${issues} Issues</span></div><div class="item-actions"><button class="btn small" onclick="filterProject('${p.id}')">Open</button><button class="icon-btn" onclick="archiveProject('${p.id}')">▣</button></div></div>`;
+      }).join("") || emptyHTML("No projects yet.");
+    }
+
+    function renderAnalytics() {
+      byId("chartTaskStatus").innerHTML = chartHTML(taskStatusData(), "status", "count");
+      byId("chartIssueSeverity").innerHTML = chartHTML(issueSeverityData(), "severity", "count");
+      byId("chartProjectWorkload").innerHTML = chartHTML(projectWorkloadData(), "project", "count");
+      byId("chartCheckCompliance").innerHTML = chartHTML(checkComplianceData(), "date", "count");
+    }
+
+    function renderReportsDefault() {
+      const out = byId("reportOutput");
+      if (out && !out.value) out.value = buildReport("daily");
+    }
+
+    function renderCalendar() {
+      const input = byId("calendarMonth");
+      const today = todayISO();
+      if (input && !input.value) input.value = today.slice(0,7);
+      const ym = input?.value || today.slice(0,7);
+      const [y,m] = ym.split("-").map(Number);
+      const last = new Date(y, m, 0).getDate();
+      const cells = [];
+      for (let day = 1; day <= last; day++) {
+        const date = `${y}-${String(m).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+        const taskCount = activeTasks().filter(t => [t.targetDate, t.followUpDate, t.expireDate].includes(date)).length;
+        const checkCount = getDueTemplates(date).length;
+        const issueCount = activeIssues().filter(i => [i.detectedDate, i.followUpDate].includes(date)).length;
+        cells.push(`<div class="day-cell ${date === today ? "today" : ""}"><div class="day-num">${day}</div><div class="meta-row">${taskCount ? `<span class="badge primary">${taskCount} T</span>` : ""}${checkCount ? `<span class="badge success">${checkCount} C</span>` : ""}${issueCount ? `<span class="badge danger">${issueCount} I</span>` : ""}${!taskCount && !checkCount && !issueCount ? `<span class="badge">Clear</span>` : ""}</div></div>`);
+      }
+      byId("calendarGrid").innerHTML = cells.join("");
+    }
+
+    function renderArchive() {
+      byId("archiveTasks").innerHTML = archivedTasks().map(taskCard).join("") || emptyHTML("No archived / completed tasks.");
+      byId("archiveIssues").innerHTML = archivedIssues().map(issueCard).join("") || emptyHTML("No closed issues.");
+    }
+
+    function renderSettingsView() {
+      byId("defaultViewSetting").value = state.data.settings.defaultView || "dashboard";
+      byId("weekStartsSetting").value = state.data.settings.weekStartsOn || "monday";
+    }
+
+    function chartHTML(rows, labelKey, valueKey) {
+      const max = Math.max(1, ...rows.map(r => Number(r[valueKey]) || 0));
+      return `<div class="chart">${rows.map(r => `<div class="chart-row"><div class="chart-label" title="${escapeHTML(r[labelKey])}">${escapeHTML(r[labelKey])}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, (Number(r[valueKey]) || 0) / max * 100)}%"></div></div><div class="chart-value">${Number(r[valueKey]) || 0}</div></div>`).join("")}</div>`;
+    }
+
+    function taskStatusData() {
+      return TASK_STATUSES.filter(([v]) => !["completed","cancelled"].includes(v)).map(([value,label]) => ({ status: label, count: activeTasks().filter(t => t.status === value).length }));
+    }
+    function issueSeverityData() {
+      return SEVERITIES.map(([value,label]) => ({ severity: label, count: activeIssues().filter(i => i.severity === value).length }));
+    }
+    function projectWorkloadData() {
+      return activeProjects().map(p => ({ project: p.name, count: state.data.tasks.filter(t => t.projectId === p.id && !t.archived).length + state.data.checkTemplates.filter(c => c.projectId === p.id && !c.archived).length + activeIssues().filter(i => i.projectId === p.id).length }));
+    }
+    function checkComplianceData() {
+      const rows = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = addDays(todayISO(), -i);
+        const due = scheduledTemplates(date).length;
+        const records = state.data.checkRecords.filter(r => r.date === date).length;
+        rows.push({ date: shortDate(date), count: due ? records : 0 });
+      }
+      return rows;
+    }
+
+    function checkStartDate(c) {
+      return c.startDate || (c.createdAt ? String(c.createdAt).slice(0, 10) : todayISO());
+    }
+
+    function checkEndDate(c) {
+      return c.endDate || "";
+    }
+
+    function frequencyLabel(c) {
+      if (!c) return "-";
+      if (c.frequency === "daily") return "Daily";
+      if (c.frequency === "weekdays") return "Weekdays";
+      if (c.frequency === "weekly") {
+        const days = (c.weeklyDays || []).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(", ");
+        return `Weekly${days ? ` · ${days}` : ""}`;
+      }
+      if (c.frequency === "monthly") return `Monthly · day ${Number(c.monthlyDay || 1)}`;
+      return c.frequency || "-";
+    }
+
+    function scheduleDueOn(c, dateISO) {
+      if (!c || c.archived || c.status !== "active") return false;
+      const d = parseISO(dateISO);
+      if (!d) return false;
+      const start = checkStartDate(c);
+      const end = checkEndDate(c);
+      if (start && dateISO < start) return false;
+      if (end && dateISO > end) return false;
+      const day = DAYS[d.getDay()];
+      if (c.frequency === "daily") return true;
+      if (c.frequency === "weekdays") return d.getDay() >= 1 && d.getDay() <= 5;
+      if (c.frequency === "weekly") return (c.weeklyDays || []).includes(day);
+      if (c.frequency === "monthly") return Number(c.monthlyDay || 1) === d.getDate();
+      return false;
+    }
+    function recordFor(templateId, dateISO) { return state.data.checkRecords.find(r => r.templateId === templateId && r.date === dateISO) || null; }
+    function scheduledTemplates(dateISO) { return activeCheckTemplates().filter(c => scheduleDueOn(c, dateISO)); }
+    function getDueTemplates(dateISO) { return scheduledTemplates(dateISO).filter(c => !recordFor(c.id, dateISO)); }
+    function lastCheckRecord(templateId) { return state.data.checkRecords.filter(r => r.templateId === templateId).sort((a,b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))[0] || null; }
+    function getCheckDisplayStatus(c, dateISO) {
+      const rec = recordFor(c.id, dateISO);
+      if (rec) return { status: rec.result, label: rec.result.toUpperCase() };
+      if (scheduleDueOn(c, dateISO)) return { status: dateISO < todayISO() ? "missed" : "due", label: dateISO < todayISO() ? "Missed" : "Due Today" };
+      return { status: c.status, label: c.status === "active" ? "Active" : c.status };
+    }
+    function getMissedCheckins(days = 14) {
+      const out = [];
+      for (let i = 1; i <= days; i++) {
+        const date = addDays(todayISO(), -i);
+        activeCheckTemplates().forEach(template => {
+          if (scheduleDueOn(template, date) && !recordFor(template.id, date)) out.push({ template, date });
+        });
+      }
+      return out;
+    }
+
+    function openCreateHub() { byId("createHubModal").classList.add("show"); }
+    function closeModal(id) { byId(id).classList.remove("show"); }
+
+    function openTaskModal(id = null) {
+      const t = id ? state.data.tasks.find(x => x.id === id) : null;
+      byId("taskModalTitle").textContent = t ? "Edit Task" : "Add Task";
+      byId("taskId").value = t?.id || "";
+      byId("taskTitle").value = t?.title || "";
+      byId("taskProject").value = t?.projectId || activeProjects()[0]?.id || "";
+      byId("taskType").value = t?.type || "Task";
+      byId("taskStatus").value = t?.status || "not_started";
+      byId("taskPriority").value = t?.priority || "medium";
+      byId("taskStakeholder").value = t?.stakeholder || "";
+      byId("taskProgress").value = clamp(t?.progress || 0);
+      byId("taskStartDate").value = t?.startDate || "";
+      byId("taskTargetDate").value = t?.targetDate || "";
+      byId("taskExpireDate").value = t?.expireDate || "";
+      byId("taskFollowDate").value = t?.followUpDate || "";
+      byId("taskNextAction").value = t?.nextAction || "";
+      byId("taskDescription").value = t?.description || "";
+      byId("taskTags").value = (t?.tags || []).join(", ");
+      byId("taskLinks").value = (t?.links || []).map(l => `${l.title || "Link"}|${l.url}`).join(", ");
+      byId("taskModal").classList.add("show");
+    }
+
+    function saveTask() {
+      const title = byId("taskTitle").value.trim();
+      if (!title) return alert("Task title is required.");
+      const id = byId("taskId").value;
+      const old = state.data.tasks.find(t => t.id === id);
+      const task = {
+        id: id || uid("task"),
+        title,
+        projectId: byId("taskProject").value,
+        type: byId("taskType").value,
+        status: byId("taskStatus").value,
+        priority: byId("taskPriority").value,
+        stakeholder: byId("taskStakeholder").value.trim(),
+        startDate: byId("taskStartDate").value,
+        targetDate: byId("taskTargetDate").value,
+        expireDate: byId("taskExpireDate").value,
+        followUpDate: byId("taskFollowDate").value,
+        progress: clamp(byId("taskProgress").value),
+        nextAction: byId("taskNextAction").value.trim(),
+        description: byId("taskDescription").value.trim(),
+        tags: byId("taskTags").value.split(",").map(x => x.trim()).filter(Boolean),
+        links: parseLinks(byId("taskLinks").value),
+        updates: old?.updates || [],
+        alerted: old?.alerted || false,
+        archived: old?.archived || false,
+        createdAt: old?.createdAt || nowISO(),
+        updatedAt: nowISO()
+      };
+      if (task.status === "completed") task.progress = 100;
+      if (old) state.data.tasks = state.data.tasks.map(t => t.id === task.id ? task : t); else state.data.tasks.unshift(task);
+      saveData(); closeModal("taskModal"); render();
+    }
+
+    function parseLinks(value) {
+      return value.split(",").map(x => x.trim()).filter(Boolean).map(x => {
+        const [title, url] = x.includes("|") ? x.split("|") : ["Link", x];
+        return { title: title.trim(), url: (url || "").trim() };
+      });
+    }
+
+    function openTaskUpdate(id, forceStatus = null) {
+      const t = state.data.tasks.find(x => x.id === id);
+      if (!t) return;
+      byId("taskUpdateTitle").textContent = forceStatus === "completed" ? "Complete Task with Note" : "Update / Follow-up Task";
+      byId("taskUpdateId").value = id;
+      byId("taskUpdateStatus").value = forceStatus || t.status;
+      byId("taskUpdateProgress").value = forceStatus === "completed" ? 100 : clamp(t.progress);
+      byId("taskUpdateFollow").value = t.followUpDate || "";
+      byId("taskUpdatePriority").value = t.priority || "medium";
+      byId("taskUpdateNext").value = t.nextAction || "";
+      byId("taskUpdateNote").value = "";
+      byId("taskUpdateModal").classList.add("show");
+    }
+
+    function saveTaskUpdate() {
+      const id = byId("taskUpdateId").value;
+      const t = state.data.tasks.find(x => x.id === id);
+      if (!t) return;
+      const note = byId("taskUpdateNote").value.trim();
+      t.status = byId("taskUpdateStatus").value;
+      t.progress = clamp(byId("taskUpdateProgress").value);
+      if (t.status === "completed") t.progress = 100;
+      t.followUpDate = byId("taskUpdateFollow").value;
+      t.priority = byId("taskUpdatePriority").value;
+      t.nextAction = byId("taskUpdateNext").value.trim();
+      if (note) t.updates.unshift({ id: uid("upd"), at: nowISO(), note, status: t.status, progress: t.progress });
+      t.updatedAt = nowISO();
+      saveData(); closeModal("taskUpdateModal"); render();
+    }
+
+    function archiveTask(id) { const t = state.data.tasks.find(x => x.id === id); if (t && confirm("Archive this task?")) { t.archived = true; t.updatedAt = nowISO(); saveData(); render(); } }
+    function deleteTask(id) { if (confirm("Delete this task permanently?")) { state.data.tasks = state.data.tasks.filter(t => t.id !== id); saveData(); render(); } }
+    function raiseIssueFromTask(id) {
+      const t = state.data.tasks.find(x => x.id === id);
+      if (!t) return;
+      openIssueModal(null, { title: `Follow-up risk: ${t.title}`, projectId: t.projectId, severity: t.priority === "urgent" ? "critical" : "high", status: "open", owner: t.stakeholder, sourceType: "task", sourceId: t.id, sourceText: "Task", nextAction: t.nextAction, description: t.description });
+    }
+
+    function setCheckDaySelection(days) {
+      const selected = new Set(days || []);
+      document.querySelectorAll('[data-check-day]').forEach(input => { input.checked = selected.has(input.dataset.checkDay); });
+    }
+
+    function getCheckDaySelection() {
+      return [...document.querySelectorAll('[data-check-day]')].filter(input => input.checked).map(input => input.dataset.checkDay);
+    }
+
+    function updateCheckFrequencyUI() {
+      const freq = byId("checkFrequency")?.value || "weekdays";
+      byId("checkWeeklySetting")?.classList.toggle("hidden", freq !== "weekly");
+      byId("checkMonthlySetting")?.classList.toggle("hidden", freq !== "monthly");
+      const hint = byId("checkFrequencyHint");
+      if (!hint) return;
+      const text = {
+        daily: "Daily: this check is due every calendar day from the effective start date.",
+        weekdays: "Weekdays: this check is due Monday to Friday only.",
+        weekly: "Weekly: select the exact weekdays when this check should be due.",
+        monthly: "Monthly: set which day of each month this check should be due."
+      };
+      hint.textContent = text[freq] || "Select a frequency.";
+    }
+
+    function openCheckTemplateModal(id = null) {
+      const c = id ? state.data.checkTemplates.find(x => x.id === id) : null;
+      byId("checkTemplateTitle").textContent = c ? "Edit Check-in Template" : "Add Check-in Template";
+      byId("checkTemplateId").value = c?.id || "";
+      byId("checkName").value = c?.name || "";
+      byId("checkProject").value = c?.projectId || activeProjects()[0]?.id || "";
+      byId("checkStatus").value = c?.status || "active";
+      byId("checkFrequency").value = c?.frequency || "weekdays";
+      byId("checkStartDate").value = c?.startDate || todayISO();
+      byId("checkEndDate").value = c?.endDate || "";
+      setCheckDaySelection(c?.weeklyDays || ["mon","tue","wed","thu","fri"]);
+      byId("checkMonthlyDay").value = c?.monthlyDay || 1;
+      updateCheckFrequencyUI();
+      byId("checkPic").value = c?.pic || "";
+      byId("checkPriority").value = c?.priority || "medium";
+      byId("checkExpected").value = c?.expected || "";
+      byId("checkItems").value = (c?.checklist || []).join("\n");
+      byId("checkAutoIssue").checked = c?.autoIssue ?? true;
+      byId("checkTemplateModal").classList.add("show");
+    }
+
+    function saveCheckTemplate() {
+      const name = byId("checkName").value.trim();
+      if (!name) return alert("Check-in name is required.");
+      const id = byId("checkTemplateId").value;
+      if (byId("checkFrequency").value === "weekly" && !getCheckDaySelection().length) return alert("Please select at least one weekly day.");
+      const old = state.data.checkTemplates.find(c => c.id === id);
+      const c = {
+        id: id || uid("check"),
+        name,
+        projectId: byId("checkProject").value,
+        status: byId("checkStatus").value,
+        frequency: byId("checkFrequency").value,
+        startDate: byId("checkStartDate").value || todayISO(),
+        endDate: byId("checkEndDate").value || "",
+        weeklyDays: getCheckDaySelection(),
+        monthlyDay: clamp(byId("checkMonthlyDay").value || 1, 1, 31),
+        pic: byId("checkPic").value.trim(),
+        priority: byId("checkPriority").value,
+        expected: byId("checkExpected").value.trim(),
+        checklist: byId("checkItems").value.split("\n").map(x => x.trim()).filter(Boolean),
+        autoIssue: byId("checkAutoIssue").checked,
+        archived: old?.archived || false,
+        createdAt: old?.createdAt || nowISO(),
+        updatedAt: nowISO()
+      };
+      if (old) state.data.checkTemplates = state.data.checkTemplates.map(x => x.id === c.id ? c : x); else state.data.checkTemplates.unshift(c);
+      saveData(); closeModal("checkTemplateModal"); render();
+    }
+
+    function openRunCheck(id, result = "ok", date = todayISO()) {
+      const c = state.data.checkTemplates.find(x => x.id === id);
+      if (!c) return;
+      byId("runCheckTitle").textContent = `Run Check-in: ${c.name}`;
+      byId("runCheckTemplateId").value = id;
+      byId("runCheckDate").value = date;
+      byId("runCheckResult").value = result;
+      byId("runCheckFinding").value = "";
+      byId("runCheckAction").value = "";
+      byId("runCheckEvidence").value = "";
+      byId("runCheckCreateIssue").checked = result === "abnormal" && Boolean(c.autoIssue);
+      byId("runCheckItems").innerHTML = (c.checklist || []).map((item, idx) => `<label class="checkline"><input type="checkbox" data-check-item="${idx}" checked style="width:auto;" />${escapeHTML(item)}</label>`).join("") || `<div class="empty">No checklist items defined.</div>`;
+      byId("runCheckModal").classList.add("show");
+    }
+
+    function saveCheckRecord() {
+      const templateId = byId("runCheckTemplateId").value;
+      const c = state.data.checkTemplates.find(x => x.id === templateId);
+      if (!c) return;
+      const date = byId("runCheckDate").value || todayISO();
+      state.data.checkRecords = state.data.checkRecords.filter(r => !(r.templateId === templateId && r.date === date));
+      const checkedItems = (c.checklist || []).map((item, idx) => ({ item, checked: Boolean(document.querySelector(`[data-check-item="${idx}"]`)?.checked) }));
+      const record = { id: uid("record"), templateId, date, result: byId("runCheckResult").value, checkedItems, finding: byId("runCheckFinding").value.trim(), actionTaken: byId("runCheckAction").value.trim(), evidence: byId("runCheckEvidence").value.trim(), linkedIssueId: "", createdAt: nowISO(), updatedAt: nowISO() };
+      if (record.result === "abnormal" && byId("runCheckCreateIssue").checked) {
+        const issue = {
+          id: uid("issue"), title: `${c.name} abnormal finding`, projectId: c.projectId, severity: c.priority === "urgent" ? "critical" : c.priority === "high" ? "high" : "medium", status: "open", owner: c.pic || "", detectedDate: date, followUpDate: date, sourceType: "checkin", sourceId: record.id, sourceText: "Check-in", nextAction: "Review abnormal check-in finding and decide next action.", description: record.finding || `Abnormal result from ${c.name}.`, resolution: record.actionTaken || "", updates: [], archived: false, createdAt: nowISO(), updatedAt: nowISO()
+        };
+        state.data.issues.unshift(issue);
+        record.linkedIssueId = issue.id;
+      }
+      state.data.checkRecords.unshift(record);
+      saveData(); closeModal("runCheckModal"); render();
+    }
+
+    function archiveCheckTemplate(id) { const c = state.data.checkTemplates.find(x => x.id === id); if (c && confirm("Archive this check-in template?")) { c.archived = true; c.status = "archived"; saveData(); render(); } }
+
+    function openIssueModal(id = null, preset = {}) {
+      const i = id ? state.data.issues.find(x => x.id === id) : preset;
+      byId("issueModalTitle").textContent = id ? "Edit Issue" : "Add Issue";
+      byId("issueId").value = id || "";
+      byId("issueSourceType").value = i?.sourceType || "manual";
+      byId("issueSourceId").value = i?.sourceId || "";
+      byId("issueTitle").value = i?.title || "";
+      byId("issueProject").value = i?.projectId || activeProjects()[0]?.id || "";
+      byId("issueSeverity").value = i?.severity || "medium";
+      byId("issueStatus").value = i?.status || "open";
+      byId("issueOwner").value = i?.owner || "";
+      byId("issueDetectedDate").value = i?.detectedDate || todayISO();
+      byId("issueFollowDate").value = i?.followUpDate || "";
+      byId("issueSourceText").value = i?.sourceText || "Manual";
+      byId("issueNextAction").value = i?.nextAction || "";
+      byId("issueDescription").value = i?.description || "";
+      byId("issueResolution").value = i?.resolution || "";
+      byId("issueModal").classList.add("show");
+    }
+
+    function saveIssue() {
+      const title = byId("issueTitle").value.trim();
+      if (!title) return alert("Issue title is required.");
+      const id = byId("issueId").value;
+      const old = state.data.issues.find(i => i.id === id);
+      const issue = {
+        id: id || uid("issue"),
+        title,
+        projectId: byId("issueProject").value,
+        severity: byId("issueSeverity").value,
+        status: byId("issueStatus").value,
+        owner: byId("issueOwner").value.trim(),
+        detectedDate: byId("issueDetectedDate").value,
+        followUpDate: byId("issueFollowDate").value,
+        sourceType: byId("issueSourceType").value || "manual",
+        sourceId: byId("issueSourceId").value || "",
+        sourceText: byId("issueSourceText").value.trim() || "Manual",
+        nextAction: byId("issueNextAction").value.trim(),
+        description: byId("issueDescription").value.trim(),
+        resolution: byId("issueResolution").value.trim(),
+        updates: old?.updates || [],
+        archived: old?.archived || false,
+        createdAt: old?.createdAt || nowISO(),
+        updatedAt: nowISO()
+      };
+      if (old) state.data.issues = state.data.issues.map(i => i.id === issue.id ? issue : i); else state.data.issues.unshift(issue);
+      saveData(); closeModal("issueModal"); render();
+    }
+
+    function resolveIssue(id) { const i = state.data.issues.find(x => x.id === id); if (i) { i.status = "resolved"; i.updatedAt = nowISO(); saveData(); render(); } }
+    function archiveIssue(id) { const i = state.data.issues.find(x => x.id === id); if (i && confirm("Archive this issue?")) { i.archived = true; saveData(); render(); } }
+    function deleteIssue(id) { if (confirm("Delete this issue permanently?")) { state.data.issues = state.data.issues.filter(i => i.id !== id); saveData(); render(); } }
+
+    function showDetails(type, id) {
+      let title = "Details", body = "";
+      if (type === "task") {
+        const t = state.data.tasks.find(x => x.id === id); if (!t) return;
+        title = t.title;
+        body = detailGrid([
+          ["Project", getProject(t.projectId)?.name], ["Status", labelOf(TASK_STATUSES, t.status)], ["Priority", labelOf(PRIORITIES, t.priority)], ["Type", t.type],
+          ["Stakeholder", t.stakeholder || "-"], ["Progress", `${clamp(t.progress)}%`], ["Target", dateLabel(t.targetDate)], ["Follow-up", dateLabel(t.followUpDate)],
+          ["Expire", dateLabel(t.expireDate)], ["Next action", t.nextAction || "-"], ["Description", t.description || "-"], ["Tags", (t.tags || []).join(", ") || "-"]
+        ]) + logHTML("Update history", t.updates || []);
+      } else if (type === "issue") {
+        const i = state.data.issues.find(x => x.id === id); if (!i) return;
+        title = i.title;
+        body = detailGrid([["Project", getProject(i.projectId)?.name], ["Severity", labelOf(SEVERITIES, i.severity)], ["Status", labelOf(ISSUE_STATUSES, i.status)], ["Owner", i.owner || "-"], ["Detected", dateLabel(i.detectedDate)], ["Follow-up", dateLabel(i.followUpDate)], ["Source", i.sourceText || i.sourceType], ["Next action", i.nextAction || "-"], ["Description", i.description || "-"], ["Resolution", i.resolution || "-"]]);
+      } else if (type === "check") {
+        const c = state.data.checkTemplates.find(x => x.id === id); if (!c) return;
+        title = c.name;
+        const recs = state.data.checkRecords.filter(r => r.templateId === id).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20);
+        body = detailGrid([["Project", getProject(c.projectId)?.name], ["Status", c.status], ["Frequency", frequencyLabel(c)], ["Start date", dateLabel(checkStartDate(c))], ["End date", c.endDate ? dateLabel(c.endDate) : "-"], ["PIC", c.pic || "-"], ["Priority", labelOf(PRIORITIES, c.priority)], ["Expected", c.expected || "-"], ["Checklist", (c.checklist || []).join("; ") || "-"]]) + `<h3 class="card-title" style="margin-top:18px;">Check-in history</h3><div class="list" style="margin-top:10px;">${recs.map(checkRecordCard).join("") || emptyHTML("No records yet.")}</div>`;
+      }
+      byId("detailTitle").textContent = title;
+      byId("detailBody").innerHTML = body;
+      byId("detailModal").classList.add("show");
+    }
+
+    function detailGrid(items) {
+      return `<div class="detail-grid">${items.map(([label,value]) => `<div class="detail-item"><div class="detail-label">${escapeHTML(label)}</div><div class="detail-value">${escapeHTML(value)}</div></div>`).join("")}</div>`;
+    }
+    function logHTML(title, updates) {
+      return `<h3 class="card-title" style="margin-top:18px;">${escapeHTML(title)}</h3><div class="list" style="margin-top:10px;">${updates.length ? updates.map(u => `<div class="record-card"><div class="item-title">${new Date(u.at).toLocaleString()}</div><div class="item-desc">${escapeHTML(u.note)}</div><div class="meta-row"><span class="badge">${escapeHTML(u.status || "")}</span><span class="badge">${clamp(u.progress)}%</span></div></div>`).join("") : emptyHTML("No update history yet.")}</div>`;
+    }
+
+    function addProject() {
+      const name = byId("newProjectName").value.trim();
+      if (!name) return alert("Project name is required.");
+      if (state.data.projects.some(p => p.name.toLowerCase() === name.toLowerCase())) return alert("Project already exists.");
+      state.data.projects.push({ id: uid("project"), name, description: byId("newProjectDesc").value.trim(), color: byId("newProjectColor").value, createdAt: nowISO(), archived: false });
+      byId("newProjectName").value = ""; byId("newProjectDesc").value = "";
+      saveData(); render();
+    }
+    function archiveProject(id) { const p = state.data.projects.find(x => x.id === id); if (p && confirm("Archive this project? Existing records remain but project is hidden.")) { p.archived = true; saveData(); render(); } }
+    function filterProject(id) { switchPage("tasks"); byId("taskProjectFilter").value = id; renderTasks(); }
+
+    function generateReport(type) { byId("reportOutput").value = buildReport(type); }
+    function buildReport(type) {
+      const today = dateLabel(todayISO());
+      const completed = state.data.tasks.filter(t => t.status === "completed" && (t.updatedAt || "").slice(0,10) === todayISO());
+      const inProgress = activeTasks().filter(t => ["in_progress", "need_review"].includes(t.status));
+      const waiting = activeTasks().filter(t => ["waiting", "blocked"].includes(t.status));
+      const checks = state.data.checkRecords.filter(r => r.date === todayISO());
+      const abnormal = checks.filter(r => r.result === "abnormal");
+      const issues = activeIssues();
+      if (type === "weekly") return `Weekly Work Summary\nGenerated: ${today}\n\nCompleted / closed focus:\n${bullet(completed.map(t => `${t.title} (${getProject(t.projectId)?.name})`))}\n\nIn progress:\n${bullet(inProgress.map(t => `${t.title} - Next: ${t.nextAction || "-"}`))}\n\nWaiting / blocked:\n${bullet(waiting.map(t => `${t.title} - Follow-up: ${shortDate(t.followUpDate)}`))}\n\nActive issues:\n${bullet(issues.map(i => `${labelOf(SEVERITIES, i.severity)} - ${i.title} - Next: ${i.nextAction || "-"}`))}`;
+      if (type === "hod") return `HOD / Manager Summary\nGenerated: ${today}\n\n1. Completed\n${bullet(completed.map(t => `${t.title}`))}\n\n2. In Progress\n${bullet(inProgress.map(t => `${t.title} (${clamp(t.progress)}%) - ${t.nextAction || "No next action"}`))}\n\n3. Waiting / Blocked\n${bullet(waiting.map(t => `${t.title} - Waiting on: ${t.stakeholder || "-"} - Follow-up: ${shortDate(t.followUpDate)}`))}\n\n4. Risk / Alert\n${bullet(issues.filter(i => ["critical","high"].includes(i.severity)).map(i => `${labelOf(SEVERITIES, i.severity)} - ${i.title} - ${i.nextAction || "-"}`))}`;
+      if (type === "issue") return `Issue Summary\nGenerated: ${today}\n\nActive Issues (${issues.length})\n${bullet(issues.map(i => `${labelOf(SEVERITIES, i.severity)} | ${labelOf(ISSUE_STATUSES, i.status)} | ${i.title} | Next: ${i.nextAction || "-"}`))}`;
+      return `Daily Update\nDate: ${today}\n\nToday Check-ins\n${bullet(checks.map(r => `${state.data.checkTemplates.find(c => c.id === r.templateId)?.name || "Check-in"}: ${r.result.toUpperCase()}${r.finding ? " - " + r.finding : ""}`))}\n\nAbnormal Findings\n${bullet(abnormal.map(r => `${state.data.checkTemplates.find(c => c.id === r.templateId)?.name || "Check-in"}: ${r.finding || "Abnormal"}`))}\n\nTasks to Focus\n${bullet(getTodayTasks().map(t => `${t.title} - Next: ${t.nextAction || "-"}`))}\n\nFollow-ups Due\n${bullet([...getFollowUpTasks(todayISO()).map(t => `${t.title} - ${t.stakeholder || "-"}`), ...getFollowUpIssues(todayISO()).map(i => `${i.title} - ${i.owner || "-"}`)])}\n\nActive Risks\n${bullet(issues.filter(i => ["critical","high"].includes(i.severity)).map(i => `${labelOf(SEVERITIES, i.severity)} - ${i.title}`))}`;
+    }
+    function bullet(list) { return list.length ? list.map(x => `- ${x}`).join("\n") : "- None"; }
+    function copyReport() { byId("reportOutput").select(); document.execCommand("copy"); alert("Report copied."); }
+
+    function saveSettings() { state.data.settings.defaultView = byId("defaultViewSetting").value; state.data.settings.weekStartsOn = byId("weekStartsSetting").value; saveData(); alert("Settings saved."); render(); }
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = `taskflow-work-control-system-export-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+    function importData() {
+      const file = byId("importFile").files[0]; if (!file) return alert("Select a JSON file first.");
+      const reader = new FileReader(); reader.onload = () => { try { state.data = normalizeData(JSON.parse(reader.result)); saveData(); render(); alert("Data imported."); } catch(e) { alert("Invalid JSON file."); } }; reader.readAsText(file);
+    }
+    function clearData() { if (confirm("Clear all TaskFlow local data?")) { localStorage.removeItem(STORAGE_KEY); state.data = defaultData(); saveData(); render(); } }
+    function emptyHTML(message) { return `<div class="empty">${escapeHTML(message)}</div>`; }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".nav button").forEach(btn => btn.addEventListener("click", () => switchPage(btn.dataset.page)));
+      document.querySelectorAll("[data-today-tab]").forEach(btn => btn.addEventListener("click", () => { state.todayTab = btn.dataset.todayTab; document.querySelectorAll("[data-today-tab]").forEach(b => b.classList.toggle("active", b === btn)); renderToday(); }));
+      document.querySelectorAll("[data-check-tab]").forEach(btn => btn.addEventListener("click", () => { state.checkTab = btn.dataset.checkTab; document.querySelectorAll("[data-check-tab]").forEach(b => b.classList.toggle("active", b === btn)); renderCheckins(); }));
+      ["taskSearch", "taskStatusFilter", "taskProjectFilter", "taskPriorityFilter", "taskSort"].forEach(id => byId(id).addEventListener("input", renderTasks));
+      ["issueSearch", "issueStatusFilter", "issueSeverityFilter", "issueProjectFilter"].forEach(id => byId(id).addEventListener("input", renderIssues));
+      byId("calendarMonth").addEventListener("input", renderCalendar);
+      byId("checkFrequency").addEventListener("change", updateCheckFrequencyUI);
+      byId("mobileMenuBtn").addEventListener("click", () => byId("sidebar").classList.toggle("show"));
+      document.querySelectorAll(".modal-backdrop").forEach(backdrop => backdrop.addEventListener("click", event => { if (event.target === backdrop) backdrop.classList.remove("show"); }));
+      initOptions();
+      render();
+      switchPage(state.data.settings.defaultView || "dashboard");
+    });
+  </script>
+</body>
+</html>
