@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Professional Meme Editor</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #38bdf8;
+      --danger: #fb7185;
+      --ok: #34d399;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at top left, #1e293b, var(--bg) 48%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 320px minmax(420px, 1fr) 340px;
+      gap: 16px;
+      height: 100vh;
+      padding: 16px;
+    }
+
+    .panel {
+      min-height: 0;
+      overflow: auto;
+      background: rgba(17, 24, 39, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .panel-inner {
+      padding: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #7dd3fc;
+      font-size: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.24);
+      white-space: nowrap;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: #e5e7eb;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hint {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 9px 11px;
+      outline: none;
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      border-color: rgba(56, 189, 248, 0.8);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+      background: rgba(15, 23, 42, 0.92);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      border-radius: 14px;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+      user-select: none;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #00131f;
+      font-weight: 900;
+      border-color: transparent;
+    }
+
+    .button.success {
+      background: linear-gradient(135deg, #059669, #34d399);
+      color: #03180f;
+      font-weight: 900;
+      border-color: transparent;
+    }
+
+    .button.danger {
+      background: rgba(251, 113, 133, 0.12);
+      color: #fecdd3;
+      border-color: rgba(251, 113, 133, 0.28);
+    }
+
+    .button.small {
+      min-height: 34px;
+      border-radius: 12px;
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      transform: none;
+    }
+
+    .dropzone {
+      display: grid;
+      place-items: center;
+      min-height: 120px;
+      border: 1px dashed rgba(148, 163, 184, 0.45);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.35);
+      color: var(--muted);
+      transition: border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .stage-wrap {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .stage-head,
+    .stage-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 20px;
+      background: rgba(17, 24, 39, 0.72);
+      border: 1px solid var(--border);
+    }
+
+    .stage-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .stage-title strong {
+      font-size: 14px;
+    }
+
+    .stage-title span,
+    .stage-foot span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .canvas-shell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(45deg, rgba(255,255,255,0.045) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.045) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.045) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.045) 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+      box-shadow: var(--shadow);
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 6px;
+      background: transparent;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.35);
+      touch-action: none;
+    }
+
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-state.hidden {
+      display: none;
+    }
+
+    .empty-card {
+      max-width: 420px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: rgba(15, 23, 42, 0.72);
+    }
+
+    .empty-card h2 {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 22px;
+      letter-spacing: -0.03em;
+    }
+
+    .layers {
+      display: grid;
+      gap: 8px;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.5);
+      cursor: pointer;
+    }
+
+    .layer.active {
+      border-color: rgba(56, 189, 248, 0.72);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .layer strong {
+      display: block;
+      overflow: hidden;
+      color: #e5e7eb;
+      font-size: 13px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .layer span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .color-line {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="color"] {
+      width: 44px;
+      height: 38px;
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: transparent;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      min-height: 20px;
+      padding: 2px 6px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 20;
+      max-width: min(520px, calc(100vw - 32px));
+      padding: 12px 14px;
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, 0.92);
+      color: #e0f2fe;
+      box-shadow: var(--shadow);
+      transform: translate(-50%, 120px);
+      opacity: 0;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      pointer-events: none;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    @media (max-width: 1180px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .stage-wrap {
+        min-height: 72vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <div class="panel-inner">
+        <div class="brand">
+          <div>
+            <h1>Meme Studio Pro</h1>
+            <span>Professional browser meme editor</span>
+          </div>
+          <div class="badge">HTML</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Load Image</div>
+          <div class="field">
+            <label for="imageUrl">Paste image URL</label>
+            <input class="input" id="imageUrl" type="url" placeholder="https://example.com/meme.jpg" />
+          </div>
+          <button class="button primary" id="loadUrlBtn" style="width: 100%;">Load from URL</button>
+          <p class="hint">For export-safe results, uploaded files and clipboard images are the most reliable. Some websites block URL image export due to CORS.</p>
+
+          <div class="section">
+            <input id="fileInput" class="file-input" type="file" accept="image/*" />
+            <button class="button" id="uploadBtn" style="width: 100%;">Upload Image</button>
+            <div class="dropzone" id="dropzone" style="margin-top: 10px;">
+              <div>
+                <strong>Drop image here</strong><br />
+                or paste an image with <span class="kbd">Ctrl</span> + <span class="kbd">V</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Presets</div>
+          <div class="row">
+            <button class="button" id="classicTopBtn">Classic Top</button>
+            <button class="button" id="classicBottomBtn">Classic Bottom</button>
+          </div>
+          <div class="row" style="margin-top: 10px;">
+            <button class="button" id="captionBoxBtn">Caption Box</button>
+            <button class="button" id="centerTextBtn">Center Text</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Export</div>
+          <div class="row">
+            <button class="button success" id="exportBtn">Export PNG</button>
+            <button class="button" id="copyBtn">Copy PNG</button>
+          </div>
+          <button class="button danger" id="clearBtn" style="width: 100%; margin-top: 10px;">Clear Project</button>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Shortcuts</div>
+          <p class="hint">
+            <span class="kbd">Double Click</span> edit text<br />
+            <span class="kbd">Delete</span> remove selected text<br />
+            <span class="kbd">Ctrl</span> + <span class="kbd">Z</span> undo<br />
+            <span class="kbd">Ctrl</span> + <span class="kbd">Y</span> redo<br />
+            Drag corners to resize. Drag round handle to rotate.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="stage-wrap">
+      <div class="stage-head">
+        <div class="stage-title">
+          <strong>Canvas Workspace</strong>
+          <span id="canvasInfo">No image loaded</span>
+        </div>
+        <div class="toolbar">
+          <button class="button small" id="fitBtn">Fit</button>
+          <button class="button small" id="zoomOutBtn">−</button>
+          <button class="button small" id="zoomInBtn">+</button>
+          <button class="button small" id="undoBtn">Undo</button>
+          <button class="button small" id="redoBtn">Redo</button>
+        </div>
+      </div>
+
+      <div class="canvas-shell" id="canvasShell">
+        <canvas id="editorCanvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-card">
+            <h2>Start with an image</h2>
+            <p>Upload, paste, drag-drop, or load a URL. Then add movable meme text anywhere on the image.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-foot">
+        <span id="statusText">Ready</span>
+        <span id="pointerInfo">X: — Y: —</span>
+      </div>
+    </main>
+
+    <aside class="panel">
+      <div class="panel-inner">
+        <div class="section">
+          <div class="section-title">Text</div>
+          <div class="field">
+            <label for="textInput">Content</label>
+            <textarea class="textarea" id="textInput" placeholder="Enter your meme text here">YOUR TEXT HERE</textarea>
+          </div>
+          <button class="button primary" id="addTextBtn" style="width: 100%;">Add Text Layer</button>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Style</div>
+          <div class="field">
+            <label for="fontFamily">Font Family</label>
+            <select class="select" id="fontFamily">
+              <option value="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif">Impact Meme</option>
+              <option value="Arial Black, Gadget, sans-serif">Arial Black</option>
+              <option value="Anton, Impact, sans-serif">Anton Style</option>
+              <option value="Bebas Neue, Impact, sans-serif">Bebas Style</option>
+              <option value="Comic Sans MS, Comic Sans, cursive">Comic Sans</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Inter, Arial, sans-serif">Clean Sans</option>
+              <option value="monospace">Monospace</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="fontSize">Size</label>
+              <input class="input" id="fontSize" type="number" min="8" max="320" value="64" />
+            </div>
+            <div class="field">
+              <label for="rotationInput">Rotation</label>
+              <input class="input" id="rotationInput" type="number" min="-180" max="180" value="0" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="lineHeight">Line Height</label>
+              <input class="input" id="lineHeight" type="number" min="0.8" max="2.4" step="0.05" value="1.05" />
+            </div>
+            <div class="field">
+              <label for="letterSpacing">Letter Spacing</label>
+              <input class="input" id="letterSpacing" type="number" min="-10" max="40" step="1" value="0" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="alignSelect">Align</label>
+            <select class="select" id="alignSelect">
+              <option value="center">Center</option>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Fill</label>
+              <div class="color-line">
+                <input id="fillColor" type="color" value="#ffffff" />
+                <input class="input" id="fillColorText" type="text" value="#ffffff" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Stroke</label>
+              <div class="color-line">
+                <input id="strokeColor" type="color" value="#000000" />
+                <input class="input" id="strokeColorText" type="text" value="#000000" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="strokeWidth">Stroke Width</label>
+              <input class="input" id="strokeWidth" type="number" min="0" max="40" value="7" />
+            </div>
+            <div class="field">
+              <label for="opacityInput">Opacity</label>
+              <input class="input" id="opacityInput" type="number" min="0.05" max="1" step="0.05" value="1" />
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="button" id="memeStyleBtn">Meme Style</button>
+            <button class="button" id="captionStyleBtn">Caption Style</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Transform</div>
+          <div class="row">
+            <div class="field">
+              <label for="xInput">X</label>
+              <input class="input" id="xInput" type="number" value="0" />
+            </div>
+            <div class="field">
+              <label for="yInput">Y</label>
+              <input class="input" id="yInput" type="number" value="0" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="widthInput">Width</label>
+              <input class="input" id="widthInput" type="number" min="20" value="400" />
+            </div>
+            <div class="field">
+              <label for="heightInput">Height</label>
+              <input class="input" id="heightInput" type="number" min="20" value="90" />
+            </div>
+          </div>
+          <div class="row-3">
+            <button class="button small" id="bringForwardBtn">Forward</button>
+            <button class="button small" id="sendBackwardBtn">Backward</button>
+            <button class="button small danger" id="deleteBtn">Delete</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Layers</div>
+          <div class="layers" id="layers"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById('editorCanvas');
+    const ctx = canvas.getContext('2d');
+    const shell = document.getElementById('canvasShell');
+    const emptyState = document.getElementById('emptyState');
+    const statusText = document.getElementById('statusText');
+    const pointerInfo = document.getElementById('pointerInfo');
+    const canvasInfo = document.getElementById('canvasInfo');
+    const layersEl = document.getElementById('layers');
+    const toastEl = document.getElementById('toast');
+
+    const state = {
+      image: null,
+      imageName: '',
+      canvasW: 1200,
+      canvasH: 800,
+      objects: [],
+      selectedId: null,
+      zoom: 1,
+      drag: null,
+      history: [],
+      future: [],
+      suppressHistory: false,
+      exportTainted: false
+    };
+
+    const els = {
+      imageUrl: document.getElementById('imageUrl'),
+      loadUrlBtn: document.getElementById('loadUrlBtn'),
+      uploadBtn: document.getElementById('uploadBtn'),
+      fileInput: document.getElementById('fileInput'),
+      dropzone: document.getElementById('dropzone'),
+      exportBtn: document.getElementById('exportBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      addTextBtn: document.getElementById('addTextBtn'),
+      textInput: document.getElementById('textInput'),
+      fontFamily: document.getElementById('fontFamily'),
+      fontSize: document.getElementById('fontSize'),
+      rotationInput: document.getElementById('rotationInput'),
+      lineHeight: document.getElementById('lineHeight'),
+      letterSpacing: document.getElementById('letterSpacing'),
+      alignSelect: document.getElementById('alignSelect'),
+      fillColor: document.getElementById('fillColor'),
+      fillColorText: document.getElementById('fillColorText'),
+      strokeColor: document.getElementById('strokeColor'),
+      strokeColorText: document.getElementById('strokeColorText'),
+      strokeWidth: document.getElementById('strokeWidth'),
+      opacityInput: document.getElementById('opacityInput'),
+      xInput: document.getElementById('xInput'),
+      yInput: document.getElementById('yInput'),
+      widthInput: document.getElementById('widthInput'),
+      heightInput: document.getElementById('heightInput'),
+      memeStyleBtn: document.getElementById('memeStyleBtn'),
+      captionStyleBtn: document.getElementById('captionStyleBtn'),
+      bringForwardBtn: document.getElementById('bringForwardBtn'),
+      sendBackwardBtn: document.getElementById('sendBackwardBtn'),
+      deleteBtn: document.getElementById('deleteBtn'),
+      classicTopBtn: document.getElementById('classicTopBtn'),
+      classicBottomBtn: document.getElementById('classicBottomBtn'),
+      captionBoxBtn: document.getElementById('captionBoxBtn'),
+      centerTextBtn: document.getElementById('centerTextBtn'),
+      fitBtn: document.getElementById('fitBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      undoBtn: document.getElementById('undoBtn'),
+      redoBtn: document.getElementById('redoBtn')
+    };
+
+    function uid() {
+      return 'obj_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    }
+
+    function toast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._timer);
+      toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function selected() {
+      return state.objects.find(o => o.id === state.selectedId) || null;
+    }
+
+    function snapshot() {
+      return JSON.stringify({
+        canvasW: state.canvasW,
+        canvasH: state.canvasH,
+        objects: state.objects,
+        selectedId: state.selectedId
+      });
+    }
+
+    function pushHistory() {
+      if (state.suppressHistory) return;
+      state.history.push(snapshot());
+      if (state.history.length > 80) state.history.shift();
+      state.future = [];
+      updateUndoRedo();
+    }
+
+    function restore(snap) {
+      const data = JSON.parse(snap);
+      state.canvasW = data.canvasW;
+      state.canvasH = data.canvasH;
+      state.objects = data.objects;
+      state.selectedId = data.selectedId;
+      resizeCanvas(state.canvasW, state.canvasH, false);
+      fitCanvas(false);
+      renderAll();
+      syncControls();
+      renderLayers();
+      updateUndoRedo();
+    }
+
+    function undo() {
+      if (!state.history.length) return;
+      state.future.push(snapshot());
+      const last = state.history.pop();
+      state.suppressHistory = true;
+      restore(last);
+      state.suppressHistory = false;
+      toast('Undo');
+    }
+
+    function redo() {
+      if (!state.future.length) return;
+      state.history.push(snapshot());
+      const next = state.future.pop();
+      state.suppressHistory = true;
+      restore(next);
+      state.suppressHistory = false;
+      toast('Redo');
+    }
+
+    function updateUndoRedo() {
+      els.undoBtn.disabled = !state.history.length;
+      els.redoBtn.disabled = !state.future.length;
+    }
+
+    function resizeCanvas(w, h, redraw = true) {
+      state.canvasW = Math.round(w);
+      state.canvasH = Math.round(h);
+      canvas.width = state.canvasW;
+      canvas.height = state.canvasH;
+      if (redraw) renderAll();
+    }
+
+    function fitCanvas(redraw = true) {
+      const shellRect = shell.getBoundingClientRect();
+      const pad = 32;
+      const zoomX = (shellRect.width - pad) / state.canvasW;
+      const zoomY = (shellRect.height - pad) / state.canvasH;
+      state.zoom = clamp(Math.min(zoomX, zoomY), 0.08, 2.5);
+      applyZoom();
+      if (redraw) renderAll();
+    }
+
+    function applyZoom() {
+      canvas.style.width = `${state.canvasW * state.zoom}px`;
+      canvas.style.height = `${state.canvasH * state.zoom}px`;
+      canvasInfo.textContent = state.image
+        ? `${state.canvasW} × ${state.canvasH}px · ${(state.zoom * 100).toFixed(0)}%`
+        : 'No image loaded';
+    }
+
+    function dataUrlToImage(dataUrl, name = 'clipboard-image') {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ img, name });
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+    }
+
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => dataUrlToImage(reader.result, file.name).then(resolve).catch(reject);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function urlToImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve({ img, name: url.split('/').pop() || 'url-image', mayBeTainted: false });
+        img.onerror = () => reject(new Error('Image URL cannot be loaded. Try uploading the image instead.'));
+        img.src = url;
+      });
+    }
+
+    function loadImageResult(result) {
+      pushHistory();
+      state.image = result.img;
+      state.imageName = result.name || 'image';
+      state.exportTainted = !!result.mayBeTainted;
+      resizeCanvas(result.img.naturalWidth || result.img.width, result.img.naturalHeight || result.img.height, false);
+      state.selectedId = null;
+      emptyState.classList.add('hidden');
+      fitCanvas(false);
+      renderAll();
+      renderLayers();
+      syncControls();
+      statusText.textContent = `Loaded: ${state.imageName}`;
+      toast('Image loaded');
+    }
+
+    function createTextObject(overrides = {}) {
+      const baseW = Math.max(220, state.canvasW * 0.78);
+      const fontSize = Number(els.fontSize.value) || Math.max(36, Math.round(state.canvasW * 0.06));
+      return {
+        id: uid(),
+        type: 'text',
+        text: els.textInput.value || 'YOUR TEXT HERE',
+        x: state.canvasW / 2,
+        y: state.canvasH / 2,
+        w: baseW,
+        h: fontSize * 1.4,
+        rotation: 0,
+        fontFamily: els.fontFamily.value,
+        fontSize,
+        lineHeight: Number(els.lineHeight.value) || 1.05,
+        letterSpacing: Number(els.letterSpacing.value) || 0,
+        align: els.alignSelect.value,
+        fill: els.fillColor.value || '#ffffff',
+        stroke: els.strokeColor.value || '#000000',
+        strokeWidth: Number(els.strokeWidth.value) || 0,
+        opacity: Number(els.opacityInput.value) || 1,
+        shadow: false,
+        uppercase: true,
+        background: null,
+        padding: 14,
+        ...overrides
+      };
+    }
+
+    function addText(overrides = {}) {
+      if (!state.image) {
+        resizeCanvas(1200, 800, false);
+        emptyState.classList.add('hidden');
+      }
+      pushHistory();
+      const obj = createTextObject(overrides);
+      measureTextObject(obj);
+      state.objects.push(obj);
+      state.selectedId = obj.id;
+      renderAll();
+      syncControls();
+      renderLayers();
+      toast('Text layer added');
+    }
+
+    function splitTextToLines(ctx, obj) {
+      const raw = obj.uppercase ? obj.text.toUpperCase() : obj.text;
+      const paragraphs = raw.split('\n');
+      const maxW = Math.max(20, obj.w - obj.padding * 2);
+      const lines = [];
+
+      for (const paragraph of paragraphs) {
+        const words = paragraph.split(/\s+/).filter(Boolean);
+        if (!words.length) {
+          lines.push('');
+          continue;
+        }
+
+        let line = words[0];
+        for (let i = 1; i < words.length; i++) {
+          const test = line + ' ' + words[i];
+          if (measureTextWithSpacing(ctx, test, obj.letterSpacing) <= maxW || line.length === 0) {
+            line = test;
+          } else {
+            lines.push(line);
+            line = words[i];
+          }
+        }
+        lines.push(line);
+      }
+      return lines;
+    }
+
+    function measureTextWithSpacing(context, text, spacing) {
+      if (!spacing) return context.measureText(text).width;
+      return Array.from(text).reduce((sum, ch, index) => {
+        return sum + context.measureText(ch).width + (index ? spacing : 0);
+      }, 0);
+    }
+
+    function drawTextWithSpacing(context, text, x, y, spacing, fillStyle, strokeStyle, strokeWidth) {
+      if (!spacing) {
+        if (strokeWidth > 0) context.strokeText(text, x, y);
+        context.fillText(text, x, y);
+        return;
+      }
+
+      const chars = Array.from(text);
+      let cursor = x;
+      for (const ch of chars) {
+        if (strokeWidth > 0) context.strokeText(ch, cursor, y);
+        context.fillText(ch, cursor, y);
+        cursor += context.measureText(ch).width + spacing;
+      }
+    }
+
+    function measureTextObject(obj) {
+      ctx.save();
+      ctx.font = `${obj.fontSize}px ${obj.fontFamily}`;
+      const lines = splitTextToLines(ctx, obj);
+      obj.h = Math.max(24, lines.length * obj.fontSize * obj.lineHeight + obj.padding * 2);
+      ctx.restore();
+    }
+
+    function drawTextObject(context, obj, forExport = false) {
+      measureTextObject(obj);
+      context.save();
+      context.translate(obj.x, obj.y);
+      context.rotate(obj.rotation);
+      context.globalAlpha = obj.opacity;
+      context.font = `${obj.fontSize}px ${obj.fontFamily}`;
+      context.textBaseline = 'middle';
+      context.lineJoin = 'round';
+      context.miterLimit = 2;
+      context.fillStyle = obj.fill;
+      context.strokeStyle = obj.stroke;
+      context.lineWidth = obj.strokeWidth;
+
+      if (obj.background) {
+        context.fillStyle = obj.background.color;
+        roundRect(context, -obj.w / 2, -obj.h / 2, obj.w, obj.h, obj.background.radius || 0);
+        context.fill();
+        context.fillStyle = obj.fill;
+      }
+
+      if (obj.shadow) {
+        context.shadowColor = 'rgba(0,0,0,0.55)';
+        context.shadowBlur = 10;
+        context.shadowOffsetX = 3;
+        context.shadowOffsetY = 4;
+      } else {
+        context.shadowColor = 'transparent';
+      }
+
+      const lines = splitTextToLines(context, obj);
+      const lineStep = obj.fontSize * obj.lineHeight;
+      const firstY = -((lines.length - 1) * lineStep) / 2;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const width = measureTextWithSpacing(context, line, obj.letterSpacing);
+        let x = 0;
+        if (obj.align === 'left') x = -obj.w / 2 + obj.padding;
+        if (obj.align === 'center') x = -width / 2;
+        if (obj.align === 'right') x = obj.w / 2 - obj.padding - width;
+        drawTextWithSpacing(context, line, x, firstY + i * lineStep, obj.letterSpacing, obj.fill, obj.stroke, obj.strokeWidth);
+      }
+
+      context.restore();
+
+      if (!forExport && obj.id === state.selectedId) {
+        drawSelection(context, obj);
+      }
+    }
+
+    function roundRect(context, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.arcTo(x + w, y, x + w, y + h, radius);
+      context.arcTo(x + w, y + h, x, y + h, radius);
+      context.arcTo(x, y + h, x, y, radius);
+      context.arcTo(x, y, x + w, y, radius);
+      context.closePath();
+    }
+
+    function drawSelection(context, obj) {
+      const handles = getHandles(obj);
+      context.save();
+      context.translate(obj.x, obj.y);
+      context.rotate(obj.rotation);
+      context.strokeStyle = '#38bdf8';
+      context.lineWidth = 2 / state.zoom;
+      context.setLineDash([8 / state.zoom, 5 / state.zoom]);
+      context.strokeRect(-obj.w / 2, -obj.h / 2, obj.w, obj.h);
+      context.setLineDash([]);
+      context.restore();
+
+      for (const h of handles) {
+        context.save();
+        context.fillStyle = h.type === 'rotate' ? '#f59e0b' : '#38bdf8';
+        context.strokeStyle = '#00131f';
+        context.lineWidth = 2 / state.zoom;
+        context.beginPath();
+        context.arc(h.x, h.y, h.type === 'rotate' ? 9 / state.zoom : 7 / state.zoom, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.restore();
+      }
+    }
+
+    function renderAll(forExport = false, targetCtx = ctx) {
+      targetCtx.clearRect(0, 0, state.canvasW, state.canvasH);
+      if (state.image) {
+        targetCtx.drawImage(state.image, 0, 0, state.canvasW, state.canvasH);
+      } else {
+        targetCtx.fillStyle = '#f8fafc';
+        targetCtx.fillRect(0, 0, state.canvasW, state.canvasH);
+      }
+      for (const obj of state.objects) {
+        if (obj.type === 'text') drawTextObject(targetCtx, obj, forExport);
+      }
+      updateStatus();
+    }
+
+    function localPointFromEvent(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) / state.zoom,
+        y: (e.clientY - rect.top) / state.zoom
+      };
+    }
+
+    function rotatePoint(x, y, angle) {
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      return { x: x * c - y * s, y: x * s + y * c };
+    }
+
+    function worldToLocal(obj, p) {
+      const dx = p.x - obj.x;
+      const dy = p.y - obj.y;
+      return rotatePoint(dx, dy, -obj.rotation);
+    }
+
+    function localToWorld(obj, p) {
+      const r = rotatePoint(p.x, p.y, obj.rotation);
+      return { x: r.x + obj.x, y: r.y + obj.y };
+    }
+
+    function hitTestObject(obj, p) {
+      const local = worldToLocal(obj, p);
+      return local.x >= -obj.w / 2 && local.x <= obj.w / 2 && local.y >= -obj.h / 2 && local.y <= obj.h / 2;
+    }
+
+    function getHandles(obj) {
+      const points = [
+        { name: 'nw', x: -obj.w / 2, y: -obj.h / 2, type: 'resize' },
+        { name: 'ne', x: obj.w / 2, y: -obj.h / 2, type: 'resize' },
+        { name: 'se', x: obj.w / 2, y: obj.h / 2, type: 'resize' },
+        { name: 'sw', x: -obj.w / 2, y: obj.h / 2, type: 'resize' },
+        { name: 'rotate', x: 0, y: -obj.h / 2 - 46, type: 'rotate' }
+      ];
+      return points.map(pt => ({ ...pt, ...localToWorld(obj, { x: pt.x, y: pt.y }) }));
+    }
+
+    function hitTestHandle(obj, p) {
+      if (!obj) return null;
+      const size = 14 / state.zoom;
+      const handles = getHandles(obj);
+      for (const h of handles) {
+        const dx = p.x - h.x;
+        const dy = p.y - h.y;
+        if (Math.sqrt(dx * dx + dy * dy) <= size) return h;
+      }
+      return null;
+    }
+
+    function pointerDown(e) {
+      canvas.setPointerCapture(e.pointerId);
+      const p = localPointFromEvent(e);
+      const obj = selected();
+      const handle = hitTestHandle(obj, p);
+
+      if (handle) {
+        pushHistory();
+        state.drag = {
+          mode: handle.type,
+          handle: handle.name,
+          start: p,
+          objId: obj.id,
+          startObj: structuredClone(obj),
+          startAngle: Math.atan2(p.y - obj.y, p.x - obj.x)
+        };
+        return;
+      }
+
+      for (let i = state.objects.length - 1; i >= 0; i--) {
+        const candidate = state.objects[i];
+        if (hitTestObject(candidate, p)) {
+          if (state.selectedId !== candidate.id) {
+            state.selectedId = candidate.id;
+            syncControls();
+            renderLayers();
+            renderAll();
+          }
+          pushHistory();
+          state.drag = {
+            mode: 'move',
+            start: p,
+            objId: candidate.id,
+            startObj: structuredClone(candidate)
+          };
+          return;
+        }
+      }
+
+      state.selectedId = null;
+      syncControls();
+      renderLayers();
+      renderAll();
+    }
+
+    function pointerMove(e) {
+      const p = localPointFromEvent(e);
+      pointerInfo.textContent = `X: ${Math.round(p.x)} Y: ${Math.round(p.y)}`;
+
+      if (!state.drag) {
+        updateCursor(p);
+        return;
+      }
+
+      const obj = state.objects.find(o => o.id === state.drag.objId);
+      if (!obj) return;
+
+      if (state.drag.mode === 'move') {
+        obj.x = state.drag.startObj.x + (p.x - state.drag.start.x);
+        obj.y = state.drag.startObj.y + (p.y - state.drag.start.y);
+      }
+
+      if (state.drag.mode === 'rotate') {
+        const angle = Math.atan2(p.y - obj.y, p.x - obj.x);
+        obj.rotation = state.drag.startObj.rotation + angle - state.drag.startAngle;
+        if (e.shiftKey) obj.rotation = Math.round(obj.rotation / (Math.PI / 12)) * (Math.PI / 12);
+      }
+
+      if (state.drag.mode === 'resize') {
+        resizeFromHandle(obj, p, state.drag);
+      }
+
+      syncControls(false);
+      renderAll();
+    }
+
+    function resizeFromHandle(obj, p, drag) {
+      const startObj = drag.startObj;
+      const local = worldToLocal(startObj, p);
+      const opposite = {
+        nw: { x: startObj.w / 2, y: startObj.h / 2 },
+        ne: { x: -startObj.w / 2, y: startObj.h / 2 },
+        se: { x: -startObj.w / 2, y: -startObj.h / 2 },
+        sw: { x: startObj.w / 2, y: -startObj.h / 2 }
+      }[drag.handle];
+
+      let newW = Math.max(40, Math.abs(local.x - opposite.x));
+      let newH = Math.max(24, Math.abs(local.y - opposite.y));
+
+      if (drag.handle === 'nw' || drag.handle === 'sw') {
+        newW = Math.max(40, opposite.x - local.x);
+      } else {
+        newW = Math.max(40, local.x - opposite.x);
+      }
+
+      if (drag.handle === 'nw' || drag.handle === 'ne') {
+        newH = Math.max(24, opposite.y - local.y);
+      } else {
+        newH = Math.max(24, local.y - opposite.y);
+      }
+
+      const signX = drag.handle === 'nw' || drag.handle === 'sw' ? -1 : 1;
+      const signY = drag.handle === 'nw' || drag.handle === 'ne' ? -1 : 1;
+      const centerLocal = {
+        x: opposite.x + signX * newW / 2,
+        y: opposite.y + signY * newH / 2
+      };
+      const centerWorld = localToWorld(startObj, centerLocal);
+
+      obj.w = newW;
+      obj.h = newH;
+      obj.x = centerWorld.x;
+      obj.y = centerWorld.y;
+      obj.fontSize = clamp(obj.fontSize * (newH / startObj.h), 8, 320);
+    }
+
+    function pointerUp(e) {
+      if (state.drag) {
+        const obj = selected();
+        if (obj) measureTextObject(obj);
+        state.drag = null;
+        syncControls();
+        renderLayers();
+        renderAll();
+      }
+    }
+
+    function updateCursor(p) {
+      const obj = selected();
+      const handle = hitTestHandle(obj, p);
+      if (handle) {
+        canvas.style.cursor = handle.type === 'rotate' ? 'grab' : 'nwse-resize';
+        return;
+      }
+      for (let i = state.objects.length - 1; i >= 0; i--) {
+        if (hitTestObject(state.objects[i], p)) {
+          canvas.style.cursor = 'move';
+          return;
+        }
+      }
+      canvas.style.cursor = 'default';
+    }
+
+    function syncControls(updateText = true) {
+      const obj = selected();
+      const disabled = !obj;
+      [
+        els.fontFamily, els.fontSize, els.rotationInput, els.lineHeight, els.letterSpacing,
+        els.alignSelect, els.fillColor, els.fillColorText, els.strokeColor, els.strokeColorText,
+        els.strokeWidth, els.opacityInput, els.xInput, els.yInput, els.widthInput, els.heightInput,
+        els.bringForwardBtn, els.sendBackwardBtn, els.deleteBtn
+      ].forEach(el => { el.disabled = disabled; });
+
+      if (!obj) {
+        statusText.textContent = state.image ? 'No layer selected' : 'Ready';
+        return;
+      }
+
+      if (updateText) els.textInput.value = obj.text;
+      els.fontFamily.value = obj.fontFamily;
+      els.fontSize.value = Math.round(obj.fontSize);
+      els.rotationInput.value = Math.round(obj.rotation * 180 / Math.PI);
+      els.lineHeight.value = obj.lineHeight;
+      els.letterSpacing.value = obj.letterSpacing;
+      els.alignSelect.value = obj.align;
+      els.fillColor.value = normalizeHex(obj.fill);
+      els.fillColorText.value = obj.fill;
+      els.strokeColor.value = normalizeHex(obj.stroke);
+      els.strokeColorText.value = obj.stroke;
+      els.strokeWidth.value = obj.strokeWidth;
+      els.opacityInput.value = obj.opacity;
+      els.xInput.value = Math.round(obj.x);
+      els.yInput.value = Math.round(obj.y);
+      els.widthInput.value = Math.round(obj.w);
+      els.heightInput.value = Math.round(obj.h);
+      statusText.textContent = `Selected: ${obj.text.slice(0, 40) || 'Text layer'}`;
+    }
+
+    function normalizeHex(value) {
+      if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+      return '#ffffff';
+    }
+
+    function updateSelectedFromControls(push = true) {
+      const obj = selected();
+      if (!obj) return;
+      if (push) pushHistory();
+      obj.text = els.textInput.value;
+      obj.fontFamily = els.fontFamily.value;
+      obj.fontSize = Number(els.fontSize.value) || obj.fontSize;
+      obj.rotation = (Number(els.rotationInput.value) || 0) * Math.PI / 180;
+      obj.lineHeight = Number(els.lineHeight.value) || 1.05;
+      obj.letterSpacing = Number(els.letterSpacing.value) || 0;
+      obj.align = els.alignSelect.value;
+      obj.fill = els.fillColorText.value || els.fillColor.value;
+      obj.stroke = els.strokeColorText.value || els.strokeColor.value;
+      obj.strokeWidth = Number(els.strokeWidth.value) || 0;
+      obj.opacity = clamp(Number(els.opacityInput.value) || 1, 0.05, 1);
+      obj.x = Number(els.xInput.value) || obj.x;
+      obj.y = Number(els.yInput.value) || obj.y;
+      obj.w = Math.max(20, Number(els.widthInput.value) || obj.w);
+      obj.h = Math.max(20, Number(els.heightInput.value) || obj.h);
+      measureTextObject(obj);
+      renderAll();
+      renderLayers();
+    }
+
+    function renderLayers() {
+      layersEl.innerHTML = '';
+      if (!state.objects.length) {
+        layersEl.innerHTML = '<p class="hint">No text layers yet.</p>';
+        return;
+      }
+      [...state.objects].reverse().forEach((obj, reverseIndex) => {
+        const layer = document.createElement('div');
+        layer.className = 'layer' + (obj.id === state.selectedId ? ' active' : '');
+        layer.innerHTML = `
+          <div>
+            <strong>${escapeHtml(obj.text || 'Text Layer')}</strong>
+            <span>${Math.round(obj.x)}, ${Math.round(obj.y)} · ${Math.round(obj.fontSize)}px</span>
+          </div>
+          <span>Text</span>
+        `;
+        layer.addEventListener('click', () => {
+          state.selectedId = obj.id;
+          syncControls();
+          renderLayers();
+          renderAll();
+        });
+        layersEl.appendChild(layer);
+      });
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    }
+
+    function updateStatus() {
+      canvasInfo.textContent = state.image
+        ? `${state.canvasW} × ${state.canvasH}px · ${(state.zoom * 100).toFixed(0)}%`
+        : `Blank ${state.canvasW} × ${state.canvasH}px · ${(state.zoom * 100).toFixed(0)}%`;
+    }
+
+    async function exportPng(copy = false) {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = state.canvasW;
+      exportCanvas.height = state.canvasH;
+      const exportCtx = exportCanvas.getContext('2d');
+      renderAll(true, exportCtx);
+
+      try {
+        if (copy) {
+          if (!navigator.clipboard || !window.ClipboardItem) {
+            toast('Clipboard image copy is not supported in this browser.');
+            return;
+          }
+          exportCanvas.toBlob(async blob => {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            toast('PNG copied to clipboard');
+          }, 'image/png');
+          return;
+        }
+
+        const link = document.createElement('a');
+        link.download = `meme-${Date.now()}.png`;
+        link.href = exportCanvas.toDataURL('image/png');
+        link.click();
+        toast('PNG exported');
+      } catch (error) {
+        toast('Export failed. The image may be blocked by CORS. Try uploading it instead.');
+      }
+    }
+
+    function deleteSelected() {
+      if (!state.selectedId) return;
+      pushHistory();
+      state.objects = state.objects.filter(o => o.id !== state.selectedId);
+      state.selectedId = null;
+      renderAll();
+      syncControls();
+      renderLayers();
+      toast('Layer deleted');
+    }
+
+    function moveLayer(direction) {
+      const index = state.objects.findIndex(o => o.id === state.selectedId);
+      if (index < 0) return;
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= state.objects.length) return;
+      pushHistory();
+      const [obj] = state.objects.splice(index, 1);
+      state.objects.splice(newIndex, 0, obj);
+      renderAll();
+      renderLayers();
+    }
+
+    function applyMemeStyle() {
+      const obj = selected();
+      if (!obj) return;
+      pushHistory();
+      Object.assign(obj, {
+        fontFamily: "Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeWidth: Math.max(5, Math.round(obj.fontSize * 0.1)),
+        align: 'center',
+        lineHeight: 1.05,
+        letterSpacing: 1,
+        uppercase: true,
+        background: null,
+        shadow: false
+      });
+      syncControls();
+      renderAll();
+      renderLayers();
+    }
+
+    function applyCaptionStyle() {
+      const obj = selected();
+      if (!obj) return;
+      pushHistory();
+      Object.assign(obj, {
+        fontFamily: 'Inter, Arial, sans-serif',
+        fill: '#111827',
+        stroke: '#111827',
+        strokeWidth: 0,
+        align: 'center',
+        lineHeight: 1.2,
+        letterSpacing: 0,
+        uppercase: false,
+        background: { color: '#ffffff', radius: 18 },
+        shadow: false,
+        padding: 18
+      });
+      syncControls();
+      renderAll();
+      renderLayers();
+    }
+
+    function clearProject() {
+      pushHistory();
+      state.image = null;
+      state.imageName = '';
+      state.objects = [];
+      state.selectedId = null;
+      resizeCanvas(1200, 800, false);
+      emptyState.classList.remove('hidden');
+      fitCanvas(false);
+      renderAll();
+      syncControls();
+      renderLayers();
+      toast('Project cleared');
+    }
+
+    function bindColorPair(colorEl, textEl) {
+      colorEl.addEventListener('input', () => {
+        textEl.value = colorEl.value;
+        updateSelectedFromControls(true);
+      });
+      textEl.addEventListener('change', () => {
+        if (/^#[0-9a-f]{6}$/i.test(textEl.value)) colorEl.value = textEl.value;
+        updateSelectedFromControls(true);
+      });
+    }
+
+    els.loadUrlBtn.addEventListener('click', async () => {
+      const url = els.imageUrl.value.trim();
+      if (!url) return toast('Please paste an image URL first.');
+      try {
+        statusText.textContent = 'Loading image URL...';
+        const result = await urlToImage(url);
+        loadImageResult(result);
+      } catch (error) {
+        toast(error.message || 'Failed to load URL image.');
+      }
+    });
+
+    els.uploadBtn.addEventListener('click', () => els.fileInput.click());
+    els.fileInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      loadImageResult(await fileToImage(file));
+      els.fileInput.value = '';
+    });
+
+    ['dragenter', 'dragover'].forEach(type => {
+      els.dropzone.addEventListener(type, e => {
+        e.preventDefault();
+        els.dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(type => {
+      els.dropzone.addEventListener(type, e => {
+        e.preventDefault();
+        els.dropzone.classList.remove('dragover');
+      });
+    });
+
+    els.dropzone.addEventListener('drop', async e => {
+      const file = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
+      if (!file) return toast('No image file found in drop.');
+      loadImageResult(await fileToImage(file));
+    });
+
+    document.addEventListener('paste', async e => {
+      const item = [...e.clipboardData.items].find(i => i.type.startsWith('image/'));
+      if (!item) return;
+      const file = item.getAsFile();
+      loadImageResult(await fileToImage(file));
+    });
+
+    els.addTextBtn.addEventListener('click', () => addText());
+    els.exportBtn.addEventListener('click', () => exportPng(false));
+    els.copyBtn.addEventListener('click', () => exportPng(true));
+    els.clearBtn.addEventListener('click', clearProject);
+    els.undoBtn.addEventListener('click', undo);
+    els.redoBtn.addEventListener('click', redo);
+    els.fitBtn.addEventListener('click', () => fitCanvas());
+    els.zoomInBtn.addEventListener('click', () => {
+      state.zoom = clamp(state.zoom * 1.12, 0.08, 4);
+      applyZoom();
+      renderAll();
+    });
+    els.zoomOutBtn.addEventListener('click', () => {
+      state.zoom = clamp(state.zoom / 1.12, 0.08, 4);
+      applyZoom();
+      renderAll();
+    });
+
+    els.classicTopBtn.addEventListener('click', () => addText({
+      text: 'TOP TEXT',
+      y: Math.max(60, state.canvasH * 0.12),
+      fontSize: Math.max(42, Math.round(state.canvasW * 0.07)),
+      w: state.canvasW * 0.9
+    }));
+
+    els.classicBottomBtn.addEventListener('click', () => addText({
+      text: 'BOTTOM TEXT',
+      y: Math.min(state.canvasH - 60, state.canvasH * 0.88),
+      fontSize: Math.max(42, Math.round(state.canvasW * 0.07)),
+      w: state.canvasW * 0.9
+    }));
+
+    els.centerTextBtn.addEventListener('click', () => addText({
+      text: 'WHEN THE CODE FINALLY WORKS',
+      y: state.canvasH * 0.5,
+      fontSize: Math.max(36, Math.round(state.canvasW * 0.055)),
+      w: state.canvasW * 0.82
+    }));
+
+    els.captionBoxBtn.addEventListener('click', () => {
+      addText({
+        text: 'Add a clean caption here',
+        y: Math.max(70, state.canvasH * 0.1),
+        fontSize: Math.max(28, Math.round(state.canvasW * 0.035)),
+        w: state.canvasW * 0.86,
+        fontFamily: 'Inter, Arial, sans-serif',
+        fill: '#111827',
+        stroke: '#111827',
+        strokeWidth: 0,
+        uppercase: false,
+        background: { color: '#ffffff', radius: 18 },
+        padding: 18,
+        lineHeight: 1.2
+      });
+    });
+
+    els.memeStyleBtn.addEventListener('click', applyMemeStyle);
+    els.captionStyleBtn.addEventListener('click', applyCaptionStyle);
+    els.bringForwardBtn.addEventListener('click', () => moveLayer(1));
+    els.sendBackwardBtn.addEventListener('click', () => moveLayer(-1));
+    els.deleteBtn.addEventListener('click', deleteSelected);
+
+    [
+      els.textInput, els.fontFamily, els.fontSize, els.rotationInput, els.lineHeight,
+      els.letterSpacing, els.alignSelect, els.strokeWidth, els.opacityInput,
+      els.xInput, els.yInput, els.widthInput, els.heightInput
+    ].forEach(el => {
+      el.addEventListener('change', () => updateSelectedFromControls(true));
+    });
+
+    els.textInput.addEventListener('input', () => updateSelectedFromControls(false));
+    bindColorPair(els.fillColor, els.fillColorText);
+    bindColorPair(els.strokeColor, els.strokeColorText);
+
+    canvas.addEventListener('pointerdown', pointerDown);
+    canvas.addEventListener('pointermove', pointerMove);
+    canvas.addEventListener('pointerup', pointerUp);
+    canvas.addEventListener('pointercancel', pointerUp);
+
+    canvas.addEventListener('dblclick', e => {
+      const obj = selected();
+      if (!obj) return;
+      const next = prompt('Edit text:', obj.text);
+      if (next === null) return;
+      pushHistory();
+      obj.text = next;
+      syncControls();
+      renderAll();
+      renderLayers();
+    });
+
+    window.addEventListener('keydown', e => {
+      const tag = document.activeElement.tagName.toLowerCase();
+      const editingInput = ['input', 'textarea', 'select'].includes(tag);
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      if (!editingInput && (e.key === 'Delete' || e.key === 'Backspace')) {
+        e.preventDefault();
+        deleteSelected();
+        return;
+      }
+      if (!editingInput && state.selectedId) {
+        const obj = selected();
+        if (!obj) return;
+        const step = e.shiftKey ? 10 : 1;
+        let moved = false;
+        if (e.key === 'ArrowLeft') { obj.x -= step; moved = true; }
+        if (e.key === 'ArrowRight') { obj.x += step; moved = true; }
+        if (e.key === 'ArrowUp') { obj.y -= step; moved = true; }
+        if (e.key === 'ArrowDown') { obj.y += step; moved = true; }
+        if (moved) {
+          e.preventDefault();
+          syncControls(false);
+          renderAll();
+        }
+      }
+    });
+
+    window.addEventListener('resize', () => fitCanvas());
+
+    resizeCanvas(1200, 800, false);
+    fitCanvas(false);
+    renderAll();
+    renderLayers();
+    syncControls();
+    updateUndoRedo();
+  </script>
+</body>
+</html>
