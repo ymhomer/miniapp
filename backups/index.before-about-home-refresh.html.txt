@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f7f4">
-  <meta name="description" content="GeDniM is a personal playground for curious minds, useful mini apps, and small games.">
-  <title>GeDniM — Ideas to Explore</title>
+  <meta name="description" content="GeDniM: handy mini apps and games for everyday use.">
+  <title>GeDniM — Mini Apps &amp; Games</title>
   <link rel="stylesheet" href="./css/site.css">
   <script type="module" src="./js/site.js"></script>
 </head>
@@ -15,8 +15,8 @@
   <header class="site-header">
     <div class="site-header__inner">
       <a class="brand" id="brandLink" href="#home" aria-label="GeDniM home" data-home-link>
-        <img class="brand__mark" src="./assets/gednim-mark.svg" alt="" aria-hidden="true">
-        <span class="brand__name">GeDni<span>M</span></span>
+        <span class="brand__mark" aria-hidden="true">G</span>
+        <span class="brand__name">GeDniM</span>
       </a>
 
       <button class="menu-toggle" id="menuToggle" type="button"
@@ -34,44 +34,15 @@
   <main id="main">
     <section class="home-view" id="homeView" aria-labelledby="heroTitle">
       <div class="page-shell">
-        <section class="hero" aria-labelledby="heroTitle">
+        <section class="hero">
           <div class="hero__copy">
-            <p class="eyebrow"><span class="eyebrow__dot"></span> GENIUS · MEDHAVI · MIND</p>
-            <h1 id="heroTitle" tabindex="-1">Curiosity turns ideas into <span>things you can use.</span></h1>
-            <p class="hero__description">GeDniM is my personal playground for learning by building: useful mini apps, small games, and experiments made to try.</p>
-            <div class="hero__actions">
-              <a class="button button--primary" href="#catalog">
-                Explore the collection
-                <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 7l5 5 5-5" /></svg>
-              </a>
-              <a class="button button--quiet" href="#app/about-page" data-app-id="about-page">About GeDniM</a>
-            </div>
+            <p class="eyebrow"><span class="eyebrow__dot"></span> GE-DNIM · MINI APPS</p>
+            <h1 id="heroTitle" tabindex="-1">Small tools, <span>ready when you are.</span></h1>
+            <p class="hero__description">A clear, quick workspace for useful tools and mini games on any screen.</p>
             <div class="hero__meta">
               <span class="status-dot" aria-hidden="true"></span>
-              <span><strong id="appCount">Loading the collection…</strong> <span class="hero__meta-note">to explore</span></span>
+              <span id="appCount">Loading the collection…</span>
             </div>
-          </div>
-          <div class="hero__visual" aria-hidden="true">
-            <div class="idea-orbit idea-orbit--outer"></div>
-            <div class="idea-orbit idea-orbit--inner"></div>
-            <span class="idea-node idea-node--top">GENIUS</span>
-            <span class="idea-node idea-node--right">MEDHAVI</span>
-            <span class="idea-node idea-node--bottom">MIND</span>
-            <span class="idea-center">
-              <img src="./assets/gednim-mark.svg" alt="">
-            </span>
-            <span class="idea-spark idea-spark--one">✦</span>
-            <span class="idea-spark idea-spark--two">✧</span>
-          </div>
-        </section>
-
-        <section class="catalog" id="catalog" aria-labelledby="catalogTitle">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">THE COLLECTION</p>
-              <h2 id="catalogTitle">Pick an idea to explore.</h2>
-            </div>
-            <p class="section-heading__hint" id="searchHint">Choose an item to open it in your workspace.</p>
           </div>
           <div class="search-box" role="search">
             <label class="sr-only" for="appSearch">Search apps and games</label>
@@ -82,6 +53,16 @@
             <input id="appSearch" type="search" autocomplete="off"
               placeholder="Search apps and games…" enterkeyhint="search">
             <kbd aria-hidden="true">⌕</kbd>
+          </div>
+        </section>
+
+        <section class="catalog" aria-labelledby="catalogTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">EXPLORE</p>
+              <h2 id="catalogTitle">Explore the collection</h2>
+            </div>
+            <p class="section-heading__hint" id="searchHint">Choose an item to open it in your workspace.</p>
           </div>
           <div class="category-sections" id="categorySections"></div>
           <p class="empty-state" id="emptyState" hidden>No matching items. Try another search.</p>

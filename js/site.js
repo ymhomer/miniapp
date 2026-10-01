@@ -56,8 +56,7 @@ async function loadCatalog() {
     appsById = new Map(groups.flatMap(group => group.items.map(item => [item.id, item])));
     renderNavigation();
     renderCatalog();
-    document.getElementById("appCount").textContent =
-      appsById.size + " items · organized by category";
+    document.getElementById("appCount").textContent = appsById.size + " projects";
     document.getElementById("loadError").hidden = true;
     routeFromLocation();
   } catch (error) {
@@ -88,9 +87,15 @@ function renderNavigation() {
   groups.forEach(group => {
     const details = document.createElement("details");
     details.className = "nav-group";
+    details.setAttribute("name", "primary-nav-groups");
 
     const summary = document.createElement("summary");
     summary.textContent = group.title;
+    summary.addEventListener("click", () => {
+      navGroups.querySelectorAll(".nav-group[open]").forEach(openGroup => {
+        if (openGroup !== details) openGroup.open = false;
+      });
+    });
     details.append(summary);
 
     const menu = document.createElement("div");
@@ -185,7 +190,6 @@ function createAppCard(item, group) {
   const arrow = document.createElement("span");
   arrow.className = "app-card__arrow";
   arrow.setAttribute("aria-hidden", "true");
-  arrow.textContent = "↗";
 
   link.append(top, title, description, arrow);
   article.append(link);
