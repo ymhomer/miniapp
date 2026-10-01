@@ -1,38 +1,26 @@
 # GeDniM
 
-## Introduction
+GeDniM is a collection of browser-based mini apps and games by ymhomer.
 
-GeDniM is a personal project created to showcase web development skills and knowledge. It is built using HTML, CSS, JavaScript, Bootstrap, and ~jQuery~. This website includes various mini games and demos for you to explore.
+- **Live site:** [ymhomer.github.io/miniapp](https://ymhomer.github.io/miniapp/)
+- **Technology:** HTML, CSS, and JavaScript, with shared Bootstrap assets and libraries used by individual pages.
+- **Build:** No root package manifest or build step is required.
 
-## About This Site
+## Project contents
 
-**GeDniM = Genius + Medhavi & Mind**
-This website is named GeDniM, which stands for Genius, Medhavi & Mind. This expresses the characteristics of the model that help learners expand their thinking and enhance their intelligence.
+The repository contains 17 mini app folders and 13 mini game folders. The main navigation currently links 16 apps and 9 games; other modules remain in the repository as standalone or experimental pages.
 
-The website includes the following sections:
+See the [project map](docs/PROJECT_MAP.md) for the page flow, route groups, shared assets, and archived snapshots.
 
-- **Mini App**: a dropdown menu that includes several mini apps for users to use.
-- **Mini Game**: a dropdown menu that includes several mini games for users to play.
-- **About**: a page that explains the purpose and features of the website.
-- **Contact**: a page that provides a contact form for users to reach out.
+## Run locally
 
-[Page URL Portal - Click here](https://ymhomer.github.io/miniapp/)
+Keep the checkout in a folder named `miniapp`, start a static server from its parent folder, and open the repository path:
 
-### About Page
+1. From the parent folder, run `python3 -m http.server 8000`.
+2. Open `http://localhost:8000/miniapp/`.
 
-The About page provides more details about GeDniM. It includes an image and a brief introduction about the website. Users can learn about the project's motivation, features, and how it was built.
+No dependency installation is needed. The site uses the `/miniapp/` path, as it does on GitHub Pages.
 
-### Contact Page
+## License and credits
 
-The Contact page includes a form that allows users to send feedback, questions, or suggestions to the website owner. The form includes fields for the user's name, email address, and a message.
-
-## Credits
-
-This website was created by ymhomer默易寒.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 
-© 2023 GeDniM. All rights reserved.
+Created by ymhomer (默易寒). See [LICENSE.md](LICENSE.md) for the project license and third-party notices.

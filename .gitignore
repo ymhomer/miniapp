@@ -1,0 +1,13 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Editor swap and temporary backup files
+*.swp
+*.swo
+*~
+*.bak
+
+# Accidental backup folders
+*_bak/
+*_bak[0-9]*/
