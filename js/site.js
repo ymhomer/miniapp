@@ -4,6 +4,7 @@ const catalogUrl = new URL("../apps.json", import.meta.url);
 const homeView = document.getElementById("homeView");
 const workspaceView = document.getElementById("workspaceView");
 const categorySections = document.getElementById("categorySections");
+const categoryFilters = document.getElementById("categoryFilters");
 const navGroups = document.getElementById("navGroups");
 const appFrame = document.getElementById("appFrame");
 const appSearch = document.getElementById("appSearch");
@@ -15,11 +16,21 @@ const frameLoading = document.getElementById("frameLoading");
 let groups = [];
 let appsById = new Map();
 let currentAppId = null;
+let activeCategoryId = "all";
 
 document.getElementById("currentYear").textContent = String(new Date().getFullYear());
 document.getElementById("backToHome").addEventListener("click", () => navigateHome(true, true));
 appSearch.addEventListener("input", renderCatalog);
 menuToggle.addEventListener("click", toggleMenu);
+categoryFilters.addEventListener("click", event => {
+  const button = event.target.closest("[data-category-id]");
+  if (!button) return;
+  activeCategoryId = button.dataset.categoryId;
+  categoryFilters.querySelectorAll("[data-category-id]").forEach(filter => {
+    filter.setAttribute("aria-pressed", String(filter === button));
+  });
+  renderCatalog();
+});
 appFrame.addEventListener("load", () => { frameLoading.hidden = true; });
 window.addEventListener("popstate", routeFromLocation);
 window.addEventListener("hashchange", routeFromLocation);
@@ -42,7 +53,25 @@ document.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape") closeMenu();
+  if (event.key === "Escape") {
+    closeMenu();
+    if (document.activeElement === appSearch) {
+      if (appSearch.value) {
+        appSearch.value = "";
+        renderCatalog();
+      } else {
+        appSearch.blur();
+      }
+    }
+  }
+
+  const target = event.target;
+  const isEditing = target instanceof HTMLElement &&
+    (target.isContentEditable || target.matches("input, textarea, select"));
+  if (event.key === "/" && !isEditing && !event.metaKey && !event.ctrlKey && !event.altKey && !homeView.hidden) {
+    event.preventDefault();
+    appSearch.focus();
+  }
 });
 
 loadCatalog();
@@ -55,8 +84,9 @@ async function loadCatalog() {
     groups = normalizeGroups(catalog.groups);
     appsById = new Map(groups.flatMap(group => group.items.map(item => [item.id, item])));
     renderNavigation();
+    renderFilters();
     renderCatalog();
-    document.getElementById("appCount").textContent = appsById.size + " projects";
+    document.getElementById("appCount").textContent = String(appsById.size);
     document.getElementById("loadError").hidden = true;
     routeFromLocation();
   } catch (error) {
@@ -115,12 +145,37 @@ function renderNavigation() {
   });
 }
 
+function renderFilters() {
+  categoryFilters.replaceChildren();
+  categoryFilters.append(createFilterButton("all", "All projects", appsById.size, true));
+  groups.forEach(group => {
+    categoryFilters.append(createFilterButton(group.id, group.title, group.items.length));
+  });
+}
+
+function createFilterButton(id, label, count, active = false) {
+  const button = document.createElement("button");
+  button.className = "filter-button";
+  button.type = "button";
+  button.dataset.categoryId = id;
+  button.setAttribute("aria-pressed", String(active));
+
+  const title = document.createElement("span");
+  title.textContent = label;
+  const total = document.createElement("span");
+  total.className = "filter-button__count";
+  total.textContent = String(count).padStart(2, "0");
+  button.append(title, total);
+  return button;
+}
+
 function renderCatalog() {
   const query = appSearch.value.trim().toLocaleLowerCase();
   categorySections.replaceChildren();
   let visibleCount = 0;
 
   groups.forEach(group => {
+    if (activeCategoryId !== "all" && activeCategoryId !== group.id) return;
     const items = group.items.filter(item =>
       [item.title, item.description, group.title].join(" ").toLocaleLowerCase().includes(query)
     );
@@ -135,12 +190,19 @@ function renderCatalog() {
     heading.className = "category-heading";
 
     const titleWrap = document.createElement("div");
+    titleWrap.className = "category-heading__title-wrap";
+    const headingTitle = document.createElement("div");
+    headingTitle.className = "category-heading__title";
+    const index = document.createElement("span");
+    index.className = "category-index";
+    index.textContent = String(groups.indexOf(group) + 1).padStart(2, "0");
     const title = document.createElement("h3");
     title.id = "category-" + group.id;
     title.textContent = group.title;
     const description = document.createElement("p");
     description.textContent = group.description || "";
-    titleWrap.append(title, description);
+    headingTitle.append(index, title);
+    titleWrap.append(headingTitle, description);
 
     const count = document.createElement("span");
     count.className = "category-count";
@@ -157,14 +219,21 @@ function renderCatalog() {
 
   document.getElementById("emptyState").hidden = visibleCount > 0;
   document.getElementById("searchHint").textContent = query
-    ? visibleCount + " matching items."
-    : "Choose an item to open it in your workspace.";
+    ? visibleCount + (visibleCount === 1 ? " result found" : " results found")
+    : activeCategoryId === "all"
+      ? visibleCount + " projects across " + groups.length + " collections"
+      : visibleCount + (visibleCount === 1 ? " project in this category" : " projects in this category");
 }
 
 function createAppCard(item, group) {
   const article = document.createElement("article");
   article.className = "app-card";
-  article.style.setProperty("--card-accent", group.accent || "var(--accent)");
+  const accents = {
+    tools: "var(--accent-blue)",
+    games: "var(--accent-coral)",
+    about: "var(--accent-teal)"
+  };
+  article.style.setProperty("--card-accent", group.accent || accents[group.id] || "var(--accent-violet)");
 
   const link = document.createElement("a");
   link.className = "app-card__link";
@@ -190,8 +259,16 @@ function createAppCard(item, group) {
   const arrow = document.createElement("span");
   arrow.className = "app-card__arrow";
   arrow.setAttribute("aria-hidden", "true");
+  arrow.textContent = "↗";
 
-  link.append(top, title, description, arrow);
+  const footer = document.createElement("div");
+  footer.className = "app-card__footer";
+  const openLabel = document.createElement("span");
+  openLabel.className = "app-card__open";
+  openLabel.textContent = "OPEN PROJECT";
+  footer.append(openLabel, arrow);
+
+  link.append(top, title, description, footer);
   article.append(link);
   return article;
 }
