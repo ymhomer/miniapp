@@ -1,0 +1,52 @@
+{
+  "groups": [
+    {
+      "id": "tools",
+      "title": "Mini Apps",
+      "description": "Useful tools for organizing, calculating, and creating.",
+      "items": [
+        {"id":"converter","title":"SQL Convert Tools","description":"Format SQL snippets and convert common syntax.","path":"MiniApp/Converter","icon":"⌘"},
+        {"id":"server-status","title":"Server Status Monitor","description":"Check the connection status of your configured servers.","path":"MiniApp/ServerStatusMonitor","icon":"◉"},
+        {"id":"barcode-qr","title":"Barcode & QR Code Generator","description":"Turn text into barcodes and QR codes.","path":"MiniApp/BarQRGenerator","icon":"▦"},
+        {"id":"html-editor","title":"HTML Editor Suite","description":"Edit HTML, CSS, and JavaScript.","path":"MiniApp/HTMLEditorSuite","icon":"‹›"},
+        {"id":"scoreboard","title":"Scoreboard","description":"Keep track of game scores and rounds.","path":"MiniApp/Scoreboard","icon":"＋"},
+        {"id":"ruler","title":"Ruler","description":"Measure objects on your screen.","path":"MiniApp/Ruler","icon":"↔"},
+        {"id":"stopwatch","title":"Stopwatch","description":"Track elapsed time with a simple stopwatch.","path":"MiniApp/Stopwatch","icon":"◷"},
+        {"id":"item-search-sort","title":"Item Search & Sort","description":"Organize a list and find items quickly.","path":"MiniApp/ItemSearchSort","icon":"⌕"},
+        {"id":"t9","title":"T9 Keyboard","description":"Try the classic T9 input method.","path":"MiniApp/T9","icon":"▤"},
+        {"id":"metronome","title":"Metronome","description":"Set a tempo and practice to the beat.","path":"MiniApp/Metronome","icon":"♩"},
+        {"id":"keyboard-piano","title":"Keyboard Piano","description":"Play simple melodies with your keyboard.","path":"MiniApp/KeyboardPiano","icon":"♫"},
+        {"id":"numbered-notation","title":"Numbered Notation","description":"Create and play numbered musical notation.","path":"MiniApp/NumberedNotation","icon":"𝄞"},
+        {"id":"instrument-tuner","title":"Instrument Tuner","description":"Tune an instrument with your device microphone.","path":"MiniApp/InstrumentTuner","icon":"♬"},
+        {"id":"mermaid-studio","title":"Mermaid Studio","description":"Write Mermaid syntax and preview diagrams.","path":"MiniApp/MermaidStudio","icon":"◇"},
+        {"id":"meme-editor","title":"Meme Editor","description":"Add text and create a simple image.","path":"MiniApp/MemeEditor","icon":"▧"},
+        {"id":"task-flow","title":"Task Flow Control System","description":"Manage tasks, checklists, and follow-ups.","path":"MiniApp/TaskFlow","icon":"✓"}
+      ]
+    },
+    {
+      "id": "games",
+      "title": "Mini Games",
+      "description": "Take a break with a quick, lightweight game.",
+      "items": [
+        {"id":"guess-number","title":"Guess Number Game","description":"Guess the number chosen by the game.","path":"MiniGame/GuessNumberGame","icon":"?"},
+        {"id":"mini-rpg","title":"Mini RPG","description":"Fight through a short role-playing adventure.","path":"MiniGame/MiniRPG","icon":"⚔"},
+        {"id":"rhythm-game","title":"Rhythm Game","description":"Complete a button challenge to the beat.","path":"MiniGame/RhythmGame","icon":"♫"},
+        {"id":"move-your-finger","title":"Move Your Finger","description":"Guide your finger through routes and obstacles.","path":"MiniGame/MoveYourFinger","icon":"↗"},
+        {"id":"monster-slayer","title":"Monster Slayer","description":"Face monsters and see how long you can last.","path":"MiniGame/MonsterSlayer","icon":"✦"},
+        {"id":"flappy-bird","title":"Flappy Bird","description":"Control your flight and dodge the obstacles.","path":"MiniGame/FlappyBird","icon":"⌁"},
+        {"id":"flappy-bird-3d","title":"Flappy Bird 3D","description":"Take on flying levels from a 3D perspective.","path":"MiniGame/FlappyBird3D","icon":"⤴"},
+        {"id":"flappymon","title":"FlappyMon","description":"Collect characters on a flying adventure.","path":"MiniGame/FlappyMon","icon":"◈"},
+        {"id":"draw-a-circle","title":"Draw A Circle","description":"Draw a circle as close to perfect as you can.","path":"MiniGame/DrawACircle","icon":"◯"}
+      ]
+    },
+    {
+      "id": "about",
+      "title": "About",
+      "description": "Learn more about GeDniM and get in touch.",
+      "items": [
+        {"id":"contact","title":"Contact Us","description":"Send a question, feedback, or suggestion.","path":"Contact","icon":"✉"},
+        {"id":"about-page","title":"About GeDniM","description":"Learn about the site and its project history.","path":"About","icon":"ⓘ"}
+      ]
+    }
+  ]
+}

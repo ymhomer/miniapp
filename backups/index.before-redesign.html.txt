@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ymhomer.github.io">
+    <title>GeDniM</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../miniapp/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../miniapp/css/index.css">
+	<script src="../miniapp/js/bootstrap.bundle.min.js"></script>
+	<script src="../miniapp/js/app.js"></script>
+
+	<!--link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/index.css">
+	<script src="js/bootstrap.bundle.min.js"></script>
+	<script src="js/app.js"></script-->
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-light bg-light" id="mainNav">
+	  <a class="navbar-brand navbar-brand-custom" href="#" logoUrl="/">GeDniM</a>
+	  <div class="d-flex ms-auto">
+	  	<!--div class="d-flex d-lg-none me-2">
+	        <button id="fullscreenBtn" class="btn btn-outline-secondary" type="button"><img src="/miniapp/icon/arrows-angle-expand.svg" alt="Full Screen"></button>
+	        <button id="newtabBtn" class="btn btn-outline-secondary" type="button"><img src="/miniapp/icon/box-arrow-up-right.svg" alt="New Tab"></button>
+	    </div-->
+	    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+	        <img src="/miniapp/icon/list.svg" alt="list" width="24" height="24">
+	    </button>
+	</div>
+	  
+	  <div class="collapse navbar-collapse" id="navbarCollapse">
+	    <ul class="navbar-nav">
+	      <li class="nav-item dropdown">
+	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	          Mini App
+	        </a>
+	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/Converter">SQL Convert Tools</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/ServerStatusMonitor">Server Status Monitor</a>
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/BarQRGenerator">Barcode & QR Code Generator</a>
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/HTMLEditorSuite">HTML Editor Suite</a>
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/Scoreboard">Scoreboard</a>
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/Ruler">Ruler (Alpha)</a>
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/Stopwatch">Stopwatch</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/ItemSearchSort">Item Search & Sort</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/T9">T9 keyboard (Testing)</a>
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/Metronome">Metronome</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/KeyboardPiano">Keyboard Piano</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/NumberedNotation">Numbered Notation (Beta)</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/InstrumentTuner">Instrument Tuner</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/MermaidStudio">Mermaid Studio (Alpha)</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/MemeEditor">Meme Editor (Alpha)</a>
+		  <a class="dropdown-item close-navbar" href="#" data-app="/MiniApp/TaskFlow">Task Flow Control System</a>
+	        </div>
+	      </li>
+	    </ul>
+	    <ul class="navbar-nav">
+	      <li class="nav-item dropdown">
+	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	          Mini Game
+	        </a>
+	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/GuessNumberGame">Guess Number Game</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/MiniRPG">Mini RPG (Alpha)</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/RhythmGame">Rhythm Game</a>
+  		      <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/MoveYourFinger">Move your finger adventure (alpha)</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/MonsterSlayer">Monster Slayer(Beta)</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/FlappyBird">Flappy Bird</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/FlappyBird3D">Flappy Bird 3D</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/FlappyMon">FlappyMon</a>
+			  <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/DrawACircle">Draw A Circle</a>
+			  <!--a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/2048">2048</a-->
+	        </div>
+	      </li>
+	    </ul>
+	    <ul class="navbar-nav">
+	      <li class="nav-item dropdown d-none">
+	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown3" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	          Coming Soon
+	        </a>
+	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/Jump">Jump Square Game</a>
+	          
+	          <a class="dropdown-item close-navbar" href="#" data-app="/MiniGame/MiniRPG">Mini RPG Game</a>
+
+	        </div>
+	      </li>
+	    </ul>
+	    <ul class="navbar-nav">
+	      <li class="nav-item dropdown d-none">
+	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	          From other github project
+	        </a>
+	        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	          <a class="dropdown-item close-navbar" href="#" data-app="/FromOtherSide/2048">2048</a>
+	        </div>
+	      </li>
+	    </ul>
+	    <ul class="navbar-nav ml-auto">
+	      <li class="nav-item">
+	        <a class="nav-link close-navbar" href="#" data-app="/Contact">Contact Us</a>
+	      </li>
+	      <li class="nav-item">
+	        <a class="nav-link close-navbar" href="#" data-app="/About">About</a>
+	      </li>
+	    </ul>
+	  </div>
+	  <!--div class="d-none d-lg-flex me-2">
+	        <button id="fullscreenBtn" class="btn btn-outline-secondary" type="button"><img src="/miniapp/icon/arrows-angle-expand.svg" alt="Full Screen"></button>
+	        <button id="newtabBtn" class="btn btn-outline-secondary" type="button"><img src="/miniapp/icon/box-arrow-up-right.svg" alt="New Tab"></button>
+	  </div-->
+	</nav>
+
+    <div class="container-fluid">
+      <div class="row mt-5">
+        <div class="col-12">
+          <!--div class="d-grid gap-2 -md-flex justify-content-md-end">
+          	 <div class="btn-group">
+  				<button id="fullscreenBtn" class="btn btn-primary" type="button"><img src="/miniapp/icon/arrows-angle-expand.svg" alt="Full Screen"></button>
+  				<button id="newtabBtn" class="btn btn-primary" type="button"><img src="/miniapp/icon/box-arrow-up-right.svg" alt="New Tab"></button>
+			</div>
+		  </div-->
+		  <div id="fullscreenContainer">
+			    <iframe class="embed-responsive-item" id="app-iframe" frameborder="0" width="100%"></iframe>
+			    <img src="/miniapp/icon/x-circle.svg" alt="x" id="exitFullscreenBtn" width="24" height="24" style="display: none; position: fixed; top: 10px; right: 10px; z-index: 9999;">
+			</div>
+          <p id="debuglog"></p>
+        </div>
+      </div>
+    </div>
+    <footer class="bg-dark text-white py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">Copyright &copy; 2023 GeDniM. All rights reserved. Licensed under the MIT License.</p>
+                </div>
+                <div class="col-md-6 text-md-right">
+                    <p class="mb-0">Created by ymhomer默易寒</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script type="module">
+	  // Import the functions you need from the SDKs you need
+	  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
+	  // TODO: Add SDKs for Firebase products that you want to use
+	  // https://firebase.google.com/docs/web/setup#available-libraries
+
+	  // Your web app's Firebase configuration
+	  const firebaseConfig = {
+	    apiKey: "AIzaSyDbaZ4udGTHqNeTHJ6Fu0SXjohLzTmO2a8",
+	    authDomain: "fir-testing-22d96.firebaseapp.com",
+	    databaseURL: "https://fir-testing-22d96.firebaseio.com",
+	    projectId: "fir-testing-22d96",
+	    storageBucket: "fir-testing-22d96.appspot.com",
+	    messagingSenderId: "646454508360",
+	    appId: "1:646454508360:web:9d63a838ca143d1499d17d"
+	  };
+
+	  // Initialize Firebase
+	  const app = initializeApp(firebaseConfig);
+	</script>
+</body>
+</html>
