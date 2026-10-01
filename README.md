@@ -5,9 +5,9 @@ A responsive home for the GeDniM mini apps, games, and experiments.
 ## Structure
 
 - `index.html` contains the shared portal and project workspace.
-- `apps.json` is the source for the navigation, category filters, and project cards.
+- `apps.json` is the source for the navigation, category groups, and project cards.
 - `css/site.css` contains the custom responsive design for the portal.
-- `js/site.js` handles navigation, search, filtering, and opening projects.
+- `js/site.js` handles navigation, search, grouping, and opening projects.
 - `backups/` preserves earlier page sources for rollback.
 
 ## Preview locally

@@ -4,6 +4,7 @@
       "id": "tools",
       "title": "Mini Apps",
       "description": "Useful tools for organizing, calculating, and creating.",
+      "accent": "#d6ad70",
       "items": [
         {"id":"converter","title":"SQL Convert Tools","description":"Format SQL snippets and convert common syntax.","path":"MiniApp/Converter","icon":"⌘"},
         {"id":"server-status","title":"Server Status Monitor","description":"Check the connection status of your configured servers.","path":"MiniApp/ServerStatusMonitor","icon":"◉"},
@@ -27,6 +28,7 @@
       "id": "games",
       "title": "Mini Games",
       "description": "Take a break with a quick, lightweight game.",
+      "accent": "#9998c6",
       "items": [
         {"id":"guess-number","title":"Guess Number Game","description":"Guess the number chosen by the game.","path":"MiniGame/GuessNumberGame","icon":"?"},
         {"id":"mini-rpg","title":"Mini RPG","description":"Fight through a short role-playing adventure.","path":"MiniGame/MiniRPG","icon":"⚔"},
@@ -43,6 +45,7 @@
       "id": "about",
       "title": "About",
       "description": "Learn more about GeDniM and get in touch.",
+      "accent": "#8eb6a2",
       "items": [
         {"id":"contact","title":"Contact Us","description":"Send a question, feedback, or suggestion.","path":"Contact","icon":"✉"},
         {"id":"about-page","title":"About GeDniM","description":"Learn about the site and its project history.","path":"About","icon":"ⓘ"}
