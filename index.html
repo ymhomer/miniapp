@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f8f8f5">
+  <meta name="theme-color" content="#0c1117">
   <meta name="description" content="A thoughtful collection of small tools, playful experiments, and games built to make everyday moments more interesting.">
   <title>GeDniM — A place for curious minds</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
@@ -37,15 +37,15 @@
       <div class="page-shell">
         <section class="hero" id="home" aria-labelledby="heroTitle">
           <div class="hero__copy">
-            <p class="eyebrow"><span class="eyebrow__dot"></span> A SMALL DIGITAL PLAYGROUND</p>
-            <h1 id="heroTitle" tabindex="-1">Good ideas deserve a <span>place to play.</span></h1>
+            <p class="eyebrow"><span class="eyebrow__dot"></span> GE-DNIM / PERSONAL TOOLBOX</p>
+            <h1 id="heroTitle" tabindex="-1">Small tools.<span>Endless possibilities_</span></h1>
             <p class="hero__description">A growing collection of thoughtful little tools, playful experiments, and games built to make everyday moments more interesting.</p>
             <div class="hero__actions">
               <a class="button button--primary" href="#catalog">
-                Explore the collection
+                [ Browse collection ]
                 <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 10h11M10 5l5 5-5 5" /></svg>
               </a>
-              <a class="button button--quiet" href="#app/about-page" data-app-id="about-page">Meet GeDniM <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 12 12 4M5 4h7v7" /></svg></a>
+              <a class="button button--quiet" href="#app/about-page" data-app-id="about-page">[ About ] <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 12 12 4M5 4h7v7" /></svg></a>
             </div>
             <div class="hero__meta">
               <span class="status-dot" aria-hidden="true"></span>
@@ -56,50 +56,25 @@
               <span><strong id="gameCount">—</strong> mini games</span>
             </div>
           </div>
-          <div class="hero__visual" role="group" aria-label="Featured project preview: Mermaid Studio">
-            <div class="hero-art__grain"></div>
-            <div class="hero-art__topline"><span>GE / STUDIO</span><span>IDEAS IN MOTION <i></i></span></div>
-            <div class="hero-art__window">
-              <div class="hero-art__window-top">
-                <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-                <span class="window-title"><span class="window-mark">G</span> Mermaid Studio</span>
-                <span class="window-status">LIVE</span>
-              </div>
-              <div class="diagram-preview">
-                <span class="diagram-preview__label">FLOWCHART · LR</span>
-                <div class="diagram-preview__flow" aria-hidden="true">
-                  <span class="diagram-node diagram-node--start">Imagine</span>
-                  <span class="diagram-link"></span>
-                  <span class="diagram-node diagram-node--middle">Sketch</span>
-                  <span class="diagram-link"></span>
-                  <span class="diagram-node diagram-node--end">Share</span>
-                </div>
-                <div class="diagram-preview__spark" aria-hidden="true">✦</div>
-              </div>
-              <div class="hero-art__window-bottom">
-                <div><span class="hero-art__index">01 / CREATIVE TOOL</span><strong>Make the abstract visible.</strong></div>
-                <a class="hero-art__open" href="#app/mermaid-studio" data-app-id="mermaid-studio">OPEN STUDIO <svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 12 12 4M5 4h7v7" /></svg></a>
-              </div>
+          <aside class="terminal" aria-label="Featured tools">
+            <div class="terminal__bar"><span>~/gednim/quick-launch</span><span aria-hidden="true">─ □ ×</span></div>
+            <div class="terminal__body">
+              <p class="terminal__command"><span>guest@gednim</span>:~$ ls ./featured</p>
+              <p class="terminal__note">Choose a tool to start a session.</p>
+              <a href="#app/mermaid-studio" data-app-id="mermaid-studio"><span>01</span> Mermaid Studio <b>↵</b></a>
+              <a href="#app/html-editor" data-app-id="html-editor"><span>02</span> HTML Editor Suite <b>↵</b></a>
+              <a href="#app/keyboard-piano" data-app-id="keyboard-piano"><span>03</span> Keyboard Piano <b>↵</b></a>
+              <p class="terminal__prompt" aria-hidden="true">$ <span>▊</span></p>
             </div>
-            <a class="hero-art__float hero-art__float--top" href="#app/html-editor" data-app-id="html-editor" aria-label="Open HTML Editor Suite">
-              <span class="float-icon float-icon--code">&lt;/&gt;</span>
-              <span><small>BUILD SOMETHING</small><strong>HTML Editor Suite</strong></span>
-              <span class="float-arrow" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M5 4h7v7" /></svg></span>
-            </a>
-            <div class="hero-art__float hero-art__float--bottom">
-              <span class="float-icon float-icon--play">▶</span>
-              <span><small>TAKE A QUICK BREAK</small><strong>Mini games, made to play</strong></span>
-              <span class="float-equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-            </div>
-            <span class="hero-art__orbit" aria-hidden="true"></span>
-          </div>
+            <div class="terminal__status"><span>● READY</span><span>LOCAL TOOLS / OPEN IDEAS</span></div>
+          </aside>
         </section>
 
         <section class="catalog" id="catalog" aria-labelledby="catalogTitle">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">THE PROJECT SHELF <span class="section-heading__index">01 — 03</span></p>
-              <h2 id="catalogTitle">Find your next favorite.</h2>
+              <p class="eyebrow">~/collection <span class="section-heading__index">01 — 03</span></p>
+              <h2 id="catalogTitle">Select a program.</h2>
             </div>
             <p class="section-heading__hint" id="searchHint">Useful things, small discoveries, and a little play.</p>
           </div>
@@ -110,8 +85,8 @@
               <path d="m16 16 5 5"></path>
             </svg>
             <input id="appSearch" type="search" autocomplete="off"
-              placeholder="Search apps and games…" enterkeyhint="search">
-            <kbd aria-hidden="true">⌕</kbd>
+              placeholder="Filter programs by name…" enterkeyhint="search">
+            <kbd aria-hidden="true">/</kbd>
           </div>
           <div class="category-sections" id="categorySections"></div>
           <p class="empty-state" id="emptyState" hidden>No matching items. Try another search.</p>
@@ -151,7 +126,7 @@
   <footer class="site-footer">
     <div class="site-footer__inner">
       <span class="site-footer__brand">© <span id="currentYear"></span> GeDniM <i aria-hidden="true"></i> Thoughtful tools, playful experiments.</span>
-      <span>Made for the joy of trying things.</span>
+      <span>[/] Search · [Tab] Navigate · [Enter] Open</span>
     </div>
   </footer>
 
