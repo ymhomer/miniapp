@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0c1117">
+  <meta name="theme-color" content="#f5f4ee">
   <meta name="description" content="A thoughtful collection of small tools, playful experiments, and games built to make everyday moments more interesting.">
   <title>GeDniM — A place for curious minds</title>
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <script src="./js/theme.js"></script>
   <link rel="stylesheet" href="./css/site.css">
   <script type="module" src="./js/site.js"></script>
 </head>
@@ -19,6 +20,11 @@
         <img class="brand__mark" src="./favicon.ico" alt="" aria-hidden="true">
         <span class="brand__name">GeDni<span>M</span></span>
       </a>
+
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z"/></svg>
+        <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+      </button>
 
       <button class="menu-toggle" id="menuToggle" type="button"
         aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation">
